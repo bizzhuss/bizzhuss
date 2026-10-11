@@ -842,24 +842,27 @@ function StorefrontLayoutInner({ children }) {
 
                         {/* Drawer Footer / Currency & Logout */}
                         <div className="p-4 border-t border-slate-800 bg-slate-950 space-y-3">
+                            {auth?.user && (
+                                <div className="pb-1 border-b border-slate-800/80">
+                                    <Link 
+                                        href="/logout" 
+                                        method="post" 
+                                        as="button"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors text-sm font-medium cursor-pointer"
+                                    >
+                                        <LogOut className="w-4 h-4 text-rose-400 shrink-0" />
+                                        <span>Sign Out</span>
+                                    </Link>
+                                </div>
+                            )}
+
                             <div className="flex items-center justify-between text-[11px] text-slate-400">
                                 <span>Official Currency:</span>
                                 <span className="font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                                     PKR (Rs.)
                                 </span>
                             </div>
-                            {auth?.user && (
-                                <button
-                                    onClick={(e) => {
-                                        setIsMobileMenuOpen(false);
-                                        handleLogout(e);
-                                    }}
-                                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-bold border border-rose-500/20 transition-colors cursor-pointer"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    <span>Sign Out</span>
-                                </button>
-                            )}
                         </div>
                     </div>
                 </div>
