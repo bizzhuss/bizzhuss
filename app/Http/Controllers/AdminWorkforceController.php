@@ -1,0 +1,276 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Department;
+use App\Models\Designation;
+use App\Models\Employee;
+use App\Models\Task;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class AdminWorkforceController extends Controller
+{
+    /**
+     * Display Department & Designation Management.
+     */
+    public function departments(Request $request): Response
+    {
+        $departments = Department::with(['designations'])
+            ->withCount('employees')
+            ->orderBy('name')
+            ->get();
+
+        $metrics = [
+            'total_departments' => $departments->count(),
+            'total_designations' => Designation::count(),
+            'total_workforce' => Employee::count(),
+        ];
+
+        return Inertia::render('Admin/Departments', [
+            'departments' => $departments,
+            'metrics' => $metrics,
+        ]);
+    }
+
+    /**
+     * Create a new department.
+     */
+    public function storeDepartment(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100|unique:departments,name',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        $validated['slug'] = Str::slug($validated['name']);
+
+        Department::create($validated);
+
+        return redirect()->back()->with('success', "Department '{$validated['name']}' created successfully.");
+    }
+
+    /**
+     * Update an existing department.
+     */
+    public function updateDepartment(Request $request, Department $department)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100|unique:departments,name,' . $department->id,
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        $validated['slug'] = Str::slug($validated['name']);
+
+        $department->update($validated);
+
+        return redirect()->back()->with('success', "Department '{$department->name}' updated successfully.");
+    }
+
+    /**
+     * Delete a department.
+     */
+    public function destroyDepartment(Department $department)
+    {
+        if ($department->employees()->count() > 0) {
+            return redirect()->back()->with('error', "Cannot delete department with active employees assigned. Reassign personnel first.");
+        }
+
+        $name = $department->name;
+        $department->delete();
+
+        return redirect()->back()->with('success', "Department '{$name}' deleted successfully.");
+    }
+
+    /**
+     * Add a designation under a department.
+     */
+    public function storeDesignation(Request $request)
+    {
+        $validated = $request->validate([
+            'department_id' => 'required|exists:departments,id',
+            'title' => 'required|string|max:100',
+        ]);
+
+        Designation::create($validated);
+
+        return redirect()->back()->with('success', "Designation '{$validated['title']}' created successfully.");
+    }
+
+    /**
+     * Delete a designation.
+     */
+    public function destroyDesignation(Designation $designation)
+    {
+        if (Employee::where('designation_id', $designation->id)->count() > 0) {
+            return redirect()->back()->with('error', "Cannot delete designation assigned to active employees.");
+        }
+
+        $title = $designation->title;
+        $designation->delete();
+
+        return redirect()->back()->with('success', "Designation '{$title}' removed successfully.");
+    }
+
+    /**
+     * Display Employee Directory & Onboarding.
+     */
+    public function employees(Request $request): Response
+    {
+        $search = $request->input('search');
+        $departmentFilter = $request->input('department');
+
+        $query = Employee::with([
+            'user:id,name,email,phone,avatar,status',
+            'department:id,name',
+            'designation:id,title',
+        ]);
+
+        if ($departmentFilter && $departmentFilter !== 'all') {
+            $query->where('department_id', $departmentFilter);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('employee_code', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $employees = $query->get()->map(function ($employee) {
+            $activeTasksCount = Task::where('assigned_to', $employee->user_id)
+                ->whereIn('status', ['todo', 'in_progress', 'review'])
+                ->count();
+
+            $completedTasksCount = Task::where('assigned_to', $employee->user_id)
+                ->where('status', 'completed')
+                ->count();
+
+            return [
+                'id' => $employee->id,
+                'user_id' => $employee->user_id,
+                'employee_code' => $employee->employee_code,
+                'monthly_target' => $employee->monthly_target ?? 25,
+                'joining_date' => $employee->joining_date ? $employee->joining_date->format('Y-m-d') : null,
+                'status' => $employee->status,
+                'user' => $employee->user,
+                'department' => $employee->department,
+                'designation' => $employee->designation,
+                'active_tasks_count' => $activeTasksCount,
+                'completed_tasks_count' => $completedTasksCount,
+            ];
+        });
+
+        $departments = Department::with('designations')->orderBy('name')->get();
+
+        $metrics = [
+            'total_employees' => $employees->count(),
+            'active_personnel' => $employees->where('status', 'active')->count(),
+            'total_active_tasks' => $employees->sum('active_tasks_count'),
+            'total_completed_tasks' => $employees->sum('completed_tasks_count'),
+        ];
+
+        return Inertia::render('Admin/Employees', [
+            'employees' => $employees,
+            'departments' => $departments,
+            'metrics' => $metrics,
+            'filters' => [
+                'search' => $search,
+                'department' => $departmentFilter,
+            ],
+        ]);
+    }
+
+    /**
+     * Onboard a new employee.
+     */
+    public function storeEmployee(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:150',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'phone' => 'nullable|string|max:30',
+            'department_id' => 'required|exists:departments,id',
+            'designation_id' => 'required|exists:designations,id',
+            'employee_code' => 'required|string|unique:employees,employee_code',
+            'monthly_target' => 'nullable|integer|min:1',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'phone' => $validated['phone'] ?? null,
+                'role' => 'employee',
+                'status' => 'active',
+            ]);
+
+            Employee::create([
+                'user_id' => $user->id,
+                'department_id' => $validated['department_id'],
+                'designation_id' => $validated['designation_id'],
+                'employee_code' => $validated['employee_code'],
+                'monthly_target' => $validated['monthly_target'] ?? 25,
+                'joining_date' => now(),
+                'status' => 'active',
+            ]);
+        });
+
+        return redirect()->back()->with('success', "Employee '{$validated['name']}' onboarded successfully.");
+    }
+
+    /**
+     * Update an employee.
+     */
+    public function updateEmployee(Request $request, Employee $employee)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:150',
+            'phone' => 'nullable|string|max:30',
+            'department_id' => 'required|exists:departments,id',
+            'designation_id' => 'required|exists:designations,id',
+            'monthly_target' => 'nullable|integer|min:1',
+            'status' => 'required|in:active,inactive,on_leave',
+        ]);
+
+        $employee->user->update([
+            'name' => $validated['name'],
+            'phone' => $validated['phone'] ?? $employee->user->phone,
+        ]);
+
+        $employee->update([
+            'department_id' => $validated['department_id'],
+            'designation_id' => $validated['designation_id'],
+            'monthly_target' => $validated['monthly_target'] ?? 25,
+            'status' => $validated['status'],
+        ]);
+
+        return redirect()->back()->with('success', "Employee record for '{$employee->user->name}' updated.");
+    }
+
+    /**
+     * Delete an employee.
+     */
+    public function destroyEmployee(Employee $employee)
+    {
+        $name = $employee->user ? $employee->user->name : 'Employee';
+        $user = $employee->user;
+
+        $employee->delete();
+        if ($user) {
+            $user->delete();
+        }
+
+        return redirect()->back()->with('success', "Employee '{$name}' removed from workforce.");
+    }
+}
