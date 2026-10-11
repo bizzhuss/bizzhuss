@@ -226,7 +226,7 @@ function StorefrontLayoutInner({ children }) {
                         </form>
 
                         {/* Right Utility: Portal Shortcut, Wishlist, User Account, Cart */}
-                        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+                        <div className="hidden md:flex items-center gap-3 sm:gap-4 shrink-0">
                             {/* Direct Portal Link for Staff & Merchants */}
                             {auth?.user?.role === 'vendor' && (
                                 <Link 
@@ -445,27 +445,120 @@ function StorefrontLayoutInner({ children }) {
                                 <span className="hidden sm:inline">Cart</span>
                             </button>
                         </div>
+
+                        {/* Mobile Top Row Right: User Avatar or Wishlist */}
+                        <div className="md:hidden flex items-center gap-1.5 shrink-0">
+                            {auth?.user ? (
+                                <Link
+                                    href={
+                                        auth.user.role === 'customer' ? '/customer/dashboard' :
+                                        auth.user.role === 'vendor' ? '/vendor' :
+                                        auth.user.role === 'employee' ? '/employee' :
+                                        auth.user.role === 'marketing_manager' ? '/marketing/dashboard' :
+                                        '/admin'
+                                    }
+                                    className="p-1 rounded-xl hover:bg-slate-800 transition-colors flex items-center"
+                                    aria-label="My Account"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs border border-white/20 overflow-hidden shrink-0 shadow-xs">
+                                        {auth.user.avatar ? (
+                                            <img src={auth.user.avatar} alt={auth.user.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            auth.user.name ? auth.user.name.slice(0, 2).toUpperCase() : 'US'
+                                        )}
+                                    </div>
+                                </Link>
+                            ) : (
+                                <Link
+                                    href="/wishlist"
+                                    onClick={(e) => {
+                                        if (!auth?.user) {
+                                            e.preventDefault();
+                                            router.visit(`/login?intended=${encodeURIComponent('/wishlist')}&message=${encodeURIComponent('Please sign in to view your wishlist.')}`);
+                                        }
+                                    }}
+                                    className="p-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors relative flex items-center justify-center"
+                                    aria-label="Wishlist"
+                                >
+                                    <Heart className="w-5 h-5 text-slate-300" />
+                                    {wishlistCount > 0 && (
+                                        <span className="absolute top-0.5 right-0.5 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-slate-900">
+                                            {wishlistCount}
+                                        </span>
+                                    )}
+                                </Link>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Mobile Search Bar */}
-                    <div className="mt-3 md:hidden">
-                        <form onSubmit={handleSearch} className="flex rounded-xl overflow-hidden bg-white shadow-xs">
+                    {/* Streamlined Mobile Search Bar */}
+                    <div className="mt-2.5 md:hidden">
+                        <form onSubmit={handleSearch} className="relative flex items-center w-full">
+                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <Search className="w-4 h-4" />
+                            </div>
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search products, equipment, brands..."
-                                className="flex-1 px-3 py-2 text-xs text-slate-900 outline-none"
+                                placeholder="Search products, brands, or categories..."
+                                className="w-full h-10 pl-10 pr-9 bg-slate-800/90 border border-slate-700/80 rounded-xl text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all shadow-inner"
                             />
-                            <button type="submit" className="bg-brand-500 hover:bg-brand-600 px-4 flex items-center justify-center text-white font-bold">
-                                <Search className="w-4 h-4" />
-                            </button>
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white cursor-pointer"
+                                    aria-label="Clear search"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
                         </form>
                     </div>
                 </div>
 
-                {/* Horizontal Mega-Menu Category Navigation Bar */}
-                <nav className="bg-slate-800 text-slate-200 border-t border-slate-700/80 px-4 sm:px-6 lg:px-8 overflow-x-auto no-scrollbar">
+                {/* Mobile Horizontal Quick Navigation Category Pills */}
+                <nav className="md:hidden bg-slate-950 border-t border-slate-800/80 px-3 py-2 overflow-x-auto no-scrollbar">
+                    <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
+                        <Link
+                            href="/shop?tier=special_flash_sale"
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/25 transition-colors shrink-0"
+                        >
+                            <span>🔥 Flash Deals</span>
+                        </Link>
+                        <Link
+                            href="/shop"
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-200 font-medium hover:bg-slate-700 transition-colors shrink-0"
+                        >
+                            <span>📦 All Products</span>
+                        </Link>
+                        <Link
+                            href="/shop?tier=flagship_featured"
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold hover:bg-amber-500/25 transition-colors shrink-0"
+                        >
+                            <span>⚡ Featured</span>
+                        </Link>
+                        <Link
+                            href="/shop?tier=smart_value_budget"
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-medium hover:bg-emerald-500/25 transition-colors shrink-0"
+                        >
+                            <span>🏷️ Budget Picks</span>
+                        </Link>
+                        {departments.filter(d => !d.highlight).map((dept) => (
+                            <Link
+                                key={`mobile-pill-${dept.name}`}
+                                href={dept.href}
+                                className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors shrink-0"
+                            >
+                                <span>{dept.name}</span>
+                            </Link>
+                        ))}
+                    </div>
+                </nav>
+
+                {/* Horizontal Mega-Menu Category Navigation Bar (Desktop) */}
+                <nav className="hidden md:block bg-slate-800 text-slate-200 border-t border-slate-700/80 px-4 sm:px-6 lg:px-8 overflow-x-auto no-scrollbar">
                     <div className="max-w-7xl mx-auto flex items-center justify-between text-xs py-2 gap-6">
                         <div className="flex items-center gap-4 sm:gap-6 whitespace-nowrap">
                             <Link
@@ -562,22 +655,30 @@ function StorefrontLayoutInner({ children }) {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="space-y-2">
-                                    <p className="text-xs text-slate-300">Welcome to Bizzhuss Marketplace</p>
-                                    <div className="flex items-center gap-2 pt-1">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-brand-400 shrink-0">
+                                            <User className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-white">Welcome to Bizzhuss</p>
+                                            <p className="text-[11px] text-slate-400">Sign in to track orders & saved items</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 pt-1">
                                         <Link
                                             href="/login"
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex-1 text-center py-2 rounded-xl bg-brand-500 text-white text-xs font-bold shadow-sm"
+                                            className="text-center py-2.5 px-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition-colors"
                                         >
                                             Sign In
                                         </Link>
                                         <Link
                                             href="/register"
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex-1 text-center py-2 rounded-xl bg-slate-800 text-white text-xs font-bold border border-slate-700"
+                                            className="text-center py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 transition-colors"
                                         >
-                                            Register
+                                            Create Account
                                         </Link>
                                     </div>
                                 </div>
