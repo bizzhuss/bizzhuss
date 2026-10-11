@@ -3,6 +3,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import { useApp, AppProvider } from '@/context/AppContext';
 import { ApplicationLogo } from '@/components/ApplicationLogo';
 import { CartDrawer } from './CartDrawer';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { 
     Search, 
     ShoppingCart, 
@@ -73,7 +74,7 @@ function StorefrontLayoutInner({ children }) {
         <div className="min-h-screen flex flex-col bg-slate-100/70 font-sans text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
             {/* Top Multi-Tier Utility / Dev Switcher Bar */}
             <header className="bg-slate-950 text-white text-xs border-b border-slate-800 sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col sm:flex-row items-center justify-between py-1.5 gap-2">
                         {/* Platform Role Switcher - Strictly for Super Admin Only */}
                         {auth?.user && auth.user.role === 'super_admin' ? (
@@ -166,20 +167,30 @@ function StorefrontLayoutInner({ children }) {
                 </div>
 
                 {/* Primary Amazon/Daraz Style Header */}
-                <div className="bg-slate-900 border-t border-slate-800 py-3.5 px-4 sm:px-6 lg:px-8">
-                    <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 lg:gap-8">
-                        {/* Logo */}
-                        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-                            <ApplicationLogo asLink={false} className="w-10 h-10 rounded-xl shadow-md group-hover:scale-105 transition-transform" />
-                            <div>
-                                <span className="text-2xl font-black tracking-tight text-white flex items-center">
-                                    Bizz<span className="text-brand-400">huss</span>
-                                </span>
-                                <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-medium">
-                                    Multi-Vendor Marketplace
-                                </span>
-                            </div>
-                        </Link>
+                <div className="bg-slate-900 border-t border-slate-800 py-2.5 sm:py-3.5 px-3 sm:px-6 lg:px-8">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4 lg:gap-8">
+                        {/* Hamburger toggle & Brand Logo */}
+                        <div className="flex items-center gap-1.5 sm:gap-2.5">
+                            <button
+                                type="button"
+                                onClick={() => setIsMobileMenuOpen(true)}
+                                className="md:hidden p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                                aria-label="Open mobile navigation menu"
+                            >
+                                <Menu className="w-5 h-5 text-brand-400" />
+                            </button>
+                            <Link href="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0 group">
+                                <ApplicationLogo asLink={false} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl shadow-md group-hover:scale-105 transition-transform" />
+                                <div>
+                                    <span className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center">
+                                        Bizz<span className="text-brand-400">huss</span>
+                                    </span>
+                                    <span className="hidden sm:block text-[9px] uppercase tracking-wider text-slate-400 font-medium">
+                                        Multi-Vendor Marketplace
+                                    </span>
+                                </div>
+                            </Link>
+                        </div>
 
                         {/* Central Full-Width Search Bar with Category Dropdown */}
                         <form onSubmit={handleSearch} className="flex-1 max-w-3xl hidden md:flex items-center">
@@ -507,6 +518,233 @@ function StorefrontLayoutInner({ children }) {
                 </nav>
             </header>
 
+            {/* Slide-out Mobile Navigation Drawer */}
+            {isMobileMenuOpen && (
+                <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
+                    {/* Backdrop Overlay */}
+                    <div 
+                        className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                    />
+                    
+                    {/* Drawer Panel */}
+                    <div className="relative w-4/5 max-w-xs bg-slate-900 text-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto z-10 border-r border-slate-800">
+                        {/* Top Drawer Header */}
+                        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2">
+                                <ApplicationLogo asLink={false} className="w-8 h-8 rounded-lg shadow-sm" />
+                                <span className="text-lg font-black text-white">
+                                    Bizz<span className="text-brand-400">huss</span>
+                                </span>
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                                aria-label="Close mobile menu"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* User Profile / Auth Action */}
+                        <div className="p-4 bg-slate-800/60 border-b border-slate-800">
+                            {auth?.user ? (
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 border border-white/20">
+                                        {auth.user.name ? auth.user.name.slice(0, 2).toUpperCase() : 'US'}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="font-bold text-white text-xs truncate">{auth.user.name}</p>
+                                        <span className="inline-block mt-0.5 text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                                            {auth.user.role ? auth.user.role.replace('_', ' ') : 'User'}
+                                        </span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <p className="text-xs text-slate-300">Welcome to Bizzhuss Marketplace</p>
+                                    <div className="flex items-center gap-2 pt-1">
+                                        <Link
+                                            href="/login"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="flex-1 text-center py-2 rounded-xl bg-brand-500 text-white text-xs font-bold shadow-sm"
+                                        >
+                                            Sign In
+                                        </Link>
+                                        <Link
+                                            href="/register"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="flex-1 text-center py-2 rounded-xl bg-slate-800 text-white text-xs font-bold border border-slate-700"
+                                        >
+                                            Register
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Menu Navigation Items */}
+                        <div className="flex-1 px-4 py-3 space-y-4 overflow-y-auto text-xs">
+                            {/* Department Categories */}
+                            <div>
+                                <h5 className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-2">Shop Departments</h5>
+                                <div className="space-y-1">
+                                    <Link
+                                        href="/shop"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-200 hover:bg-slate-800 hover:text-white font-medium"
+                                    >
+                                        <Tag className="w-4 h-4 text-brand-400" />
+                                        <span>All Products / Catalog</span>
+                                    </Link>
+                                    {departments.map((dept) => {
+                                        const Icon = dept.icon;
+                                        return (
+                                            <Link
+                                                key={dept.name}
+                                                href={dept.href}
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl font-medium transition-colors ${
+                                                    dept.highlight
+                                                        ? 'text-accent-orange font-bold bg-accent-orange/10'
+                                                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                                }`}
+                                            >
+                                                {Icon && <Icon className="w-4 h-4 text-brand-400" />}
+                                                <span>{dept.name}</span>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Account / Portal Links */}
+                            {auth?.user && (
+                                <div className="pt-2 border-t border-slate-800">
+                                    <h5 className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-2">Workspace & Portals</h5>
+                                    <div className="space-y-1">
+                                        {auth.user.role === 'customer' && (
+                                            <>
+                                                <Link
+                                                    href="/customer/dashboard"
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-200 hover:bg-slate-800 hover:text-white"
+                                                >
+                                                    <Package className="w-4 h-4 text-emerald-400" />
+                                                    <span>My Orders</span>
+                                                </Link>
+                                                <Link
+                                                    href="/wishlist"
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-200 hover:bg-slate-800 hover:text-white"
+                                                >
+                                                    <Heart className="w-4 h-4 text-rose-400" />
+                                                    <span>Saved Wishlist</span>
+                                                </Link>
+                                            </>
+                                        )}
+                                        {auth.user.role === 'vendor' && (
+                                            <Link
+                                                href="/vendor"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-amber-300 hover:bg-slate-800 font-semibold"
+                                            >
+                                                <Store className="w-4 h-4 text-amber-400" />
+                                                <span>Vendor Portal</span>
+                                            </Link>
+                                        )}
+                                        {auth.user.role === 'marketing_manager' && (
+                                            <Link
+                                                href="/marketing/dashboard"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-pink-300 hover:bg-slate-800 font-semibold"
+                                            >
+                                                <Sparkles className="w-4 h-4 text-pink-400" />
+                                                <span>Marketing Hub</span>
+                                            </Link>
+                                        )}
+                                        {auth.user.role === 'employee' && (
+                                            <Link
+                                                href="/employee"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sky-300 hover:bg-slate-800 font-semibold"
+                                            >
+                                                <Briefcase className="w-4 h-4 text-sky-400" />
+                                                <span>Workforce Desk</span>
+                                            </Link>
+                                        )}
+                                        {auth.user.role === 'super_admin' && (
+                                            <Link
+                                                href="/admin"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-brand-300 hover:bg-slate-800 font-semibold"
+                                            >
+                                                <ShieldCheck className="w-4 h-4 text-brand-400" />
+                                                <span>Admin Control Center</span>
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Merchant & Support */}
+                            <div className="pt-2 border-t border-slate-800">
+                                <h5 className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-2">Merchant & Support</h5>
+                                <div className="space-y-1">
+                                    <Link
+                                        href="/register?role=vendor"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-amber-400 hover:bg-slate-800 font-medium"
+                                    >
+                                        <Store className="w-4 h-4" />
+                                        <span>Become a Seller</span>
+                                    </Link>
+                                    <Link
+                                        href="/help"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800"
+                                    >
+                                        <HelpCircle className="w-4 h-4" />
+                                        <span>Help & Support</span>
+                                    </Link>
+                                    <Link
+                                        href="/track-order"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800"
+                                    >
+                                        <Truck className="w-4 h-4" />
+                                        <span>Track Your Order</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Drawer Footer / Currency & Logout */}
+                        <div className="p-4 border-t border-slate-800 bg-slate-950 space-y-3">
+                            <div className="flex items-center justify-between text-[11px] text-slate-400">
+                                <span>Official Currency:</span>
+                                <span className="font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                    PKR (Rs.)
+                                </span>
+                            </div>
+                            {auth?.user && (
+                                <button
+                                    onClick={(e) => {
+                                        setIsMobileMenuOpen(false);
+                                        handleLogout(e);
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 text-xs font-bold border border-rose-500/20 transition-colors cursor-pointer"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span>Sign Out</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Notification Toast */}
             {notification && (
                 <div className="fixed bottom-6 right-6 z-50 max-w-md animate-in fade-in slide-in-from-bottom-5">
@@ -538,7 +776,7 @@ function StorefrontLayoutInner({ children }) {
             )}
 
             {/* Main Content Area */}
-            <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6">
                 {children}
             </main>
 
@@ -657,6 +895,9 @@ function StorefrontLayoutInner({ children }) {
                     <p>© 2026 Bizzhuss Multi-Vendor Marketplace Inc. Modeled for high conversion and enterprise scale.</p>
                 </div>
             </footer>
+
+            {/* Fixed Mobile Bottom Navigation Bar */}
+            <MobileBottomNav />
         </div>
     );
 }

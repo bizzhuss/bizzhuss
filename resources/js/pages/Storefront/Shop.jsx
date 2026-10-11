@@ -705,7 +705,7 @@ export default function Shop({
                                     }}
                                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 text-xs font-semibold hover:bg-emerald-200 transition-colors"
                                 >
-                                    <span>Price: ${filters.min_price || 0} – ${filters.max_price || '∞'}</span>
+                                    <span>Price: Rs. {Number(filters.min_price || 0).toLocaleString()} – {filters.max_price ? `Rs. ${Number(filters.max_price).toLocaleString()}` : '∞'}</span>
                                     <X className="w-3 h-3" />
                                 </button>
                             )}
@@ -886,9 +886,9 @@ export default function Shop({
                                 </div>
                             ) : (
                                 /* GRID VIEW (3 or 4 Columns) */
-                                <div className={`grid gap-4 ${
+                                <div className={`grid gap-3 sm:gap-4 ${
                                     viewMode === 'grid-3' 
-                                        ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+                                        ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3' 
                                         : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
                                 }`}>
                                     {products.data.map((product) => {

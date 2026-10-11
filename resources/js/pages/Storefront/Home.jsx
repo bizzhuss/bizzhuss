@@ -241,7 +241,7 @@ export default function Home({
                 <button
                     type="button"
                     onClick={(e) => handleToggleWishlist(product, e)}
-                    className={`absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full backdrop-blur-xs transition-colors cursor-pointer ${
+                    className={`absolute top-2.5 right-2.5 z-10 p-1.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-full backdrop-blur-xs transition-colors cursor-pointer ${
                         isInWishlist(product.id)
                             ? 'bg-rose-500 text-white shadow-sm'
                             : 'bg-black/40 text-white hover:bg-black/60'
@@ -252,7 +252,7 @@ export default function Home({
                 </button>
 
                 {/* Image Container */}
-                <Link href={`/product/${product.slug || product.id}`} className="relative h-48 bg-slate-100 overflow-hidden block">
+                <Link href={`/product/${product.slug || product.id}`} className="relative h-36 sm:h-48 bg-slate-100 overflow-hidden block">
                     <img
                         src={imageSrc}
                         alt={product.title}
@@ -267,47 +267,47 @@ export default function Home({
                 </Link>
 
                 {/* Card Content */}
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between space-y-2 sm:space-y-3">
                     <div>
                         {/* Vendor & Category Header */}
-                        <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+                        <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 mb-1">
                             <span className="truncate flex items-center gap-1 font-medium text-slate-600">
                                 <Store className="w-3 h-3 text-brand-500 shrink-0" />
                                 {vendorName}
                             </span>
-                            <span className="text-slate-400 text-[10px]">{product.category?.name}</span>
+                            <span className="text-slate-400 text-[9px] sm:text-[10px] hidden sm:inline">{product.category?.name}</span>
                         </div>
 
                         {/* Title */}
                         <Link 
                             href={`/product/${product.slug || product.id}`}
-                            className="text-xs font-bold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2 leading-snug"
+                            className="text-[11px] sm:text-xs font-bold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2 leading-snug"
                         >
                             {product.title}
                         </Link>
 
                         {/* Special Sale Title or Sublabel */}
                         {sublabel && (
-                            <p className="mt-1 text-[11px] font-bold text-rose-600 flex items-center gap-1">
+                            <p className="mt-1 text-[10px] sm:text-[11px] font-bold text-rose-600 flex items-center gap-1">
                                 <Flame className="w-3 h-3 text-rose-500 shrink-0" />
                                 <span className="truncate">{sublabel}</span>
                             </p>
                         )}
                         {!sublabel && product.total_sold_count > 0 && (
-                            <p className="mt-1 text-[11px] font-medium text-slate-500">
-                                <strong className="text-slate-700 font-bold">{product.total_sold_count}</strong> units sold
+                            <p className="mt-1 text-[10px] sm:text-[11px] font-medium text-slate-500">
+                                <strong className="text-slate-700 font-bold">{product.total_sold_count}</strong> sold
                             </p>
                         )}
                     </div>
 
                     {/* Price and Cart Button */}
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                        <div>
-                            <div className="text-base font-black text-slate-900 leading-tight">
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1">
+                        <div className="min-w-0 flex-1">
+                            <div className="text-sm sm:text-base font-black text-slate-900 leading-tight truncate">
                                 {formatCurrency(product.price)}
                             </div>
                             {product.compare_price && product.compare_price > product.price && (
-                                <div className="text-[11px] text-slate-400 line-through">
+                                <div className="text-[10px] sm:text-[11px] text-slate-400 line-through truncate">
                                     {formatCurrency(product.compare_price)}
                                 </div>
                             )}
@@ -316,7 +316,7 @@ export default function Home({
                         <button
                             type="button"
                             onClick={() => handleAddToCart(product)}
-                            className={`p-2 rounded-xl transition-all cursor-pointer ${
+                            className={`p-2 min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] flex items-center justify-center rounded-xl transition-all cursor-pointer shrink-0 ${
                                 isAdded 
                                     ? 'bg-emerald-600 text-white' 
                                     : 'bg-brand-500 hover:bg-brand-600 text-white shadow-sm shadow-brand-500/20'
@@ -379,11 +379,11 @@ export default function Home({
                     </div>
 
                     {/* Main Promo Banner Carousel */}
-                    <div className="lg:col-span-3 relative rounded-2xl overflow-hidden shadow-lg border border-slate-800 bg-slate-950 min-h-[340px] sm:min-h-[380px] flex items-center">
+                    <div className="lg:col-span-3 relative rounded-2xl overflow-hidden shadow-lg border border-slate-800 bg-slate-950 min-h-[260px] sm:min-h-[380px] flex items-center">
                         {activeSlides.map((slide, idx) => (
                             <div
                                 key={slide.id}
-                                className={`absolute inset-0 transition-opacity duration-700 flex flex-col md:flex-row items-center justify-between p-6 sm:p-10 ${
+                                className={`absolute inset-0 transition-opacity duration-700 flex flex-col md:flex-row items-center justify-between p-4 sm:p-10 ${
                                     idx === currentSlide ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
                                 }`}
                             >
@@ -393,29 +393,29 @@ export default function Home({
                                 />
                                 <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgGradient} opacity-90`} />
 
-                                <div className="relative z-10 max-w-lg space-y-3.5 text-white">
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-orange text-white font-black text-[10px] uppercase tracking-wider shadow-sm">
+                                <div className="relative z-10 max-w-lg space-y-2.5 sm:space-y-3.5 text-white">
+                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-orange text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider shadow-sm">
                                         <Sparkles className="w-3 h-3 text-white" />
                                         <span>{slide.tag}</span>
                                     </div>
 
-                                    <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
+                                    <h1 className="text-xl sm:text-4xl font-black tracking-tight leading-tight">
                                         {slide.title}
                                     </h1>
 
-                                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-2 sm:line-clamp-none">
                                         {slide.subtitle}
                                     </p>
 
-                                    <div className="pt-2 flex items-center gap-3">
+                                    <div className="pt-1.5 sm:pt-2 flex items-center gap-2.5 sm:gap-3">
                                         <a
                                             href={slide.ctaLink}
-                                            className="px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/25 transition-transform hover:scale-102 flex items-center gap-1.5 cursor-pointer"
+                                            className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/25 transition-transform hover:scale-102 flex items-center gap-1.5 cursor-pointer"
                                         >
                                             <span>{slide.ctaText}</span>
                                             <ArrowRight className="w-3.5 h-3.5" />
                                         </a>
-                                        <span className="text-xs font-bold text-accent-amber px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-xs border border-white/20">
+                                        <span className="text-[11px] sm:text-xs font-bold text-accent-amber px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white/10 backdrop-blur-xs border border-white/20">
                                             {slide.discount}
                                         </span>
                                     </div>
@@ -475,7 +475,7 @@ export default function Home({
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                         {featuredProducts.map((p, idx) => 
                             renderCard(p, {
                                 badge: p.sale_badge_label || (p.featured_order > 0 ? `Featured #${p.featured_order}` : 'Editor Pick'),
@@ -489,8 +489,8 @@ export default function Home({
 
             {/* 3. Special Sales & Promotional Offers (Daraz / Amazon Limited-Time Style) */}
             {specialSaleProducts.length > 0 && (
-                <section id="special-sales" className="mb-12 bg-gradient-to-br from-rose-950 via-slate-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white border border-rose-900/40 shadow-xl">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-rose-800/40 gap-4">
+                <section id="special-sales" className="mb-12 bg-gradient-to-br from-rose-950 via-slate-950 to-slate-900 rounded-3xl p-4 sm:p-8 text-white border border-rose-900/40 shadow-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 sm:pb-6 border-b border-rose-800/40 gap-3 sm:gap-4">
                         <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[11px] font-bold border border-rose-500/30">
@@ -498,7 +498,7 @@ export default function Home({
                                     <span>Special Flash Offer</span>
                                 </span>
                             </div>
-                            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                            <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight">
                                 Limited-Time Deals & Special Sale Offers
                             </h2>
                             <p className="text-xs text-slate-300">
@@ -507,26 +507,26 @@ export default function Home({
                         </div>
 
                         {/* Live Timer Countdown */}
-                        <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-2xl">
-                            <Clock className="w-4 h-4 text-amber-400" />
-                            <span className="text-xs font-semibold text-slate-300">Ends in:</span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-900/90 border border-slate-800 px-3 sm:px-4 py-1.5 sm:py-2.5 rounded-2xl shrink-0 self-start sm:self-auto">
+                            <Clock className="w-3.5 h-3.5 text-amber-400" />
+                            <span className="text-[11px] sm:text-xs font-semibold text-slate-300">Ends in:</span>
                             <div className="flex items-center gap-1 font-mono font-black text-xs text-white">
-                                <span className="bg-slate-800 px-2 py-1 rounded text-amber-400">
+                                <span className="bg-slate-800 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-amber-400">
                                     {String(timeLeft.hours).padStart(2, '0')}h
                                 </span>
                                 <span>:</span>
-                                <span className="bg-slate-800 px-2 py-1 rounded text-amber-400">
+                                <span className="bg-slate-800 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-amber-400">
                                     {String(timeLeft.minutes).padStart(2, '0')}m
                                 </span>
                                 <span>:</span>
-                                <span className="bg-rose-600 px-2 py-1 rounded text-white">
+                                <span className="bg-rose-600 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-white">
                                     {String(timeLeft.seconds).padStart(2, '0')}s
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                         {specialSaleProducts.map((p) => 
                             renderCard(p, {
                                 badge: p.sale_badge_label || p.special_sale_title || 'Mega Offer',
@@ -566,7 +566,7 @@ export default function Home({
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                         {bestSellingProducts.map((p, idx) => 
                             renderCard(p, {
                                 rank: idx + 1,
@@ -588,22 +588,22 @@ export default function Home({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-3.5">
                     {quickCategories.map((cat, idx) => {
                         const Icon = cat.icon;
                         return (
                             <Link
                                 key={idx}
                                 href={`/?category=${cat.slug}`}
-                                className="group bg-white p-5 rounded-2xl border border-slate-200/80 hover:border-brand-500 hover:shadow-md transition-all text-center flex flex-col items-center"
+                                className="group bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-brand-500 hover:shadow-md transition-all text-center flex flex-col items-center"
                             >
-                                <div className="w-14 h-14 rounded-2xl bg-brand-50 group-hover:bg-brand-500 text-brand-600 group-hover:text-white flex items-center justify-center transition-colors mb-3">
-                                    <Icon className="w-7 h-7" />
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-brand-50 group-hover:bg-brand-500 text-brand-600 group-hover:text-white flex items-center justify-center transition-colors mb-2.5 sm:mb-3">
+                                    <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
                                 </div>
                                 <h3 className="text-xs font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
                                     {cat.name}
                                 </h3>
-                                <p className="text-[11px] text-slate-400 mt-0.5">{cat.count}</p>
+                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">{cat.count}</p>
                             </Link>
                         );
                     })}
@@ -612,7 +612,7 @@ export default function Home({
 
             {/* 6. Budget Picks / Best Value Deals (Sorted by price ASC) */}
             {budgetPicks.length > 0 && (
-                <section id="budget-picks" className="mb-12 bg-amber-500/10 border border-amber-400/40 rounded-3xl p-6 sm:p-8">
+                <section id="budget-picks" className="mb-12 bg-amber-500/10 border border-amber-400/40 rounded-3xl p-4 sm:p-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-amber-200/60 mb-6 gap-2">
                         <div>
                             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">
@@ -635,7 +635,7 @@ export default function Home({
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                         {budgetPicks.map((p) => 
                             renderCard(p, {
                                 badge: p.sale_badge_label || 'Value Choice',
@@ -674,7 +674,7 @@ export default function Home({
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                         {(enterpriseHeavyDuty.length > 0 ? enterpriseHeavyDuty : premiumLuxury).map((p) => 
                             renderCard(p, {
                                 badge: p.sale_badge_label || 'Enterprise Flagship',
@@ -701,7 +701,7 @@ export default function Home({
                     </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                     {products.map((product) => 
                         renderCard(product, {
                             sublabel: product.is_on_special_sale ? product.special_sale_title : null,
