@@ -91,6 +91,30 @@ export default function Home({
     const [addedIds, setAddedIds] = useState({});
     const [inspectedStore, setInspectedStore] = useState(null);
 
+    // Touch swipe gestures state
+    const [touchStart, setTouchStart] = useState(null);
+    const [touchEnd, setTouchEnd] = useState(null);
+    const minSwipeDistance = 40;
+
+    const onTouchStart = (e) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const onTouchMove = (e) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        if (distance > minSwipeDistance) {
+            setCurrentSlide((prev) => (prev + 1) % (activeSlides.length || 1));
+        } else if (distance < -minSwipeDistance) {
+            setCurrentSlide((prev) => (prev - 1 + (activeSlides.length || 1)) % (activeSlides.length || 1));
+        }
+    };
+
     // Dynamic Banner Slides with fallback
     const activeSlides = (banners && banners.length > 0)
         ? banners.map((b, idx) => ({
@@ -378,73 +402,111 @@ export default function Home({
                         </div>
                     </div>
 
-                    {/* Main Promo Banner Carousel */}
-                    <div className="lg:col-span-3 relative rounded-2xl overflow-hidden shadow-lg border border-slate-800 bg-slate-950 min-h-[260px] sm:min-h-[380px] flex items-center">
-                        {activeSlides.map((slide, idx) => (
-                            <div
-                                key={slide.id}
-                                className={`absolute inset-0 transition-opacity duration-700 flex flex-col md:flex-row items-center justify-between p-4 sm:p-10 ${
-                                    idx === currentSlide ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
-                                }`}
-                            >
-                                <div 
-                                    className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay"
-                                    style={{ backgroundImage: `url(${slide.image})` }}
-                                />
-                                <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgGradient} opacity-90`} />
-
-                                <div className="relative z-10 max-w-lg space-y-2.5 sm:space-y-3.5 text-white">
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-orange text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider shadow-sm">
-                                        <Sparkles className="w-3 h-3 text-white" />
-                                        <span>{slide.tag}</span>
-                                    </div>
-
-                                    <h1 className="text-xl sm:text-4xl font-black tracking-tight leading-tight">
-                                        {slide.title}
-                                    </h1>
-
-                                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-2 sm:line-clamp-none">
-                                        {slide.subtitle}
-                                    </p>
-
-                                    <div className="pt-1.5 sm:pt-2 flex items-center gap-2.5 sm:gap-3">
-                                        <a
-                                            href={slide.ctaLink}
-                                            className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/25 transition-transform hover:scale-102 flex items-center gap-1.5 cursor-pointer"
-                                        >
-                                            <span>{slide.ctaText}</span>
-                                            <ArrowRight className="w-3.5 h-3.5" />
-                                        </a>
-                                        <span className="text-[11px] sm:text-xs font-bold text-accent-amber px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-white/10 backdrop-blur-xs border border-white/20">
-                                            {slide.discount}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="relative z-10 hidden md:block shrink-0 max-w-[280px]">
-                                    <img
-                                        src={slide.image}
-                                        alt={slide.title}
-                                        className="w-64 h-64 object-cover rounded-2xl shadow-2xl border-2 border-white/20 transform rotate-1 hover:rotate-0 transition-transform duration-300"
+                    {/* Main Promo Banner Carousel with Touch Gestures */}
+                    <div
+                        className="lg:col-span-3 relative flex flex-col justify-between"
+                        onTouchStart={onTouchStart}
+                        onTouchMove={onTouchMove}
+                        onTouchEnd={onTouchEnd}
+                    >
+                        <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-800 bg-slate-950 min-h-[260px] sm:min-h-[380px] flex items-center">
+                            {activeSlides.map((slide, idx) => (
+                                <div
+                                    key={slide.id}
+                                    className={`absolute inset-0 transition-opacity duration-700 flex flex-col md:flex-row items-start md:items-center justify-between p-5 sm:p-10 ${
+                                        idx === currentSlide ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+                                    }`}
+                                >
+                                    {/* Background Image */}
+                                    <div 
+                                        className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay"
+                                        style={{ backgroundImage: `url(${slide.image})` }}
                                     />
-                                </div>
-                            </div>
-                        ))}
+                                    {/* Mobile vertical gradient overlay & desktop horizontal gradient */}
+                                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+                                    <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgGradient} opacity-60 hidden md:block`} />
 
-                        <button
-                            type="button"
-                            onClick={() => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % activeSlides.length)}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-xs transition-colors cursor-pointer"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setCurrentSlide((prev) => (prev + 1) % activeSlides.length)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-xs transition-colors cursor-pointer"
-                        >
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
+                                    {/* Content Column */}
+                                    <div className="relative z-10 max-w-lg flex flex-col justify-between h-full md:h-auto text-white">
+                                        <div>
+                                            {/* Tag Badge */}
+                                            <div className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 font-semibold rounded-full w-fit mb-2 bg-blue-600 text-white shadow-xs">
+                                                <Sparkles className="w-3 h-3 text-white" />
+                                                <span>{slide.tag}</span>
+                                            </div>
+
+                                            {/* Title */}
+                                            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold leading-tight line-clamp-2 text-white">
+                                                {slide.title}
+                                            </h1>
+
+                                            {/* Subtitle / Description */}
+                                            <p className="text-xs sm:text-sm text-slate-300 line-clamp-2 mt-1.5 mb-4 leading-relaxed">
+                                                {slide.subtitle}
+                                            </p>
+                                        </div>
+
+                                        {/* Mobile Action Buttons */}
+                                        <div className="flex items-center gap-2.5 flex-wrap">
+                                            <a
+                                                href={slide.ctaLink}
+                                                className="px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-blue-600 text-white shadow-md active:scale-95 flex items-center justify-center gap-2 transition-all hover:bg-blue-700 cursor-pointer"
+                                            >
+                                                <span>{slide.ctaText}</span>
+                                                <ArrowRight className="w-3.5 h-3.5" />
+                                            </a>
+                                            <span className="px-3 py-2 text-xs text-slate-300 bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 font-medium">
+                                                {slide.discount}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Desktop Product Image */}
+                                    <div className="relative z-10 hidden md:block shrink-0 max-w-[280px]">
+                                        <img
+                                            src={slide.image}
+                                            alt={slide.title}
+                                            className="w-64 h-64 object-cover rounded-2xl shadow-2xl border-2 border-white/20 transform rotate-1 hover:rotate-0 transition-transform duration-300"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Carousel Arrow Controls (Hidden on Mobile) */}
+                            <button
+                                type="button"
+                                onClick={() => setCurrentSlide((prev) => (prev - 1 + activeSlides.length) % activeSlides.length)}
+                                className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white items-center justify-center backdrop-blur-xs transition-colors cursor-pointer"
+                                aria-label="Previous slide"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCurrentSlide((prev) => (prev + 1) % activeSlides.length)}
+                                className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-white items-center justify-center backdrop-blur-xs transition-colors cursor-pointer"
+                                aria-label="Next slide"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Subtle Pagination Dot Indicators */}
+                        <div className="flex justify-center items-center gap-1.5 mt-3">
+                            {activeSlides.map((_, dotIdx) => (
+                                <button
+                                    key={`dot-${dotIdx}`}
+                                    type="button"
+                                    onClick={() => setCurrentSlide(dotIdx)}
+                                    className={`transition-all duration-300 cursor-pointer ${
+                                        dotIdx === currentSlide
+                                            ? 'w-5 h-1.5 bg-blue-600 rounded-full'
+                                            : 'w-1.5 h-1.5 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 rounded-full'
+                                    }`}
+                                    aria-label={`Go to slide ${dotIdx + 1}`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </section>
