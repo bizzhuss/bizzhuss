@@ -39,6 +39,17 @@ function StorefrontLayoutInner({ children }) {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+    const user = auth?.user;
+    const userAvatarRaw = user?.avatar || user?.profile_photo_url || user?.profile_picture;
+    const userAvatarUrl = userAvatarRaw
+        ? (userAvatarRaw.startsWith('http') || userAvatarRaw.startsWith('/storage/')
+            ? userAvatarRaw
+            : `/storage/${userAvatarRaw}`)
+        : null;
+    const userInitials = user?.name
+        ? user.name.split(' ').map((n) => n[0]).filter(Boolean).join('').slice(0, 2).toUpperCase()
+        : 'U';
+
     useEffect(() => {
         if (flash?.success) {
             showNotification(flash.success, 'success');
@@ -287,10 +298,10 @@ function StorefrontLayoutInner({ children }) {
                                         className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-800 transition-colors text-left cursor-pointer"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs border border-white/20 overflow-hidden shrink-0">
-                                            {auth.user.avatar ? (
-                                                <img src={auth.user.avatar} alt={auth.user.name} className="w-full h-full object-cover" />
+                                            {userAvatarUrl ? (
+                                                <img src={userAvatarUrl} alt={user.name} className="w-full h-full object-cover" />
                                             ) : (
-                                                auth.user.name.slice(0, 2).toUpperCase()
+                                                userInitials
                                             )}
                                         </div>
                                         <div className="hidden lg:block">
@@ -461,10 +472,10 @@ function StorefrontLayoutInner({ children }) {
                                     aria-label="My Account"
                                 >
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs border border-white/20 overflow-hidden shrink-0 shadow-xs">
-                                        {auth.user.avatar ? (
-                                            <img src={auth.user.avatar} alt={auth.user.name} className="w-full h-full object-cover" />
+                                        {userAvatarUrl ? (
+                                            <img src={userAvatarUrl} alt={user.name} className="w-full h-full object-cover" />
                                         ) : (
-                                            auth.user.name ? auth.user.name.slice(0, 2).toUpperCase() : 'US'
+                                            userInitials
                                         )}
                                     </div>
                                 </Link>
@@ -642,15 +653,23 @@ function StorefrontLayoutInner({ children }) {
 
                         {/* User Profile / Auth Action */}
                         <div className="p-4 bg-slate-800/60 border-b border-slate-800">
-                            {auth?.user ? (
+                            {user ? (
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 border border-white/20">
-                                        {auth.user.name ? auth.user.name.slice(0, 2).toUpperCase() : 'US'}
-                                    </div>
+                                    {userAvatarUrl ? (
+                                        <img 
+                                            src={userAvatarUrl} 
+                                            alt={user.name} 
+                                            className="h-12 w-12 rounded-full object-cover border-2 border-brand ring-2 ring-white/10 shadow-md shrink-0"
+                                        />
+                                    ) : (
+                                        <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-md shrink-0 border border-white/20">
+                                            {userInitials}
+                                        </div>
+                                    )}
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-bold text-white text-xs truncate">{auth.user.name}</p>
+                                        <p className="font-bold text-white text-xs truncate">{user.name}</p>
                                         <span className="inline-block mt-0.5 text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30">
-                                            {auth.user.role ? auth.user.role.replace('_', ' ') : 'User'}
+                                            {user.role ? user.role.replace('_', ' ') : 'User'}
                                         </span>
                                     </div>
                                 </div>
