@@ -64,32 +64,22 @@ export function MobileBottomNav() {
             {/* Home */}
             <Link
                 href="/"
-                className={`flex flex-col items-center justify-center min-w-[56px] py-1 transition-all ${
-                    isHomeActive ? 'text-brand-600 font-bold' : 'text-slate-500 hover:text-slate-900'
+                className={`flex flex-col items-center justify-center min-w-[56px] py-1 transition-colors ${
+                    isHomeActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-700 font-normal'
                 }`}
             >
-                <div className="relative">
-                    <Home className={`w-5 h-5 transition-transform ${isHomeActive ? 'scale-110' : ''}`} />
-                    {isHomeActive && (
-                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand-500" />
-                    )}
-                </div>
+                <Home className="w-5 h-5" />
                 <span className="text-[10px] mt-1 tracking-tight">Home</span>
             </Link>
 
             {/* Shop / Categories */}
             <Link
                 href="/shop"
-                className={`flex flex-col items-center justify-center min-w-[56px] py-1 transition-all ${
-                    isShopActive ? 'text-brand-600 font-bold' : 'text-slate-500 hover:text-slate-900'
+                className={`flex flex-col items-center justify-center min-w-[56px] py-1 transition-colors ${
+                    isShopActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-700 font-normal'
                 }`}
             >
-                <div className="relative">
-                    <LayoutGrid className={`w-5 h-5 transition-transform ${isShopActive ? 'scale-110' : ''}`} />
-                    {isShopActive && (
-                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand-500" />
-                    )}
-                </div>
+                <LayoutGrid className="w-5 h-5" />
                 <span className="text-[10px] mt-1 tracking-tight">Shop</span>
             </Link>
 
@@ -97,7 +87,7 @@ export function MobileBottomNav() {
             <button
                 type="button"
                 onClick={handleCartClick}
-                className="flex flex-col items-center justify-center min-w-[56px] py-1 text-slate-500 hover:text-slate-900 cursor-pointer active:scale-95 transition-all"
+                className="flex flex-col items-center justify-center min-w-[56px] py-1 text-slate-500 hover:text-slate-700 font-normal cursor-pointer active:scale-95 transition-all"
             >
                 <div className="relative">
                     <ShoppingCart className="w-5 h-5" />
@@ -114,19 +104,16 @@ export function MobileBottomNav() {
             <Link
                 href={auth?.user ? "/wishlist" : "/login"}
                 onClick={handleWishlistClick}
-                className={`flex flex-col items-center justify-center min-w-[56px] py-1 transition-all ${
-                    isWishlistActive ? 'text-rose-600 font-bold' : 'text-slate-500 hover:text-slate-900'
+                className={`flex flex-col items-center justify-center min-w-[56px] py-1 transition-colors ${
+                    isWishlistActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-700 font-normal'
                 }`}
             >
                 <div className="relative">
-                    <Heart className={`w-5 h-5 transition-transform ${isWishlistActive ? 'fill-rose-500 text-rose-500 scale-110' : ''}`} />
+                    <Heart className={`w-5 h-5 ${isWishlistActive ? 'fill-blue-600 text-blue-600' : ''}`} />
                     {auth?.user && wishlistCount > 0 && (
                         <span className="absolute -top-1.5 -right-2 bg-rose-500 text-white text-[10px] font-black px-1 rounded-full min-w-4 text-center ring-2 ring-white shadow-xs">
                             {wishlistCount}
                         </span>
-                    )}
-                    {isWishlistActive && (
-                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-rose-500" />
                     )}
                 </div>
                 <span className="text-[10px] mt-1 tracking-tight">Wishlist</span>
@@ -135,16 +122,11 @@ export function MobileBottomNav() {
             {/* Account / Login */}
             <Link
                 href={getAccountHref()}
-                className={`flex flex-col items-center justify-center min-w-[56px] py-1 transition-all ${
-                    isAccountActive ? 'text-brand-600 font-bold' : 'text-slate-500 hover:text-slate-900'
+                className={`flex flex-col items-center justify-center min-w-[56px] py-1 transition-colors ${
+                    isAccountActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-700 font-normal'
                 }`}
             >
-                <div className="relative">
-                    <User className={`w-5 h-5 transition-transform ${isAccountActive ? 'scale-110' : ''}`} />
-                    {isAccountActive && (
-                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand-500" />
-                    )}
-                </div>
+                <User className="w-5 h-5" />
                 <span className="text-[10px] mt-1 tracking-tight">
                     {auth?.user ? (auth.user.name ? auth.user.name.split(' ')[0] : 'Account') : 'Sign In'}
                 </span>
