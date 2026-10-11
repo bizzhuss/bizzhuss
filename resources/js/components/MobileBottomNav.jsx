@@ -59,7 +59,7 @@ export function MobileBottomNav() {
     return (
         <aside 
             aria-label="Mobile Navigation"
-            className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-1.5 px-2 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.08)] select-none"
+            className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-1.5 px-2 flex justify-around items-center shadow-[0_-4px_20px_rgba(0,0,0,0.08)] select-none"
         >
             {/* Home */}
             <Link

@@ -59,6 +59,18 @@ function StorefrontLayoutInner({ children }) {
         }
     }, [flash]);
 
+    // Lock body scroll when mobile drawer is open
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isMobileMenuOpen]);
+
     const handleSearch = (e) => {
         e.preventDefault();
         router.get('/shop', {
@@ -624,17 +636,17 @@ function StorefrontLayoutInner({ children }) {
 
             {/* Slide-out Mobile Navigation Drawer */}
             {isMobileMenuOpen && (
-                <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
+                <div className="md:hidden">
                     {/* Backdrop Overlay */}
                     <div 
-                        className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity"
+                        className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm cursor-pointer transition-opacity animate-in fade-in duration-200"
                         onClick={() => setIsMobileMenuOpen(false)}
                     />
                     
-                    {/* Drawer Panel */}
-                    <div className="relative w-4/5 max-w-xs bg-slate-900 text-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto z-10 border-r border-slate-800">
+                    {/* Drawer Panel Container */}
+                    <div className="fixed inset-y-0 left-0 w-[85%] max-w-xs h-screen h-[100dvh] bg-[#0d1527] text-white shadow-2xl flex flex-col z-[80] border-r border-slate-800 animate-in slide-in-from-left duration-200">
                         {/* Top Drawer Header */}
-                        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950 shrink-0">
                             <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2">
                                 <ApplicationLogo asLink={false} className="w-8 h-8 rounded-lg shadow-sm" />
                                 <span className="text-lg font-black text-white">
@@ -652,7 +664,7 @@ function StorefrontLayoutInner({ children }) {
                         </div>
 
                         {/* User Profile / Auth Action */}
-                        <div className="p-4 bg-slate-800/60 border-b border-slate-800">
+                        <div className="p-4 bg-slate-800/60 border-b border-slate-800 shrink-0">
                             {user ? (
                                 <div className="flex items-center gap-3">
                                     {userAvatarUrl ? (
@@ -841,7 +853,7 @@ function StorefrontLayoutInner({ children }) {
                         </div>
 
                         {/* Drawer Footer / Currency & Logout */}
-                        <div className="p-4 border-t border-slate-800 bg-slate-950 space-y-3">
+                        <div className="p-4 border-t border-slate-800 bg-slate-950 space-y-3 shrink-0 pb-8 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
                             {auth?.user && (
                                 <div className="pb-1 border-b border-slate-800/80">
                                     <Link 
