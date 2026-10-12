@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use GuzzleHttp\Client;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,11 +14,35 @@ use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse
 class SocialAuthController extends Controller
 {
     /**
+     * Build an HTTP client optimized for Windows environments (resolves IPv4 & verifies SSL).
+     */
+    protected function getHttpClient(): Client
+    {
+        $options = [
+            'force_ip_resolve' => 'v4',
+            'curl' => [
+                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+            ],
+            'timeout' => 20,
+        ];
+
+        // Ensure Windows / XAMPP CA cert bundle is picked up if present
+        if (file_exists('C:\\xampp\\apache\\bin\\curl-ca-bundle.crt')) {
+            $options['verify'] = 'C:\\xampp\\apache\\bin\\curl-ca-bundle.crt';
+        }
+
+        return new Client($options);
+    }
+
+    /**
      * Redirect the user to the Google authentication page.
      */
     public function redirectToGoogle(): SymfonyRedirectResponse|RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        $driver = Socialite::driver('google');
+        $driver->setHttpClient($this->getHttpClient());
+
+        return $driver->stateless()->redirect();
     }
 
     /**
@@ -26,8 +51,11 @@ class SocialAuthController extends Controller
     public function handleGoogleCallback(Request $request): RedirectResponse
     {
         try {
+            $driver = Socialite::driver('google');
+            $driver->setHttpClient($this->getHttpClient());
+
             /** @var \Laravel\Socialite\Two\User $googleUser */
-            $googleUser = Socialite::driver('google')->user();
+            $googleUser = $driver->stateless()->user();
 
             if (!$googleUser || !$googleUser->getEmail()) {
                 return redirect()->route('login')->with('error', 'Google authentication failed: Email address could not be retrieved.');
@@ -82,7 +110,7 @@ class SocialAuthController extends Controller
             };
         } catch (\Throwable $e) {
             Log::error('Google OAuth Error: ' . $e->getMessage(), [
-                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return redirect()->route('login')->with('error', 'Unable to authenticate with Google. Please try again or use email/password.');
