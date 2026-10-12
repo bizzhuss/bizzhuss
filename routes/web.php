@@ -18,6 +18,7 @@ use App\Http\Controllers\MarketingCurationController;
 use App\Http\Controllers\MarketingBannerController;
 use App\Http\Controllers\MarketingCampaignController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -80,6 +81,8 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 // Tier 1B: Dedicated Customer Portal (Strictly role:customer)
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
