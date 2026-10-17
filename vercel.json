@@ -2,6 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "framework": null,
+  "outputDirectory": "public",
   "buildCommand": "npm run build",
   "functions": {
     "api/index.php": {
@@ -11,23 +12,14 @@
   },
   "routes": [
     {
-      "src": "/build/(.*)",
-      "dest": "/public/build/$1",
+      "src": "/build/assets/(.*)",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
-      }
+      },
+      "continue": true
     },
     {
-      "src": "/images/(.*)",
-      "dest": "/public/images/$1"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
-    },
-    {
-      "src": "/robots.txt",
-      "dest": "/public/robots.txt"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
