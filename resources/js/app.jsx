@@ -35,8 +35,8 @@ function getInitialPage() {
 
 const initialPage = getInitialPage();
 
-import { CartProvider } from '@/Context/CartContext';
-import { WishlistProvider } from '@/Context/WishlistContext';
+import { CartProvider } from '@/context/CartContext';
+import { WishlistProvider } from '@/context/WishlistContext';
 import { AppProvider } from '@/context/AppContext';
 
 createInertiaApp({

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
-import { useCart } from '@/Context/CartContext';
-import { useWishlist } from '@/Context/WishlistContext';
+import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { useNotification } from '@/hooks/useNotification';
 
 const AppContext = createContext(null);

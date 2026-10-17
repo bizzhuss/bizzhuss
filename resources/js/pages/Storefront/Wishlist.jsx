@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
-import { useWishlist } from '@/Context/WishlistContext';
-import { useCart } from '@/Context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
+import { useCart } from '@/context/CartContext';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency } from '@/lib/utils';
 import { 

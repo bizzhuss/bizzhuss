@@ -13,6 +13,13 @@ export default defineConfig({
     resolve: {
         alias: {
             '@/Components': '/resources/js/components',
+            '@/components': '/resources/js/components',
+            '@/Context': '/resources/js/context',
+            '@/context': '/resources/js/context',
+            '@/Layouts': '/resources/js/Layouts',
+            '@/layouts': '/resources/js/Layouts',
+            '@/Utils': '/resources/js/Utils',
+            '@/utils': '/resources/js/Utils',
             '@': '/resources/js',
         },
     },
