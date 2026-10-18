@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse
 class SocialAuthController extends Controller
 {
     /**
-     * Build an HTTP client optimized for Windows environments (resolves IPv4 & verifies SSL).
+     * Build an HTTP client optimized for Windows and Linux environments (resolves IPv4 & verifies SSL).
      */
     protected function getHttpClient(): Client
     {
@@ -26,7 +26,7 @@ class SocialAuthController extends Controller
             'timeout' => 20,
         ];
 
-        // Ensure Windows / XAMPP CA cert bundle is picked up if present
+        // Ensure Windows / XAMPP CA cert bundle is picked up if present to avoid cURL error 60
         if (file_exists('C:\\xampp\\apache\\bin\\curl-ca-bundle.crt')) {
             $options['verify'] = 'C:\\xampp\\apache\\bin\\curl-ca-bundle.crt';
         }
@@ -39,10 +39,7 @@ class SocialAuthController extends Controller
      */
     public function redirectToGoogle(): SymfonyRedirectResponse|RedirectResponse
     {
-        $driver = Socialite::driver('google');
-        $driver->setHttpClient($this->getHttpClient());
-
-        return $driver->stateless()->redirect();
+        return Socialite::driver('google')->redirect();
     }
 
     /**
@@ -67,32 +64,22 @@ class SocialAuthController extends Controller
                 ->first();
 
             if ($user) {
-                // Link account if Google ID was not set
-                if (empty($user->google_id)) {
-                    $user->google_id = $googleUser->getId();
-                }
-
-                // If user doesn't have an avatar or it's default, update with Google's avatar
-                if ((empty($user->avatar) || str_contains($user->avatar, 'images.unsplash.com')) && $googleUser->getAvatar()) {
-                    $user->avatar = $googleUser->getAvatar();
-                }
-
-                if (!$user->email_verified_at) {
-                    $user->email_verified_at = now();
-                }
-
-                $user->save();
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $user->avatar ?? $googleUser->getAvatar(),
+                    'approval_status' => $user->approval_status ?? 'approved',
+                ]);
             } else {
-                // Register a new customer user via Google OAuth
                 $user = User::create([
                     'name' => $googleUser->getName() ?: ($googleUser->getNickname() ?: 'Google User'),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar() ?: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+                    'avatar' => $googleUser->getAvatar(),
+                    'password' => null,
                     'role' => 'customer',
                     'status' => 'active',
+                    'approval_status' => 'approved',
                     'email_verified_at' => now(),
-                    'password' => null,
                 ]);
             }
 
@@ -113,7 +100,7 @@ class SocialAuthController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->route('login')->with('error', 'Unable to authenticate with Google. Please try again or use email/password.');
+            return redirect()->route('login')->with('error', 'Unable to authenticate with Google (' . $e->getMessage() . '). Please try again or use email/password.');
         }
     }
 }
