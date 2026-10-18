@@ -35,7 +35,8 @@ import {
     Briefcase,
     ShieldCheck,
     CheckSquare,
-    Square
+    Square,
+    Sparkles
 } from 'lucide-react';
 
 export default function PlatformSettings({ 
@@ -150,6 +151,7 @@ export default function PlatformSettings({
                 banner: cat.banner || '',
                 commission_rate: cat.commission_rate || '',
                 parent_id: cat.parent_id || '',
+                is_verified_featured: Boolean(cat.is_verified_featured),
             });
         } else {
             setEditingCategory(null);
@@ -160,9 +162,16 @@ export default function PlatformSettings({
                 banner: '',
                 commission_rate: '',
                 parent_id: '',
+                is_verified_featured: false,
             });
         }
         setIsCategoryModalOpen(true);
+    };
+
+    const handleToggleVerifiedFeatured = (cat) => {
+        router.post(`/admin/settings/categories/${cat.id}/toggle-featured`, {}, {
+            preserveScroll: true,
+        });
     };
 
     const handleCategorySubmit = (e) => {
@@ -634,6 +643,7 @@ export default function PlatformSettings({
                                         <th className="px-4 py-3.5">Banner Image</th>
                                         <th className="px-4 py-3.5 text-center">Products</th>
                                         <th className="px-4 py-3.5 text-center">Custom Fee</th>
+                                        <th className="px-4 py-3.5 text-center">Verified Showcase</th>
                                         <th className="px-5 py-3.5 text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -686,6 +696,22 @@ export default function PlatformSettings({
                                                 ) : (
                                                     <span className="text-slate-400 text-[11px]">Standard (10%)</span>
                                                 )}
+                                            </td>
+
+                                            <td className="px-4 py-4 text-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleToggleVerifiedFeatured(cat)}
+                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                                                        cat.is_verified_featured
+                                                            ? 'bg-amber-500/15 text-amber-700 border border-amber-500/30 hover:bg-amber-500/25 shadow-xs'
+                                                            : 'bg-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-200 border border-slate-200'
+                                                    }`}
+                                                    title="Click to toggle feature in 'Shop by Verified Category' on storefront home"
+                                                >
+                                                    <Sparkles className={`w-3.5 h-3.5 ${cat.is_verified_featured ? 'text-amber-500 fill-amber-500' : 'text-slate-400'}`} />
+                                                    <span>{cat.is_verified_featured ? 'Featured' : 'Not Featured'}</span>
+                                                </button>
                                             </td>
 
                                             <td className="px-5 py-4 text-right">
@@ -921,6 +947,26 @@ export default function PlatformSettings({
                                     placeholder="e.g. 8.5"
                                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none"
                                 />
+                            </div>
+
+                            <div>
+                                <label className="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer hover:bg-slate-100/70 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={categoryForm.is_verified_featured}
+                                        onChange={(e) => setCategoryForm({ ...categoryForm, is_verified_featured: e.target.checked })}
+                                        className="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer"
+                                    />
+                                    <div className="flex-1">
+                                        <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                            Feature in &quot;Shop by Verified Category&quot;
+                                        </span>
+                                        <span className="block text-[11px] text-slate-500 mt-0.5">
+                                            Showcase this category prominently on the storefront homepage under Verified Categories.
+                                        </span>
+                                    </div>
+                                </label>
                             </div>
 
                             <div className="flex items-center justify-end gap-3 pt-3">

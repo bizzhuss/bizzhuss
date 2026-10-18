@@ -225,6 +225,9 @@ export default function Home({
     const rootCategories = Array.isArray(pageCategories) ? pageCategories.filter((c) => !c.parent_id) : [];
     const displayCategories = rootCategories.length > 0 ? rootCategories : (Array.isArray(pageCategories) ? pageCategories : []);
 
+    const verifiedFeatured = Array.isArray(pageCategories) ? pageCategories.filter((c) => Boolean(c.is_verified_featured)) : [];
+    const displayVerifiedCategories = verifiedFeatured.length > 0 ? verifiedFeatured : displayCategories;
+
     // Reusable Product Card Component
     const renderCard = (product, { badge, badgeColor, sublabel, rank } = {}) => {
         const isAdded = addedIds[product.id];
@@ -673,15 +676,21 @@ export default function Home({
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-3.5">
-                    {displayCategories && displayCategories.length > 0 ? (
-                        displayCategories.map((cat) => {
+                    {displayVerifiedCategories && displayVerifiedCategories.length > 0 ? (
+                        displayVerifiedCategories.map((cat) => {
                             const Icon = getCategoryIcon(cat.icon);
                             return (
                                 <Link
                                     key={cat.id || cat.slug}
                                     href={`/category/${cat.slug}`}
-                                    className="group bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-brand-500 hover:shadow-md transition-all text-center flex flex-col items-center"
+                                    className="group relative bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-brand-500 hover:shadow-md transition-all text-center flex flex-col items-center"
                                 >
+                                    {cat.is_verified_featured && (
+                                        <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200 text-[9px] font-bold">
+                                            <Sparkles className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                                            <span>Featured</span>
+                                        </span>
+                                    )}
                                     <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-brand-50 group-hover:bg-brand-500 text-brand-600 group-hover:text-white flex items-center justify-center transition-colors mb-2.5 sm:mb-3">
                                         <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
                                     </div>

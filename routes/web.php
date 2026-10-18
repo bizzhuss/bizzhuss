@@ -135,6 +135,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::post('/settings/maintenance-mode', [AdminSettingController::class, 'updateMaintenanceMode'])->name('settings.maintenance');
     Route::post('/settings/categories', [AdminSettingController::class, 'storeCategory'])->name('settings.categories.store');
     Route::put('/settings/categories/{category}', [AdminSettingController::class, 'updateCategory'])->name('settings.categories.update');
+    Route::post('/settings/categories/{category}/toggle-featured', [AdminSettingController::class, 'toggleVerifiedFeatured'])->name('settings.categories.toggle-featured');
     Route::delete('/settings/categories/{category}', [AdminSettingController::class, 'destroyCategory'])->name('settings.categories.destroy');
     Route::post('/settings/payouts/{payout}/approve', [AdminSettingController::class, 'approvePayout'])->name('settings.payouts.approve');
     Route::post('/settings/payouts/{payout}/reject', [AdminSettingController::class, 'rejectPayout'])->name('settings.payouts.reject');

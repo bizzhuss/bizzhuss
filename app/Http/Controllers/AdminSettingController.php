@@ -141,6 +141,7 @@ class AdminSettingController extends Controller
             'banner' => 'nullable|string|max:500',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'parent_id' => 'nullable|exists:categories,id',
+            'is_verified_featured' => 'nullable|boolean',
         ]);
 
         if (empty($validated['slug'])) {
@@ -164,11 +165,26 @@ class AdminSettingController extends Controller
             'banner' => 'nullable|string|max:500',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'parent_id' => 'nullable|exists:categories,id',
+            'is_verified_featured' => 'nullable|boolean',
         ]);
 
         $category->update($validated);
 
         return redirect()->back()->with('success', "Category '{$category->name}' updated successfully.");
+    }
+
+    /**
+     * Toggle featured status for Shop by Verified Category section.
+     */
+    public function toggleVerifiedFeatured(Category $category)
+    {
+        $newStatus = !$category->is_verified_featured;
+        $category->update([
+            'is_verified_featured' => $newStatus,
+        ]);
+
+        $statusText = $newStatus ? 'featured in' : 'removed from';
+        return redirect()->back()->with('success', "Category '{$category->name}' {$statusText} 'Shop by Verified Category'.");
     }
 
     /**
