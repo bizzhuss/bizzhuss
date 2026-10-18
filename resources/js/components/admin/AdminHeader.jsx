@@ -17,7 +17,9 @@ import { cn } from '@/lib/utils';
 import { ApplicationLogo } from '@/components/ApplicationLogo';
 
 export function AdminHeader({ title, subtitle, actions }) {
-    const { url, maintenance } = usePage().props;
+    const page = usePage();
+    const url = page.url || (typeof window !== 'undefined' ? window.location.pathname : '') || '';
+    const { maintenance } = page.props || {};
     const isMaintenanceActive = maintenance?.is_enabled || false;
 
     const navTabs = [
@@ -30,37 +32,37 @@ export function AdminHeader({ title, subtitle, actions }) {
         {
             name: 'Vendor Oversight',
             href: '/admin/vendors',
-            active: url.startsWith('/admin/vendors'),
+            active: url?.startsWith('/admin/vendors') || false,
             icon: Store,
         },
         {
             name: 'Storefront Curation',
             href: '/admin/marketing/curation',
-            active: url.startsWith('/admin/marketing/curation') || url.startsWith('/admin/curation'),
+            active: (url?.startsWith('/admin/marketing/curation') || url?.startsWith('/admin/curation')) || false,
             icon: Sparkles,
         },
         {
             name: 'Departments',
             href: '/admin/workforce/departments',
-            active: url.startsWith('/admin/workforce/departments'),
+            active: url?.startsWith('/admin/workforce/departments') || false,
             icon: Building2,
         },
         {
             name: 'Workforce Directory',
             href: '/admin/workforce/employees',
-            active: url.startsWith('/admin/workforce/employees'),
+            active: url?.startsWith('/admin/workforce/employees') || false,
             icon: Users,
         },
         {
             name: 'Task Delegation & Kanban',
             href: '/admin/workforce/tasks',
-            active: url.startsWith('/admin/workforce/tasks'),
+            active: url?.startsWith('/admin/workforce/tasks') || false,
             icon: CheckSquare,
         },
         {
             name: 'Platform Settings',
             href: '/admin/settings',
-            active: url.startsWith('/admin/settings'),
+            active: url?.startsWith('/admin/settings') || false,
             icon: Settings,
         },
     ];

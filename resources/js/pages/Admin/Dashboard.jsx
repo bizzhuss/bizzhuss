@@ -40,6 +40,9 @@ export default function AdminDashboard({
     recentOrders = [],
     auth = {}
 }) {
+    const permissions = auth?.user?.permissions || [];
+    const isSuperAdmin = auth?.user?.role === 'super_admin' || permissions.includes('*');
+
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [selectedVendorForReview, setSelectedVendorForReview] = useState(null);
 

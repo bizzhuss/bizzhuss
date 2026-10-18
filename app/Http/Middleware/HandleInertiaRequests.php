@@ -43,6 +43,9 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'role' => $request->user()->role,
                     'avatar' => $request->user()->avatar,
+                    'permissions' => method_exists($request->user(), 'getAllPermissions')
+                        ? $request->user()->getAllPermissions()->pluck('name')->toArray()
+                        : ($request->user()->role === 'super_admin' ? ['*'] : []),
                 ] : null,
             ],
             'maintenance' => [
