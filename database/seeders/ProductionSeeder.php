@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\PromotionalCampaign;
+use App\Models\Setting;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Vendor;
@@ -26,6 +27,7 @@ class ProductionSeeder extends Seeder
      * - Master Super Admin account (driven by INITIAL_ADMIN_PASSWORD env var)
      * - Marketplace category taxonomy
      * - Enterprise departments and designations
+     * - Production platform settings (Maintenance mode OFF)
      * - Zero mock products, orders, vendors, or tasks
      */
     public function run(): void
@@ -44,6 +46,7 @@ class ProductionSeeder extends Seeder
         Designation::truncate();
         Department::truncate();
         User::truncate();
+        Setting::truncate();
         Schema::enableForeignKeyConstraints();
 
         // 1. Initial Master Super Admin Account
@@ -55,122 +58,113 @@ class ProductionSeeder extends Seeder
             'role' => 'super_admin',
             'status' => 'active',
             'phone' => '+1 (555) 010-9900',
+            'email_verified_at' => now(),
         ]);
 
-        // 2. Official Core Marketplace Categories
+        // 2. Production Baseline Platform Settings
+        Setting::set('maintenance_enabled', false);
+        Setting::set('maintenance_mode', false);
+        Setting::set('maintenance_blocked_roles', ['guest', 'customer']);
+        Setting::set('platform_name', 'Bizzhuss Multi-Vendor Marketplace');
+        Setting::set('platform_currency', 'PKR');
+        Setting::set('default_commission_rate', '10.00');
+        Setting::set('support_email', 'governance@bizzhuss.com');
+        Setting::set('support_phone', '+1 (800) 555-BIZZ');
+        cache()->flush();
+
+        // 3. Official Core Marketplace Categories & Taxonomies
         $iot = Category::create([
             'name' => 'Industrial IoT',
             'slug' => 'industrial-iot',
-            'description' => 'Edge computing, embedded microcontrollers, and industrial telemetry hardware.',
             'icon' => 'Cpu',
-            'is_active' => true,
+            'parent_id' => null,
         ]);
 
         Category::create([
             'parent_id' => $iot->id,
             'name' => 'Edge Gateways',
             'slug' => 'edge-gateways',
-            'description' => 'Cellular and LoRaWAN industrial gateway devices.',
             'icon' => 'Cpu',
-            'is_active' => true,
         ]);
 
         $hardware = Category::create([
             'name' => 'Enterprise Hardware',
             'slug' => 'enterprise-hardware',
-            'description' => 'High-density server nodes, modular rack enclosures, and enterprise networking.',
             'icon' => 'Layers',
-            'is_active' => true,
+            'parent_id' => null,
         ]);
 
         Category::create([
             'parent_id' => $hardware->id,
             'name' => 'Server Racks & Enclosures',
             'slug' => 'server-racks-enclosures',
-            'description' => 'Seismic-rated server rack enclosures and power distribution units.',
             'icon' => 'Layers',
-            'is_active' => true,
         ]);
 
         Category::create([
             'name' => 'Heavy Tooling',
             'slug' => 'heavy-tooling',
-            'description' => 'Calibration fixtures, precision torque drivers, and manufacturing equipment.',
             'icon' => 'Wrench',
-            'is_active' => true,
+            'parent_id' => null,
         ]);
 
         Category::create([
             'name' => 'Executive Office',
             'slug' => 'executive-office',
-            'description' => 'Ergonomic seating, executive desks, and architectural workspace furnishings.',
             'icon' => 'Briefcase',
-            'is_active' => true,
+            'parent_id' => null,
         ]);
 
         Category::create([
             'name' => 'Sensors & Telemetry',
             'slug' => 'sensors-telemetry',
-            'description' => 'Environmental monitoring, vibration diagnostics, and optical telemetry sensors.',
             'icon' => 'Zap',
-            'is_active' => true,
+            'parent_id' => null,
         ]);
 
-        // 3. Operational Enterprise Departments & Designations
+        // 4. Operational Enterprise Departments & Designations
         $qaDept = Department::create([
             'name' => 'Quality Assurance',
-            'code' => 'QA',
+            'slug' => 'quality-assurance',
             'description' => 'Product inspection, vendor certification compliance, and sample audits.',
-            'is_active' => true,
         ]);
 
         Designation::create([
             'department_id' => $qaDept->id,
-            'title' => 'Lead QA Specialist',
-            'code' => 'QA-LEAD',
-            'description' => 'Responsible for vendor product quality testing and RMA authorization.',
+            'title' => 'Senior QA & Compliance Lead',
         ]);
 
         $logDept = Department::create([
             'name' => 'Logistics & Dispatch',
-            'code' => 'LOG',
+            'slug' => 'logistics-dispatch',
             'description' => 'Carrier SLA tracking, freight routing, and regional fulfillment oversight.',
-            'is_active' => true,
         ]);
 
         Designation::create([
             'department_id' => $logDept->id,
             'title' => 'Logistics Coordinator',
-            'code' => 'LOG-COORD',
-            'description' => 'Monitors carrier handoffs and multi-vendor shipment consolidation.',
         ]);
 
         $vendorDept = Department::create([
             'name' => 'Vendor Relations',
-            'code' => 'VR',
+            'slug' => 'vendor-relations',
             'description' => 'Merchant onboarding, store verification, and catalog compliance.',
-            'is_active' => true,
         ]);
 
         Designation::create([
             'department_id' => $vendorDept->id,
             'title' => 'Merchant Partner Manager',
-            'code' => 'VR-MGR',
-            'description' => 'Manages merchant seller agreements and commission structures.',
         ]);
 
         $finDept = Department::create([
             'name' => 'Billing & Settlements',
-            'code' => 'FIN',
+            'slug' => 'billing-settlements',
             'description' => 'Automated payout ledger reconciliation, commission audit, and tax accounting.',
-            'is_active' => true,
         ]);
 
         Designation::create([
             'department_id' => $finDept->id,
             'title' => 'Settlement Auditor',
-            'code' => 'FIN-AUDIT',
-            'description' => 'Audits weekly vendor disbursement batches and escrow balances.',
         ]);
     }
 }
