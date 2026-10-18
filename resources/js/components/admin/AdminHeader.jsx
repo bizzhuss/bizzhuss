@@ -10,13 +10,15 @@ import {
     ExternalLink,
     Shield,
     Sparkles,
-    Flame
+    Flame,
+    AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ApplicationLogo } from '@/components/ApplicationLogo';
 
 export function AdminHeader({ title, subtitle, actions }) {
-    const { url } = usePage();
+    const { url, maintenance } = usePage().props;
+    const isMaintenanceActive = maintenance?.is_enabled || false;
 
     const navTabs = [
         {
@@ -79,6 +81,12 @@ export function AdminHeader({ title, subtitle, actions }) {
                                     <Sparkles className="w-2.5 h-2.5 text-brand-500" />
                                     Tier 2 Super Admin
                                 </span>
+                                {isMaintenanceActive && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-amber-50 text-amber-700 border border-amber-300 animate-pulse">
+                                        <AlertTriangle className="w-2.5 h-2.5 text-amber-600" />
+                                        Site Under Maintenance
+                                    </span>
+                                )}
                             </div>
                             {subtitle && (
                                 <p className="text-xs text-slate-500 mt-0.5">

@@ -18,8 +18,14 @@ class AdminSettingController extends Controller
     public function index(Request $request): Response
     {
         // 1. Settings
+        $maintenanceState = [
+            'is_enabled' => (bool) (Setting::get('maintenance_enabled', null) !== null ? Setting::get('maintenance_enabled') : Setting::get('maintenance_mode', false)),
+            'blocked_roles' => Setting::get('maintenance_blocked_roles', ['guest', 'customer']),
+        ];
+
         $settings = [
-            'maintenance_mode' => Setting::get('maintenance_mode', 'false') === 'true',
+            'maintenance_mode' => $maintenanceState['is_enabled'],
+            'maintenance_blocked_roles' => $maintenanceState['blocked_roles'],
             'platform_currency' => Setting::get('platform_currency', 'PKR'),
             'default_commission_rate' => (float) Setting::get('default_commission_rate', '10.00'),
             'platform_name' => Setting::get('platform_name', 'Bizzhuss Multi-Vendor Marketplace'),
@@ -53,11 +59,48 @@ class AdminSettingController extends Controller
 
         return Inertia::render('Admin/Settings', [
             'settings' => $settings,
+            'maintenance' => $maintenanceState,
             'categories' => $categories,
             'rootCategories' => $rootCategories,
             'payouts' => $payouts,
             'payoutMetrics' => $payoutMetrics,
         ]);
+    }
+
+    /**
+     * Update Dynamic Maintenance Mode and Audience Targeting.
+     */
+    public function updateMaintenanceMode(Request $request)
+    {
+        $validated = $request->validate([
+            'is_enabled' => 'required|boolean',
+            'blocked_roles' => 'nullable|array',
+            'blocked_roles.*' => 'string|in:guest,customer,vendor,employee,staff',
+        ]);
+
+        $isEnabled = (bool) $validated['is_enabled'];
+        $blockedRoles = $validated['blocked_roles'] ?? ['guest', 'customer'];
+
+        // Normalize customer / guest inclusion
+        if (in_array('guest', $blockedRoles) && !in_array('customer', $blockedRoles)) {
+            $blockedRoles[] = 'customer';
+        }
+        if (in_array('customer', $blockedRoles) && !in_array('guest', $blockedRoles)) {
+            $blockedRoles[] = 'guest';
+        }
+
+        Setting::set('maintenance_enabled', $isEnabled);
+        Setting::set('maintenance_mode', $isEnabled);
+        Setting::set('maintenance_blocked_roles', $blockedRoles);
+
+        cache()->forever('maintenance_enabled', $isEnabled);
+        cache()->forever('maintenance_blocked_roles', $blockedRoles);
+
+        $statusMsg = $isEnabled 
+            ? 'Dynamic Maintenance Mode enabled. Selected audiences are now restricted.' 
+            : 'Maintenance Mode deactivated. The marketplace is now live for all users.';
+
+        return redirect()->back()->with('success', $statusMsg);
     }
 
     /**
@@ -75,6 +118,8 @@ class AdminSettingController extends Controller
         ]);
 
         Setting::set('maintenance_mode', $validated['maintenance_mode']);
+        Setting::set('maintenance_enabled', $validated['maintenance_mode']);
+        cache()->forever('maintenance_enabled', $validated['maintenance_mode']);
         Setting::set('platform_currency', $validated['platform_currency']);
         Setting::set('default_commission_rate', $validated['default_commission_rate']);
         Setting::set('platform_name', $validated['platform_name']);

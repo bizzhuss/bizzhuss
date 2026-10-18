@@ -28,17 +28,72 @@ import {
     HelpCircle,
     Paperclip,
     Percent,
-    Shield
+    Shield,
+    Wrench,
+    Users,
+    Store,
+    Briefcase,
+    ShieldCheck,
+    CheckSquare,
+    Square
 } from 'lucide-react';
 
 export default function PlatformSettings({ 
     settings = {}, 
+    maintenance = {},
     categories = [], 
     rootCategories = [], 
     payouts = [], 
     payoutMetrics = {} 
 }) {
     const [activeSection, setActiveSection] = useState('general'); // 'general', 'categories', 'payouts'
+
+    // Dynamic Maintenance Mode State
+    const initialMaintenanceEnabled = maintenance?.is_enabled ?? settings.maintenance_mode ?? false;
+    const initialBlockedRoles = maintenance?.blocked_roles ?? settings.maintenance_blocked_roles ?? ['guest', 'customer'];
+
+    const [maintenanceForm, setMaintenanceForm] = useState({
+        is_enabled: initialMaintenanceEnabled,
+        blocked_roles: initialBlockedRoles,
+    });
+    const [savingMaintenance, setSavingMaintenance] = useState(false);
+
+    const handleSaveMaintenance = (e) => {
+        if (e) e.preventDefault();
+        setSavingMaintenance(true);
+        router.post('/admin/settings/maintenance-mode', {
+            is_enabled: maintenanceForm.is_enabled,
+            blocked_roles: maintenanceForm.blocked_roles,
+        }, {
+            preserveScroll: true,
+            onFinish: () => setSavingMaintenance(false),
+        });
+    };
+
+    const toggleBlockedRole = (role) => {
+        if (!maintenanceForm.is_enabled) return;
+
+        setMaintenanceForm(prev => {
+            const exists = prev.blocked_roles.includes(role);
+            let nextRoles = exists
+                ? prev.blocked_roles.filter(r => r !== role)
+                : [...prev.blocked_roles, role];
+
+            if (role === 'customer' || role === 'guest') {
+                if (exists) {
+                    nextRoles = nextRoles.filter(r => r !== 'customer' && r !== 'guest');
+                } else {
+                    if (!nextRoles.includes('customer')) nextRoles.push('customer');
+                    if (!nextRoles.includes('guest')) nextRoles.push('guest');
+                }
+            }
+
+            return {
+                ...prev,
+                blocked_roles: nextRoles,
+            };
+        });
+    };
 
     // General Settings Form
     const [generalForm, setGeneralForm] = useState({
@@ -209,7 +264,207 @@ export default function PlatformSettings({
             {/* 1. GENERAL MARKETPLACE CONTROLS */}
             {activeSection === 'general' && (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div className="lg:col-span-8">
+                    <div className="lg:col-span-8 space-y-6">
+                        {/* Dedicated Dynamic Maintenance Mode & Audience Targeting Card */}
+                        <Card className={`border-2 transition-all ${maintenanceForm.is_enabled ? 'border-amber-400/80 bg-amber-500/[0.02] shadow-amber-500/5' : 'border-slate-200'}`}>
+                            <CardHeader className="border-b border-slate-100/80 bg-slate-50/50 pb-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0 ${
+                                            maintenanceForm.is_enabled 
+                                                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' 
+                                                : 'bg-slate-200 text-slate-700'
+                                        }`}>
+                                            <Wrench className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                                                <span>Dynamic Maintenance Mode</span>
+                                                {maintenanceForm.is_enabled ? (
+                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
+                                                        Active & Restricting
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                        Platform Live
+                                                    </span>
+                                                )}
+                                            </CardTitle>
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                Super Admin master control to selectively gate platform access by user role.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Master Toggle */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setMaintenanceForm(prev => ({ ...prev, is_enabled: !prev.is_enabled }))}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
+                                            maintenanceForm.is_enabled 
+                                                ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-md shadow-amber-500/20 font-black' 
+                                                : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'
+                                        }`}
+                                    >
+                                        {maintenanceForm.is_enabled ? (
+                                            <>
+                                                <ToggleRight className="w-4 h-4 text-slate-950" />
+                                                <span>Maintenance ON</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ToggleLeft className="w-4 h-4 text-slate-400" />
+                                                <span>Maintenance OFF</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </CardHeader>
+
+                            <CardContent className="p-6 space-y-6">
+                                {/* Audience Target Selectors */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                                            Target Audience Selectors (Who sees the 503 maintenance screen?)
+                                        </label>
+                                        <span className={`text-[11px] font-medium ${maintenanceForm.is_enabled ? 'text-amber-600 font-semibold' : 'text-slate-400'}`}>
+                                            {maintenanceForm.is_enabled ? 'Click role card to toggle restriction' : 'Turn master toggle ON to configure audience'}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                        {/* 1. Customers & Visitors (Guests) */}
+                                        <div 
+                                            onClick={() => toggleBlockedRole('customer')}
+                                            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
+                                                !maintenanceForm.is_enabled 
+                                                    ? 'opacity-50 pointer-events-none bg-slate-50 border-slate-200' 
+                                                    : (maintenanceForm.blocked_roles.includes('customer') || maintenanceForm.blocked_roles.includes('guest'))
+                                                        ? 'bg-amber-500/10 border-amber-500 shadow-sm'
+                                                        : 'bg-white border-slate-200 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div className={`p-2 rounded-xl ${
+                                                    (maintenanceForm.blocked_roles.includes('customer') || maintenanceForm.blocked_roles.includes('guest')) && maintenanceForm.is_enabled
+                                                        ? 'bg-amber-500 text-slate-950'
+                                                        : 'bg-slate-100 text-slate-600'
+                                                }`}>
+                                                    <Users className="w-4 h-4" />
+                                                </div>
+                                                {(maintenanceForm.blocked_roles.includes('customer') || maintenanceForm.blocked_roles.includes('guest')) && maintenanceForm.is_enabled ? (
+                                                    <CheckSquare className="w-4 h-4 text-amber-600" />
+                                                ) : (
+                                                    <Square className="w-4 h-4 text-slate-400" />
+                                                )}
+                                            </div>
+                                            <h4 className="font-bold text-slate-900 text-xs">Customers & Visitors</h4>
+                                            <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                                                Blocks public catalog, product pages, cart, and customer accounts.
+                                            </p>
+                                        </div>
+
+                                        {/* 2. Vendors / Store Owners */}
+                                        <div 
+                                            onClick={() => toggleBlockedRole('vendor')}
+                                            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
+                                                !maintenanceForm.is_enabled 
+                                                    ? 'opacity-50 pointer-events-none bg-slate-50 border-slate-200' 
+                                                    : maintenanceForm.blocked_roles.includes('vendor')
+                                                        ? 'bg-amber-500/10 border-amber-500 shadow-sm'
+                                                        : 'bg-white border-slate-200 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div className={`p-2 rounded-xl ${
+                                                    maintenanceForm.blocked_roles.includes('vendor') && maintenanceForm.is_enabled
+                                                        ? 'bg-amber-500 text-slate-950'
+                                                        : 'bg-slate-100 text-slate-600'
+                                                }`}>
+                                                    <Store className="w-4 h-4" />
+                                                </div>
+                                                {maintenanceForm.blocked_roles.includes('vendor') && maintenanceForm.is_enabled ? (
+                                                    <CheckSquare className="w-4 h-4 text-amber-600" />
+                                                ) : (
+                                                    <Square className="w-4 h-4 text-slate-400" />
+                                                )}
+                                            </div>
+                                            <h4 className="font-bold text-slate-900 text-xs">Vendors & Merchants</h4>
+                                            <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                                                Blocks vendor merchant portal, order dispatch, and product managers.
+                                            </p>
+                                        </div>
+
+                                        {/* 3. Staff / Employees */}
+                                        <div 
+                                            onClick={() => toggleBlockedRole('employee')}
+                                            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
+                                                !maintenanceForm.is_enabled 
+                                                    ? 'opacity-50 pointer-events-none bg-slate-50 border-slate-200' 
+                                                    : (maintenanceForm.blocked_roles.includes('employee') || maintenanceForm.blocked_roles.includes('staff'))
+                                                        ? 'bg-amber-500/10 border-amber-500 shadow-sm'
+                                                        : 'bg-white border-slate-200 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div className={`p-2 rounded-xl ${
+                                                    (maintenanceForm.blocked_roles.includes('employee') || maintenanceForm.blocked_roles.includes('staff')) && maintenanceForm.is_enabled
+                                                        ? 'bg-amber-500 text-slate-950'
+                                                        : 'bg-slate-100 text-slate-600'
+                                                }`}>
+                                                    <Briefcase className="w-4 h-4" />
+                                                </div>
+                                                {(maintenanceForm.blocked_roles.includes('employee') || maintenanceForm.blocked_roles.includes('staff')) && maintenanceForm.is_enabled ? (
+                                                    <CheckSquare className="w-4 h-4 text-amber-600" />
+                                                ) : (
+                                                    <Square className="w-4 h-4 text-slate-400" />
+                                                )}
+                                            </div>
+                                            <h4 className="font-bold text-slate-900 text-xs">Staff & Employees</h4>
+                                            <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                                                Blocks internal workforce workspace and assigned task Kanban board.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Super Admin Universal Bypass Guarantee Note */}
+                                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3 text-xs">
+                                    <ShieldCheck className="w-4 h-4 text-brand-600 shrink-0" />
+                                    <p className="text-slate-600 text-[11px]">
+                                        <strong className="text-slate-900">Universal Bypass:</strong> Super Administrators are always bypassed through kernel gatekeepers and can never be locked out of the system.
+                                    </p>
+                                </div>
+
+                                {/* Save Maintenance Settings Action */}
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                                    <div className="text-[11px] text-slate-500">
+                                        {maintenanceForm.is_enabled ? (
+                                            <span className="text-amber-600 font-semibold flex items-center gap-1.5">
+                                                <AlertTriangle className="w-3.5 h-3.5" />
+                                                Save changes to immediately enforce role restriction.
+                                            </span>
+                                        ) : (
+                                            <span>Site is currently live to all visitors.</span>
+                                        )}
+                                    </div>
+
+                                    <Button
+                                        type="button"
+                                        variant="primary"
+                                        icon={Save}
+                                        loading={savingMaintenance}
+                                        onClick={handleSaveMaintenance}
+                                        className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-amber-600/20"
+                                    >
+                                        Save Maintenance Settings
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* General Platform Parameters Card */}
                         <Card>
                             <CardHeader className="border-b border-slate-100">
                                 <CardTitle className="text-base font-bold text-slate-900">
@@ -218,41 +473,6 @@ export default function PlatformSettings({
                             </CardHeader>
                             <CardContent className="p-6">
                                 <form onSubmit={handleSaveGeneralSettings} className="space-y-6 text-xs">
-                                    {/* Maintenance Mode Switch */}
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                                        <div>
-                                            <span className="font-bold text-slate-900 text-sm block">
-                                                Global Maintenance Mode
-                                            </span>
-                                            <p className="text-slate-500 text-[11px] mt-0.5">
-                                                When active, customers will see an operational maintenance banner during storefront browsing.
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setGeneralForm({
-                                                ...generalForm,
-                                                maintenance_mode: !generalForm.maintenance_mode
-                                            })}
-                                            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
-                                                generalForm.maintenance_mode 
-                                                    ? 'bg-rose-500 text-white' 
-                                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                            }`}
-                                        >
-                                            {generalForm.maintenance_mode ? (
-                                                <>
-                                                    <ToggleRight className="w-4 h-4" />
-                                                    <span>Active (Locked)</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <ToggleLeft className="w-4 h-4" />
-                                                    <span>Live (Online)</span>
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
 
                                     {/* Platform Currency & Default Commission */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

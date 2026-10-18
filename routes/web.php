@@ -74,6 +74,7 @@ Route::get('/terms', [PageController::class, 'privacyTerms'])->name('terms');
 Route::get('/privacy', [PageController::class, 'privacyTerms'])->name('privacy');
 Route::get('/security', [PageController::class, 'complianceSecurity'])->name('security');
 Route::get('/status', [PageController::class, 'systemStatus'])->name('status');
+Route::get('/maintenance', fn () => \Inertia\Inertia::render('Maintenance'))->name('maintenance');
 
 // Authentication System
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -131,6 +132,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     // 2.5 Global Platform Controls & Settings
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings');
     Route::post('/settings/general', [AdminSettingController::class, 'updateGeneralSettings'])->name('settings.general');
+    Route::post('/settings/maintenance-mode', [AdminSettingController::class, 'updateMaintenanceMode'])->name('settings.maintenance');
     Route::post('/settings/categories', [AdminSettingController::class, 'storeCategory'])->name('settings.categories.store');
     Route::put('/settings/categories/{category}', [AdminSettingController::class, 'updateCategory'])->name('settings.categories.update');
     Route::delete('/settings/categories/{category}', [AdminSettingController::class, 'destroyCategory'])->name('settings.categories.destroy');

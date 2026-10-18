@@ -45,6 +45,10 @@ class HandleInertiaRequests extends Middleware
                     'avatar' => $request->user()->avatar,
                 ] : null,
             ],
+            'maintenance' => [
+                'is_enabled' => (bool) (\App\Models\Setting::get('maintenance_enabled', null) !== null ? \App\Models\Setting::get('maintenance_enabled') : \App\Models\Setting::get('maintenance_mode', false)),
+                'blocked_roles' => \App\Models\Setting::get('maintenance_blocked_roles', ['guest', 'customer']),
+            ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
