@@ -46,7 +46,12 @@ class CustomerController extends Controller
         }
 
         $products = $query->orderBy('id', 'desc')->get();
-        $categories = Category::select('id', 'name', 'slug', 'icon')->get();
+        $categories = Category::where('is_active', true)
+            ->withCount('products')
+            ->with(['subcategories' => fn ($q) => $q->where('is_active', true)->withCount('products')])
+            ->orderBy('order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
         $featuredVendors = Vendor::where('status', 'active')->limit(6)->get();
 
         // Base relation query with active vendor gatekeeper
@@ -216,9 +221,17 @@ class CustomerController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
-        $categories = Category::with('subcategories')->whereNull('parent_id')->get();
+        $categories = Category::with(['subcategories' => fn ($q) => $q->where('is_active', true)])
+            ->where('is_active', true)
+            ->whereNull('parent_id')
+            ->orderBy('order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
         if ($categories->isEmpty()) {
-            $categories = Category::select('id', 'name', 'slug', 'icon')->get();
+            $categories = Category::where('is_active', true)
+                ->select('id', 'name', 'slug', 'icon')
+                ->orderBy('order', 'asc')
+                ->get();
         }
 
         $vendors = Vendor::where('status', 'active')->select('id', 'shop_name', 'slug')->get();

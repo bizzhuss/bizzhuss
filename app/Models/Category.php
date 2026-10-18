@@ -18,6 +18,14 @@ class Category extends Model
         'banner',
         'commission_rate',
         'parent_id',
+        'is_active',
+        'order',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'order' => 'integer',
+        'commission_rate' => 'float',
     ];
 
     public function parent(): BelongsTo

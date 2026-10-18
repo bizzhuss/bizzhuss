@@ -52,6 +52,12 @@ class HandleInertiaRequests extends Middleware
                 'is_enabled' => (bool) (\App\Models\Setting::get('maintenance_enabled', null) !== null ? \App\Models\Setting::get('maintenance_enabled') : \App\Models\Setting::get('maintenance_mode', false)),
                 'blocked_roles' => \App\Models\Setting::get('maintenance_blocked_roles', ['guest', 'customer']),
             ],
+            'categories' => fn () => \App\Models\Category::where('is_active', true)
+                ->withCount('products')
+                ->with(['subcategories' => fn ($q) => $q->where('is_active', true)->withCount('products')])
+                ->orderBy('order', 'asc')
+                ->orderBy('id', 'asc')
+                ->get(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

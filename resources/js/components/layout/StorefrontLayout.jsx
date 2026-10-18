@@ -28,11 +28,31 @@ import {
     Flame,
     Zap,
     Tag,
-    Briefcase
+    Briefcase,
+    Cpu,
+    Wrench,
 } from 'lucide-react';
 
+const ICON_MAP = {
+    Cpu,
+    Layers,
+    Wrench,
+    Briefcase,
+    Zap,
+    Package,
+    Shield,
+    Flame,
+    Tag,
+};
+
+function getCategoryIcon(iconName) {
+    if (!iconName) return Package;
+    if (typeof iconName !== 'string') return iconName;
+    return ICON_MAP[iconName] || Package;
+}
+
 function StorefrontLayoutInner({ children }) {
-    const { auth, flash } = usePage().props;
+    const { auth, flash, categories: globalCategories = [] } = usePage().props;
     const { cartCount, totalItems, wishlistCount, setIsCartOpen, notification, showNotification, clearNotification } = useApp();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -84,13 +104,25 @@ function StorefrontLayoutInner({ children }) {
         router.post('/logout');
     };
 
+    const allCategories = Array.isArray(globalCategories) ? globalCategories : [];
+    const rootCategories = allCategories.filter((c) => !c.parent_id);
+    const navCategories = rootCategories.length > 0 ? rootCategories : allCategories;
+
     const departments = [
-        { name: 'Flash Deals', href: '/#flash-deals', icon: Flame, highlight: true },
-        { name: 'Electronics & Mobiles', slug: 'enterprise-hardware', href: '/?category=enterprise-hardware' },
-        { name: 'Industrial & Tools', slug: 'heavy-tooling', href: '/?category=heavy-tooling' },
-        { name: 'Sensors & IoT', slug: 'industrial-iot', href: '/?category=industrial-iot' },
-        { name: 'Executive Office', slug: 'executive-office', href: '/?category=executive-office' },
-        { name: 'Smart Gadgets', slug: 'sensors-telemetry', href: '/?category=sensors-telemetry' },
+        { id: 'flash-deals', name: 'Flash Deals', href: '/#flash-deals', icon: Flame, highlight: true },
+        ...navCategories.map((cat) => ({
+            id: cat.id,
+            name: cat.name,
+            slug: cat.slug,
+            href: `/category/${cat.slug}`,
+            icon: getCategoryIcon(cat.icon),
+            highlight: false,
+        })),
+    ];
+
+    const desktopDepartments = [
+        departments[0], // Flash Deals
+        ...departments.slice(1, 7), // First 6 categories
     ];
 
     return (
@@ -224,11 +256,11 @@ function StorefrontLayoutInner({ children }) {
                                     className="bg-slate-100 text-slate-700 text-xs px-3 py-2.5 border-r border-slate-200 outline-none font-medium cursor-pointer max-w-[150px] shrink-0"
                                 >
                                     <option value="all">All Departments</option>
-                                    <option value="enterprise-hardware">Enterprise Hardware</option>
-                                    <option value="heavy-tooling">Heavy Tooling</option>
-                                    <option value="industrial-iot">Industrial IoT</option>
-                                    <option value="executive-office">Executive Office</option>
-                                    <option value="sensors-telemetry">Sensors & Telemetry</option>
+                                    {allCategories.map((cat) => (
+                                        <option key={cat.id} value={cat.slug}>
+                                            {cat.name}
+                                        </option>
+                                    ))}
                                 </select>
 
                                 <input
@@ -570,7 +602,7 @@ function StorefrontLayoutInner({ children }) {
                         </Link>
                         {departments.filter(d => !d.highlight).map((dept) => (
                             <Link
-                                key={`mobile-pill-${dept.name}`}
+                                key={`mobile-pill-${dept.id || dept.name}`}
                                 href={dept.href}
                                 className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors shrink-0"
                             >
@@ -600,11 +632,11 @@ function StorefrontLayoutInner({ children }) {
                                 <span>All Departments</span>
                             </button>
 
-                            {departments.map((dept) => {
+                            {desktopDepartments.map((dept) => {
                                 const Icon = dept.icon;
                                 return (
                                     <Link
-                                        key={dept.name}
+                                        key={dept.id || dept.name}
                                         href={dept.href}
                                         className={`flex items-center gap-1.5 transition-colors font-medium ${
                                             dept.highlight 
@@ -734,7 +766,7 @@ function StorefrontLayoutInner({ children }) {
                                         const Icon = dept.icon;
                                         return (
                                             <Link
-                                                key={dept.name}
+                                                key={dept.id || dept.name}
                                                 href={dept.href}
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                                 className={`flex items-center gap-2.5 px-3 py-2 rounded-xl font-medium transition-colors ${

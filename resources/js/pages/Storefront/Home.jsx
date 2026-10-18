@@ -34,6 +34,28 @@ import {
     X
 } from 'lucide-react';
 
+const ICON_MAP = {
+    Cpu,
+    Layers,
+    Wrench,
+    Briefcase,
+    Zap,
+    Package,
+    Store,
+    ShoppingBag: Package,
+    Tag: Package,
+    Sparkles,
+    ShieldCheck,
+    Truck,
+    Flame,
+};
+
+function getCategoryIcon(iconName) {
+    if (!iconName) return Package;
+    if (typeof iconName !== 'string') return iconName;
+    return ICON_MAP[iconName] || Package;
+}
+
 const heroSlides = [
     {
         id: 1,
@@ -199,13 +221,9 @@ export default function Home({
         );
     };
 
-    const quickCategories = [
-        { name: 'Industrial IoT', slug: 'industrial-iot', icon: Cpu, count: '140+ Items' },
-        { name: 'Enterprise Hardware', slug: 'enterprise-hardware', icon: Layers, count: '85+ Items' },
-        { name: 'Heavy Tooling', slug: 'heavy-tooling', icon: Wrench, count: '210+ Items' },
-        { name: 'Executive Office', slug: 'executive-office', icon: Briefcase, count: '95+ Items' },
-        { name: 'Sensors & Telemetry', slug: 'sensors-telemetry', icon: Zap, count: '120+ Items' },
-    ];
+    const pageCategories = (categories && categories.length > 0) ? categories : (usePage().props.categories || []);
+    const rootCategories = Array.isArray(pageCategories) ? pageCategories.filter((c) => !c.parent_id) : [];
+    const displayCategories = rootCategories.length > 0 ? rootCategories : (Array.isArray(pageCategories) ? pageCategories : []);
 
     // Reusable Product Card Component
     const renderCard = (product, { badge, badgeColor, sublabel, rank } = {}) => {
@@ -370,22 +388,26 @@ export default function Home({
                             </span>
                         </div>
                         <div className="pt-2 space-y-1">
-                            {quickCategories.map((cat) => {
-                                const Icon = cat.icon;
-                                return (
-                                    <Link
-                                        key={cat.slug}
-                                        href={`/?category=${cat.slug}`}
-                                        className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-brand-600 hover:bg-brand-50/60 transition-colors group cursor-pointer"
-                                    >
-                                        <div className="flex items-center gap-2.5">
-                                            <Icon className="w-4 h-4 text-slate-400 group-hover:text-brand-500 transition-colors" />
-                                            <span>{cat.name}</span>
-                                        </div>
-                                        <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-brand-500 transition-transform group-hover:translate-x-0.5" />
-                                    </Link>
-                                );
-                            })}
+                            {displayCategories && displayCategories.length > 0 ? (
+                                displayCategories.map((cat) => {
+                                    const Icon = getCategoryIcon(cat.icon);
+                                    return (
+                                        <Link
+                                            key={cat.id || cat.slug}
+                                            href={`/category/${cat.slug}`}
+                                            className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-brand-600 hover:bg-brand-50/60 transition-colors group cursor-pointer"
+                                        >
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <Icon className="w-4 h-4 text-slate-400 group-hover:text-brand-500 transition-colors shrink-0" />
+                                                <span className="truncate">{cat.name}</span>
+                                            </div>
+                                            <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-brand-500 transition-transform group-hover:translate-x-0.5 shrink-0" />
+                                        </Link>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-xs text-slate-400 p-3">No categories found</p>
+                            )}
                         </div>
 
                         {/* Marketplace Guarantee Callout */}
@@ -651,24 +673,32 @@ export default function Home({
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-3.5">
-                    {quickCategories.map((cat, idx) => {
-                        const Icon = cat.icon;
-                        return (
-                            <Link
-                                key={idx}
-                                href={`/?category=${cat.slug}`}
-                                className="group bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-brand-500 hover:shadow-md transition-all text-center flex flex-col items-center"
-                            >
-                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-brand-50 group-hover:bg-brand-500 text-brand-600 group-hover:text-white flex items-center justify-center transition-colors mb-2.5 sm:mb-3">
-                                    <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
-                                </div>
-                                <h3 className="text-xs font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
-                                    {cat.name}
-                                </h3>
-                                <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">{cat.count}</p>
-                            </Link>
-                        );
-                    })}
+                    {displayCategories && displayCategories.length > 0 ? (
+                        displayCategories.map((cat) => {
+                            const Icon = getCategoryIcon(cat.icon);
+                            return (
+                                <Link
+                                    key={cat.id || cat.slug}
+                                    href={`/category/${cat.slug}`}
+                                    className="group bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/80 hover:border-brand-500 hover:shadow-md transition-all text-center flex flex-col items-center"
+                                >
+                                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-brand-50 group-hover:bg-brand-500 text-brand-600 group-hover:text-white flex items-center justify-center transition-colors mb-2.5 sm:mb-3">
+                                        <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
+                                    </div>
+                                    <h3 className="text-xs font-bold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">
+                                        {cat.name}
+                                    </h3>
+                                    <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
+                                        {cat.products_count ?? 0} Items
+                                    </p>
+                                </Link>
+                            );
+                        })
+                    ) : (
+                        <div className="col-span-full py-8 text-center text-slate-400 text-xs">
+                            No categories found
+                        </div>
+                    )}
                 </div>
             </section>
 
