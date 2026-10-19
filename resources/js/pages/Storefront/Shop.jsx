@@ -30,13 +30,16 @@ import {
 } from 'lucide-react';
 
 export default function Shop({ 
-    products = { data: [], links: [], total: 0, from: 0, to: 0, current_page: 1, last_page: 1 }, 
+    products = [], 
     categories = [], 
     vendors = [], 
     filters = {} 
 }) {
     const { auth } = usePage().props;
     const { addToCart, toggleWishlist, isInWishlist, showNotification } = useApp();
+
+    // Strictly read products from Inertia props, never use mock fallback
+    const items = Array.isArray(products) ? products : (products?.data || []);
 
     // UI state
     const [viewMode, setViewMode] = useState('grid-4'); // 'grid-3', 'grid-4', 'list'
@@ -608,7 +611,7 @@ export default function Shop({
                             </button>
 
                             <div className="text-xs text-slate-600 font-medium">
-                                Showing <strong className="text-slate-900 font-black">{products.from || (products.data?.length > 0 ? 1 : 0)}</strong>–<strong className="text-slate-900 font-black">{products.to || products.data?.length || 0}</strong> of <strong className="text-slate-900 font-black">{products.total || products.data?.length || 0}</strong> items
+                                Showing <strong className="text-slate-900 font-black">{products.from || (items.length > 0 ? 1 : 0)}</strong>–<strong className="text-slate-900 font-black">{products.to || items.length}</strong> of <strong className="text-slate-900 font-black">{products.total || items.length}</strong> items
                             </div>
                         </div>
 
