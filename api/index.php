@@ -18,6 +18,13 @@ $_ENV['VERCEL'] = '1';
 $_SERVER['VERCEL'] = '1';
 putenv('VERCEL=1');
 
+// Synchronize all $_ENV and $_SERVER variables to putenv() for getenv() and env() compatibility
+foreach (array_merge($_ENV, $_SERVER) as $key => $val) {
+    if (is_string($val) && (getenv($key) === false || getenv($key) === '')) {
+        putenv("{$key}={$val}");
+    }
+}
+
 if (!getenv('APP_STORAGE_PATH')) {
     putenv('APP_STORAGE_PATH=/tmp/storage');
     $_ENV['APP_STORAGE_PATH'] = '/tmp/storage';
