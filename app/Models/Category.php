@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
     use HasFactory;
+
+    protected $connection = 'mongodb';
+    protected $collection = 'categories';
 
     protected $fillable = [
         'name',
@@ -43,6 +46,16 @@ class Category extends Model
     public function subcategories(): HasMany
     {
         return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    protected $appends = ['products_count'];
+
+    public function getProductsCountAttribute(): int
+    {
+        if ($this->relationLoaded('products')) {
+            return $this->products ? $this->products->count() : 0;
+        }
+        return $this->products()->count();
     }
 
     public function products(): HasMany

@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vendor extends Model
 {
     use HasFactory;
+
+    protected $connection = 'mongodb';
+    protected $collection = 'vendors';
 
     protected $fillable = [
         'user_id',
@@ -41,6 +44,16 @@ class Vendor extends Model
     public function payouts(): HasMany
     {
         return $this->hasMany(VendorPayout::class);
+    }
+
+    protected $appends = ['products_count'];
+
+    public function getProductsCountAttribute(): int
+    {
+        if ($this->relationLoaded('products')) {
+            return $this->products ? $this->products->count() : 0;
+        }
+        return $this->products()->count();
     }
 
     public function products(): HasMany

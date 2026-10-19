@@ -21,8 +21,7 @@ class AdminWorkforceController extends Controller
      */
     public function departments(Request $request): Response
     {
-        $departments = Department::with(['designations'])
-            ->withCount('employees')
+        $departments = Department::with(['designations', 'employees'])
             ->orderBy('name')
             ->get();
 

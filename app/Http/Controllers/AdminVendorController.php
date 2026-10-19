@@ -22,8 +22,7 @@ class AdminVendorController extends Controller
         $status = $request->input('status', 'all');
         $search = $request->input('search');
 
-        $query = Vendor::with(['user:id,name,email,phone,avatar'])
-            ->withCount('products');
+        $query = Vendor::with(['user:id,name,email,phone,avatar', 'products']);
 
         if ($status && $status !== 'all') {
             $query->where('status', $status);

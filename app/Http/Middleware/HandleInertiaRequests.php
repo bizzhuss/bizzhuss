@@ -56,11 +56,10 @@ class HandleInertiaRequests extends Middleware
             ],
             'categories' => function () {
                 try {
-                    $cats = \App\Models\Category::where('is_active', true)
-                        ->withCount('products')
-                        ->with(['subcategories' => fn ($q) => $q->where('is_active', true)->withCount('products')])
+                    $cats = \App\Models\Category::whereNull('parent_id')
+                        ->where('is_active', true)
+                        ->with(['products', 'subcategories' => fn ($q) => $q->where('is_active', true)->with('products')])
                         ->orderBy('order', 'asc')
-                        ->orderBy('id', 'asc')
                         ->get();
                     return $cats->isNotEmpty() ? $cats : \App\Services\DemoCatalogService::categories();
                 } catch (\Throwable $e) {

@@ -3,11 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Product extends Model
+class Product extends BaseModel
 {
     use HasFactory;
 
@@ -42,16 +41,16 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2',
-            'compare_price' => 'decimal:2',
-            'cost_per_item' => 'decimal:2',
+            'price' => 'float',
+            'compare_price' => 'float',
+            'cost_per_item' => 'float',
             'stock_quantity' => 'integer',
             'low_stock_threshold' => 'integer',
             'is_featured' => 'boolean',
             'is_on_special_sale' => 'boolean',
             'total_sold_count' => 'integer',
             'featured_order' => 'integer',
-            'discount_percentage' => 'decimal:2',
+            'discount_percentage' => 'float',
             'flash_sale_end_time' => 'datetime',
             'images' => 'array',
             'variants' => 'array',

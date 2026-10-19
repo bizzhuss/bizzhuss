@@ -48,10 +48,9 @@ class CustomerController extends Controller
 
             $products = $query->orderBy('id', 'desc')->get();
             $categories = Category::where('is_active', true)
-                ->withCount('products')
-                ->with(['subcategories' => fn ($q) => $q->where('is_active', true)->withCount('products')])
+                ->whereNull('parent_id')
+                ->with(['products', 'subcategories' => fn ($q) => $q->where('is_active', true)->with('products')])
                 ->orderBy('order', 'asc')
-                ->orderBy('id', 'asc')
                 ->get();
             $featuredVendors = Vendor::where('status', 'active')->limit(6)->get();
 

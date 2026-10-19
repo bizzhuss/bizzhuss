@@ -34,14 +34,12 @@ class AdminSettingController extends Controller
         ];
 
         // 2. Categories with parent/child tree and product counts
-        $categories = Category::with(['parent', 'subcategories'])
-            ->withCount('products')
+        $categories = Category::with(['parent', 'subcategories', 'products'])
             ->orderBy('name')
             ->get();
 
         $rootCategories = Category::whereNull('parent_id')
-            ->with(['subcategories' => fn($q) => $q->withCount('products')])
-            ->withCount('products')
+            ->with(['subcategories.products', 'products'])
             ->orderBy('name')
             ->get();
 

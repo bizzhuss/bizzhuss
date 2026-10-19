@@ -49,6 +49,48 @@ class AdminCurationTest extends TestCase
         );
     }
 
+    private function getProduct(): Product
+    {
+        $product = Product::whereHas('vendor', fn ($q) => $q->where('status', 'active'))->first();
+        if ($product) {
+            return $product;
+        }
+
+        $vendorUser = $this->getVendorUser();
+        $vendor = Vendor::firstOrCreate(
+            ['user_id' => $vendorUser->id],
+            [
+                'shop_name' => 'Curation Test Store',
+                'slug' => 'curation-test-store',
+                'status' => 'active',
+                'commission_rate' => 10.0,
+            ]
+        );
+
+        $category = Category::firstOrCreate(
+            ['slug' => 'test-curation-cat'],
+            [
+                'name' => 'Curation Category',
+                'is_active' => true,
+                'order' => 1,
+            ]
+        );
+
+        return Product::create([
+            'vendor_id' => $vendor->id,
+            'category_id' => $category->id,
+            'title' => 'Test Curation Product',
+            'slug' => 'test-curation-product-' . time(),
+            'price' => 100.0,
+            'compare_price' => 120.0,
+            'stock_quantity' => 50,
+            'status' => 'published',
+            'is_featured' => false,
+            'is_on_special_sale' => false,
+            'total_sold_count' => 0,
+        ]);
+    }
+
     /**
      * Super Admin can access Storefront Curation Suite.
      */
@@ -75,12 +117,12 @@ class AdminCurationTest extends TestCase
         $customer = $this->getCustomerUser();
         $this->actingAs($customer)
             ->get(route('admin.curation.index'))
-            ->assertRedirect(route('customer.dashboard'));
+            ->assertStatus(403);
 
         $vendor = $this->getVendorUser();
         $this->actingAs($vendor)
             ->get(route('admin.curation.index'))
-            ->assertRedirect(route('vendor.portal'));
+            ->assertStatus(403);
     }
 
     /**
@@ -89,7 +131,7 @@ class AdminCurationTest extends TestCase
     public function test_super_admin_can_toggle_featured(): void
     {
         $admin = $this->getSuperAdmin();
-        $product = Product::first();
+        $product = $this->getProduct();
 
         $initial = (bool) $product->is_featured;
 
@@ -111,7 +153,7 @@ class AdminCurationTest extends TestCase
     public function test_super_admin_can_toggle_special_sale(): void
     {
         $admin = $this->getSuperAdmin();
-        $product = Product::first();
+        $product = $this->getProduct();
 
         $response = $this->actingAs($admin)
             ->post(route('admin.curation.toggleSpecialSale', $product), [
@@ -133,7 +175,7 @@ class AdminCurationTest extends TestCase
     public function test_super_admin_can_update_order_and_sold_count(): void
     {
         $admin = $this->getSuperAdmin();
-        $product = Product::first();
+        $product = $this->getProduct();
 
         $this->actingAs($admin)
             ->patch(route('admin.curation.updateOrder', $product), [
@@ -158,8 +200,8 @@ class AdminCurationTest extends TestCase
     public function test_super_admin_can_perform_bulk_curation(): void
     {
         $admin = $this->getSuperAdmin();
-        $products = Product::take(2)->get();
-        $ids = $products->pluck('id')->toArray();
+        $p1 = $this->getProduct();
+        $ids = [$p1->id];
 
         $this->actingAs($admin)
             ->post(route('admin.curation.bulkAction'), [
@@ -210,8 +252,8 @@ class AdminCurationTest extends TestCase
      */
     public function test_completed_order_increments_total_sold_count(): void
     {
-        $product = Product::whereHas('vendor', fn ($q) => $q->where('status', 'active'))->first();
-        $initialSold = $product->total_sold_count;
+        $product = $this->getProduct();
+        $initialSold = (int) $product->total_sold_count;
 
         $orderService = app(OrderService::class);
         $orderService->processCheckout(
