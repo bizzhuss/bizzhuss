@@ -35,11 +35,26 @@ class SocialAuthController extends Controller
     }
 
     /**
+     * Resolve the canonical Google OAuth callback URL.
+     */
+    protected function getRedirectUri(): string
+    {
+        $configured = config('services.google.redirect');
+        if (!empty($configured) && filter_var($configured, FILTER_VALIDATE_URL)) {
+            return $configured;
+        }
+
+        return route('auth.google.callback');
+    }
+
+    /**
      * Redirect the user to the Google authentication page.
      */
     public function redirectToGoogle(): SymfonyRedirectResponse|RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('google')
+            ->redirectUrl($this->getRedirectUri())
+            ->redirect();
     }
 
     /**
@@ -47,9 +62,15 @@ class SocialAuthController extends Controller
      */
     public function handleGoogleCallback(Request $request): RedirectResponse
     {
+        if ($request->has('error')) {
+            Log::warning('Google OAuth callback returned error: ' . $request->input('error'));
+            return redirect()->route('login')->with('error', 'Google sign-in was cancelled or encountered an error.');
+        }
+
         try {
             $driver = Socialite::driver('google');
             $driver->setHttpClient($this->getHttpClient());
+            $driver->redirectUrl($this->getRedirectUri());
 
             /** @var \Laravel\Socialite\Two\User $googleUser */
             $googleUser = $driver->stateless()->user();
@@ -58,9 +79,12 @@ class SocialAuthController extends Controller
                 return redirect()->route('login')->with('error', 'Google authentication failed: Email address could not be retrieved.');
             }
 
+            $googleId = (string) $googleUser->getId();
+            $googleEmail = (string) $googleUser->getEmail();
+
             // Find user by Google ID or by existing email address
-            $user = User::where('google_id', $googleUser->getId())
-                ->orWhere('email', $googleUser->getEmail())
+            $user = User::where('google_id', $googleId)
+                ->orWhere('email', $googleEmail)
                 ->first();
 
             if ($user) {
