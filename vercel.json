@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "framework": null,
-  "outputDirectory": "public",
   "buildCommand": "npm run build",
   "functions": {
     "api/index.php": {
@@ -12,14 +11,27 @@
   },
   "routes": [
     {
-      "src": "/build/assets/(.*)",
+      "src": "/build/(.*)",
+      "dest": "/public/build/$1",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
-      },
-      "continue": true
+      }
     },
     {
-      "handle": "filesystem"
+      "src": "/images/(.*)",
+      "dest": "/public/images/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/public/favicon.ico"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/public/robots.txt"
+    },
+    {
+      "src": "/storage/(.*)",
+      "dest": "/public/storage/$1"
     },
     {
       "src": "/(.*)",
@@ -29,13 +41,15 @@
   "env": {
     "APP_ENV": "production",
     "APP_DEBUG": "false",
+    "VERCEL": "1",
+    "APP_STORAGE_PATH": "/tmp/storage",
     "APP_CONFIG_CACHE": "/tmp/bootstrap/cache/config.php",
     "APP_EVENTS_CACHE": "/tmp/bootstrap/cache/events.php",
     "APP_PACKAGES_CACHE": "/tmp/bootstrap/cache/packages.php",
     "APP_ROUTES_CACHE": "/tmp/bootstrap/cache/routes.php",
     "APP_SERVICES_CACHE": "/tmp/bootstrap/cache/services.php",
     "VIEW_COMPILED_PATH": "/tmp/storage/framework/views",
-    "CACHE_STORE": "database",
+    "CACHE_STORE": "array",
     "SESSION_DRIVER": "cookie",
     "LOG_CHANNEL": "stderr"
   }

@@ -7,7 +7,55 @@ if (isset($_SERVER['PHP_SELF'])) {
     $_SERVER['PHP_SELF'] = '/index.php';
 }
 
+// Ensure hot reload development file is never used in serverless production
+if (file_exists(__DIR__ . '/../public/hot')) {
+    @unlink(__DIR__ . '/../public/hot');
+}
+
 // In Vercel serverless functions, the only writable directory is /tmp.
+// Explicitly inject environment variables for Vercel execution
+$_ENV['VERCEL'] = '1';
+$_SERVER['VERCEL'] = '1';
+putenv('VERCEL=1');
+
+if (!getenv('APP_STORAGE_PATH')) {
+    putenv('APP_STORAGE_PATH=/tmp/storage');
+    $_ENV['APP_STORAGE_PATH'] = '/tmp/storage';
+    $_SERVER['APP_STORAGE_PATH'] = '/tmp/storage';
+}
+
+if (!getenv('VIEW_COMPILED_PATH')) {
+    putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
+    $_ENV['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
+    $_SERVER['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
+}
+
+if (!getenv('APP_CONFIG_CACHE')) {
+    putenv('APP_CONFIG_CACHE=/tmp/bootstrap/cache/config.php');
+    $_ENV['APP_CONFIG_CACHE'] = '/tmp/bootstrap/cache/config.php';
+    $_SERVER['APP_CONFIG_CACHE'] = '/tmp/bootstrap/cache/config.php';
+}
+if (!getenv('APP_EVENTS_CACHE')) {
+    putenv('APP_EVENTS_CACHE=/tmp/bootstrap/cache/events.php');
+    $_ENV['APP_EVENTS_CACHE'] = '/tmp/bootstrap/cache/events.php';
+    $_SERVER['APP_EVENTS_CACHE'] = '/tmp/bootstrap/cache/events.php';
+}
+if (!getenv('APP_PACKAGES_CACHE')) {
+    putenv('APP_PACKAGES_CACHE=/tmp/bootstrap/cache/packages.php');
+    $_ENV['APP_PACKAGES_CACHE'] = '/tmp/bootstrap/cache/packages.php';
+    $_SERVER['APP_PACKAGES_CACHE'] = '/tmp/bootstrap/cache/packages.php';
+}
+if (!getenv('APP_ROUTES_CACHE')) {
+    putenv('APP_ROUTES_CACHE=/tmp/bootstrap/cache/routes.php');
+    $_ENV['APP_ROUTES_CACHE'] = '/tmp/bootstrap/cache/routes.php';
+    $_SERVER['APP_ROUTES_CACHE'] = '/tmp/bootstrap/cache/routes.php';
+}
+if (!getenv('APP_SERVICES_CACHE')) {
+    putenv('APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php');
+    $_ENV['APP_SERVICES_CACHE'] = '/tmp/bootstrap/cache/services.php';
+    $_SERVER['APP_SERVICES_CACHE'] = '/tmp/bootstrap/cache/services.php';
+}
+
 // Prepare framework directories if not present in the ephemeral container.
 $tmpDirs = [
     '/tmp/storage/framework/views',
@@ -25,3 +73,4 @@ foreach ($tmpDirs as $dir) {
 
 // Forward incoming request to Laravel's standard public front controller
 require __DIR__ . '/../public/index.php';
+
