@@ -43,7 +43,6 @@
     "APP_DEBUG": "false",
     "VERCEL": "1",
     "APP_STORAGE_PATH": "/tmp/storage",
-    "APP_CONFIG_CACHE": "/tmp/bootstrap/cache/config.php",
     "APP_EVENTS_CACHE": "/tmp/bootstrap/cache/events.php",
     "APP_PACKAGES_CACHE": "/tmp/bootstrap/cache/packages.php",
     "APP_ROUTES_CACHE": "/tmp/bootstrap/cache/routes.php",
