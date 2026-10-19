@@ -53,6 +53,7 @@ class SocialAuthController extends Controller
     public function redirectToGoogle(): SymfonyRedirectResponse|RedirectResponse
     {
         return Socialite::driver('google')
+            ->stateless()
             ->redirectUrl($this->getRedirectUri())
             ->redirect();
     }
