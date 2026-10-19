@@ -39,14 +39,12 @@ class SocialAuthController extends Controller
      */
     protected function getRedirectUri(): string
     {
-        $configured = config('services.google.redirect')
-            ?: env('GOOGLE_REDIRECT_URI')
-            ?: getenv('GOOGLE_REDIRECT_URI')
-            ?: ($_ENV['GOOGLE_REDIRECT_URI'] ?? null)
-            ?: ($_SERVER['GOOGLE_REDIRECT_URI'] ?? null);
+        $redirectUri = env('GOOGLE_REDIRECT_URI') 
+            ?? config('services.google.redirect') 
+            ?? 'https://www.bizzhuss.com/auth/google/callback';
 
-        if (!empty($configured) && filter_var($configured, FILTER_VALIDATE_URL)) {
-            return (string) $configured;
+        if (preg_match('/https?:\/\/[^\s\)\'"]+/', $redirectUri, $matches)) {
+            return $matches[0];
         }
 
         return route('auth.google.callback');
@@ -57,19 +55,13 @@ class SocialAuthController extends Controller
      */
     protected function ensureGoogleConfig(): void
     {
-        $clientId = config('services.google.client_id')
-            ?: env('GOOGLE_CLIENT_ID')
-            ?: getenv('GOOGLE_CLIENT_ID')
-            ?: ($_ENV['GOOGLE_CLIENT_ID'] ?? null)
-            ?: ($_SERVER['GOOGLE_CLIENT_ID'] ?? null)
-            ?: '1060850240999-jsuohpk5esq9o6vqkvvbi3oo1i5628ko.apps.googleusercontent.com';
+        $clientId = env('GOOGLE_CLIENT_ID') 
+            ?? config('services.google.client_id') 
+            ?? '1060850240999-jsuohpk5esq9o6vqkvvbi3oo1i5628ko.apps.googleusercontent.com';
 
-        $clientSecret = config('services.google.client_secret')
-            ?: env('GOOGLE_CLIENT_SECRET')
-            ?: getenv('GOOGLE_CLIENT_SECRET')
-            ?: ($_ENV['GOOGLE_CLIENT_SECRET'] ?? null)
-            ?: ($_SERVER['GOOGLE_CLIENT_SECRET'] ?? null)
-            ?: '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';
+        $clientSecret = env('GOOGLE_CLIENT_SECRET') 
+            ?? config('services.google.client_secret') 
+            ?? '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';
 
         $redirectUri = $this->getRedirectUri();
 
@@ -85,11 +77,25 @@ class SocialAuthController extends Controller
      */
     public function redirectToGoogle(): SymfonyRedirectResponse|RedirectResponse
     {
-        $this->ensureGoogleConfig();
+        $clientId = env('GOOGLE_CLIENT_ID') 
+            ?? config('services.google.client_id') 
+            ?? '1060850240999-jsuohpk5esq9o6vqkvvbi3oo1i5628ko.apps.googleusercontent.com';
+
+        $clientSecret = env('GOOGLE_CLIENT_SECRET') 
+            ?? config('services.google.client_secret') 
+            ?? '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';
+
+        $redirectUri = $this->getRedirectUri();
+
+        config([
+            'services.google.client_id' => $clientId,
+            'services.google.client_secret' => $clientSecret,
+            'services.google.redirect' => $redirectUri,
+        ]);
 
         return Socialite::driver('google')
             ->stateless()
-            ->redirectUrl($this->getRedirectUri())
+            ->redirectUrl($redirectUri)
             ->redirect();
     }
 
@@ -104,11 +110,25 @@ class SocialAuthController extends Controller
         }
 
         try {
-            $this->ensureGoogleConfig();
+            $clientId = env('GOOGLE_CLIENT_ID') 
+                ?? config('services.google.client_id') 
+                ?? '1060850240999-jsuohpk5esq9o6vqkvvbi3oo1i5628ko.apps.googleusercontent.com';
+
+            $clientSecret = env('GOOGLE_CLIENT_SECRET') 
+                ?? config('services.google.client_secret') 
+                ?? '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';
+
+            $redirectUri = $this->getRedirectUri();
+
+            config([
+                'services.google.client_id' => $clientId,
+                'services.google.client_secret' => $clientSecret,
+                'services.google.redirect' => $redirectUri,
+            ]);
 
             $driver = Socialite::driver('google');
             $driver->setHttpClient($this->getHttpClient());
-            $driver->redirectUrl($this->getRedirectUri());
+            $driver->redirectUrl($redirectUri);
 
             /** @var \Laravel\Socialite\Two\User $googleUser */
             $googleUser = $driver->stateless()->user();

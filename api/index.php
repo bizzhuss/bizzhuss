@@ -100,6 +100,25 @@ if (!getenv('CACHE_STORE')) {
     $_SERVER['CACHE_STORE'] = 'array';
 }
 
+if (!getenv('DB_CONNECTION')) {
+    putenv('DB_CONNECTION=mongodb');
+    $_ENV['DB_CONNECTION'] = 'mongodb';
+    $_SERVER['DB_CONNECTION'] = 'mongodb';
+}
+
+if (!getenv('MONGODB_DATABASE')) {
+    putenv('MONGODB_DATABASE=bizzhuss');
+    $_ENV['MONGODB_DATABASE'] = 'bizzhuss';
+    $_SERVER['MONGODB_DATABASE'] = 'bizzhuss';
+}
+
+if (!getenv('MONGODB_URI')) {
+    $fallbackMongoUri = 'mongodb+srv://Vercel-Admin-bizzhuss:gFpIAIZ32lwj3hp3@bizzhuss.zpvg2e7.mongodb.net/bizzhuss?retryWrites=true&w=majority';
+    putenv("MONGODB_URI={$fallbackMongoUri}");
+    $_ENV['MONGODB_URI'] = $fallbackMongoUri;
+    $_SERVER['MONGODB_URI'] = $fallbackMongoUri;
+}
+
 // Prepare framework directories if not present in the ephemeral container.
 $tmpDirs = [
     '/tmp/storage/framework/views',

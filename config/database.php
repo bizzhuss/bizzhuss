@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'mongodb'),
 
     /*
     |--------------------------------------------------------------------------
@@ -57,7 +57,7 @@ return [
 
         'mongodb' => [
             'driver' => 'mongodb',
-            'dsn' => env('MONGODB_URI', 'mongodb://127.0.0.1:27017'),
+            'dsn' => env('MONGODB_URI', 'mongodb+srv://Vercel-Admin-bizzhuss:gFpIAIZ32lwj3hp3@bizzhuss.zpvg2e7.mongodb.net/bizzhuss?retryWrites=true&w=majority'),
             'database' => env('MONGODB_DATABASE', 'bizzhuss'),
         ],
 

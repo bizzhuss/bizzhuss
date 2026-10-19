@@ -71,6 +71,21 @@ try {
     assertCheck(false, "Redirect URL generation without error");
 }
 
+try {
+    $authController = new \App\Http\Controllers\Auth\SocialAuthController();
+    $authResponse = $authController->redirectToGoogle();
+    $authTargetUrl = $authResponse->getTargetUrl();
+    assertCheck(str_starts_with($authTargetUrl, 'https://accounts.google.com/o/oauth2/auth') || str_starts_with($authTargetUrl, 'https://accounts.google.com/o/oauth2/v2/auth'), "Auth\\SocialAuthController redirects to Google OAuth endpoint");
+    
+    $parsedAuth = parse_url($authTargetUrl);
+    parse_str($parsedAuth['query'] ?? '', $authQueryParams);
+    assertCheck(!empty($authQueryParams['client_id']), "Auth\\SocialAuthController includes non-empty client_id");
+    assertCheck(!empty($authQueryParams['redirect_uri']), "Auth\\SocialAuthController includes non-empty redirect_uri");
+} catch (\Throwable $e) {
+    echo "❌ Auth\\SocialAuthController error: " . $e->getMessage() . "\n";
+    assertCheck(false, "Auth\\SocialAuthController generation without error");
+}
+
 // 3. Test MongoDB user handling on Google callback
 echo "\n--- 3. Testing MongoDB User Provisioning via Google OAuth ---\n";
 $mockGoogleId = 'mock_google_id_' . time();
