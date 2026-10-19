@@ -32,8 +32,8 @@ return [
     ],
 
     'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'client_id' => env('GOOGLE_CLIENT_ID', '1060850240999-jsuohpk5esq9o6vqkvvbi3oo1i5628ko.apps.googleusercontent.com'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET', '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'),
         'redirect' => env('GOOGLE_REDIRECT_URI', 'https://www.bizzhuss.com/auth/google/callback'),
     ],
 

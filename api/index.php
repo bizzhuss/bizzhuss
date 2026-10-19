@@ -37,11 +37,28 @@ if (!getenv('VIEW_COMPILED_PATH')) {
     $_SERVER['VIEW_COMPILED_PATH'] = '/tmp/storage/framework/views';
 }
 
-if (!getenv('APP_CONFIG_CACHE')) {
-    putenv('APP_CONFIG_CACHE=/tmp/bootstrap/cache/config.php');
-    $_ENV['APP_CONFIG_CACHE'] = '/tmp/bootstrap/cache/config.php';
-    $_SERVER['APP_CONFIG_CACHE'] = '/tmp/bootstrap/cache/config.php';
+// Prevent Laravel from using cached configuration in serverless if env vars are dynamic
+if (file_exists(__DIR__ . '/../bootstrap/cache/config.php')) {
+    @unlink(__DIR__ . '/../bootstrap/cache/config.php');
 }
+if (file_exists('/tmp/bootstrap/cache/config.php')) {
+    @unlink('/tmp/bootstrap/cache/config.php');
+}
+if (file_exists('/tmp/storage/framework/cache')) {
+    // ensure clean cache
+    $files = glob('/tmp/storage/framework/cache/*');
+    if ($files) {
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
+    }
+}
+
+// Unset config cache path so Laravel dynamically reads config files with runtime env variables
+putenv('APP_CONFIG_CACHE');
+unset($_ENV['APP_CONFIG_CACHE'], $_SERVER['APP_CONFIG_CACHE']);
 if (!getenv('APP_EVENTS_CACHE')) {
     putenv('APP_EVENTS_CACHE=/tmp/bootstrap/cache/events.php');
     $_ENV['APP_EVENTS_CACHE'] = '/tmp/bootstrap/cache/events.php';
