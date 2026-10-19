@@ -56,6 +56,26 @@ if (!getenv('APP_SERVICES_CACHE')) {
     $_SERVER['APP_SERVICES_CACHE'] = '/tmp/bootstrap/cache/services.php';
 }
 
+// Provide fallback APP_KEY if not yet configured in Vercel environment variables
+if (!getenv('APP_KEY') && empty($_ENV['APP_KEY']) && empty($_SERVER['APP_KEY'])) {
+    $fallbackKey = 'base64:niNfQlDHgmS0Ja2dov5Sv0BV0eeOYqoyRFNCFmQlcxk=';
+    putenv("APP_KEY={$fallbackKey}");
+    $_ENV['APP_KEY'] = $fallbackKey;
+    $_SERVER['APP_KEY'] = $fallbackKey;
+}
+
+if (!getenv('SESSION_DRIVER')) {
+    putenv('SESSION_DRIVER=cookie');
+    $_ENV['SESSION_DRIVER'] = 'cookie';
+    $_SERVER['SESSION_DRIVER'] = 'cookie';
+}
+
+if (!getenv('CACHE_STORE')) {
+    putenv('CACHE_STORE=array');
+    $_ENV['CACHE_STORE'] = 'array';
+    $_SERVER['CACHE_STORE'] = 'array';
+}
+
 // Prepare framework directories if not present in the ephemeral container.
 $tmpDirs = [
     '/tmp/storage/framework/views',
@@ -69,6 +89,10 @@ foreach ($tmpDirs as $dir) {
     if (!is_dir($dir)) {
         @mkdir($dir, 0755, true);
     }
+}
+
+if (!file_exists('/tmp/database.sqlite')) {
+    @touch('/tmp/database.sqlite');
 }
 
 // Forward incoming request to Laravel's standard public front controller

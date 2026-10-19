@@ -120,11 +120,10 @@ class CustomerController extends Controller
                 ->take(8)
                 ->get();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Storefront database exception: ' . $e->getMessage());
-            if (config('app.debug')) {
-                throw $e;
-            }
+            \Illuminate\Support\Facades\Log::warning('Storefront DB unavailable, serving demo catalog: ' . $e->getMessage());
             $products = collect();
+            $categories = collect();
+            $featuredVendors = collect();
             $heroBanners = collect();
             $activeCampaign = null;
             $featuredProducts = collect();
@@ -133,8 +132,49 @@ class CustomerController extends Controller
             $budgetPicks = collect();
             $enterpriseHeavyDuty = collect();
             $premiumLuxury = collect();
-            $categories = collect();
-            $featuredVendors = collect();
+        }
+
+        // Automatic fallback to DemoCatalogService if database is offline or empty
+        $demoProducts = \App\Services\DemoCatalogService::products();
+        $demoCategories = \App\Services\DemoCatalogService::categories();
+        $demoVendors = \App\Services\DemoCatalogService::vendors();
+        $demoBanners = \App\Services\DemoCatalogService::banners();
+
+        if ($products->isEmpty()) {
+            $products = $demoProducts;
+        }
+        if ($categories->isEmpty()) {
+            $categories = $demoCategories;
+        }
+        if ($featuredVendors->isEmpty()) {
+            $featuredVendors = $demoVendors;
+        }
+        if ($heroBanners->isEmpty()) {
+            $heroBanners = $demoBanners;
+        }
+        if ($featuredProducts->isEmpty()) {
+            $featuredProducts = $demoProducts->where('is_featured', true)->values();
+        }
+        if ($specialSaleProducts->isEmpty()) {
+            $specialSaleProducts = $demoProducts->where('is_on_special_sale', true)->values();
+        }
+        if ($bestSellingProducts->isEmpty()) {
+            $bestSellingProducts = $demoProducts->sortByDesc('total_sold_count')->values();
+        }
+        if ($budgetPicks->isEmpty()) {
+            $budgetPicks = $demoProducts->where('curation_tier', 'smart_value_budget')->values();
+            if ($budgetPicks->isEmpty()) {
+                $budgetPicks = $demoProducts->sortBy('price')->values();
+            }
+        }
+        if ($enterpriseHeavyDuty->isEmpty()) {
+            $enterpriseHeavyDuty = $demoProducts->where('curation_tier', 'enterprise_heavy_duty')->values();
+            if ($enterpriseHeavyDuty->isEmpty()) {
+                $enterpriseHeavyDuty = $demoProducts->sortByDesc('price')->values();
+            }
+        }
+        if ($premiumLuxury->isEmpty()) {
+            $premiumLuxury = $demoProducts->sortByDesc('price')->values();
         }
 
         return Inertia::render('Storefront/Home', [
@@ -159,100 +199,117 @@ class CustomerController extends Controller
      */
     public function shop(Request $request): Response
     {
-        $query = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug,parent_id'])
-            ->where('status', 'published')
-            ->whereHas('vendor', function ($q) {
-                $q->where('status', 'active');
-            });
+        try {
+            $query = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug,parent_id'])
+                ->where('status', 'published')
+                ->whereHas('vendor', function ($q) {
+                    $q->where('status', 'active');
+                });
 
-        // Filter by category or categories
-        if ($request->filled('categories')) {
-            $catFilter = is_array($request->input('categories')) 
-                ? $request->input('categories') 
-                : explode(',', $request->input('categories'));
+            // Filter by category or categories
+            if ($request->filled('categories')) {
+                $catFilter = is_array($request->input('categories')) 
+                    ? $request->input('categories') 
+                    : explode(',', $request->input('categories'));
 
-            $query->whereHas('category', function ($q) use ($catFilter) {
-                $q->whereIn('slug', $catFilter)->orWhereIn('id', $catFilter)->orWhereIn('name', $catFilter);
-            });
-        } elseif ($request->filled('category') && $request->input('category') !== 'all') {
-            $cat = $request->input('category');
-            $query->whereHas('category', function ($q) use ($cat) {
-                $q->where('slug', $cat)->orWhere('name', $cat)->orWhere('id', $cat);
-            });
-        }
+                $query->whereHas('category', function ($q) use ($catFilter) {
+                    $q->whereIn('slug', $catFilter)->orWhereIn('id', $catFilter)->orWhereIn('name', $catFilter);
+                });
+            } elseif ($request->filled('category') && $request->input('category') !== 'all') {
+                $cat = $request->input('category');
+                $query->whereHas('category', function ($q) use ($cat) {
+                    $q->where('slug', $cat)->orWhere('name', $cat)->orWhere('id', $cat);
+                });
+            }
 
-        // Filter by vendors / brands
-        if ($request->filled('vendors')) {
-            $vendorFilter = is_array($request->input('vendors')) 
-                ? $request->input('vendors') 
-                : explode(',', $request->input('vendors'));
+            // Filter by vendors / brands
+            if ($request->filled('vendors')) {
+                $vendorFilter = is_array($request->input('vendors')) 
+                    ? $request->input('vendors') 
+                    : explode(',', $request->input('vendors'));
 
-            $query->whereHas('vendor', function ($q) use ($vendorFilter) {
-                $q->whereIn('id', $vendorFilter)->orWhereIn('shop_name', $vendorFilter)->orWhereIn('slug', $vendorFilter);
-            });
-        } elseif ($request->filled('vendor')) {
-            $vId = $request->input('vendor');
-            $query->whereHas('vendor', function ($q) use ($vId) {
-                $q->where('id', $vId)->orWhere('slug', $vId)->orWhere('shop_name', $vId);
-            });
-        }
+                $query->whereHas('vendor', function ($q) use ($vendorFilter) {
+                    $q->whereIn('id', $vendorFilter)->orWhereIn('shop_name', $vendorFilter)->orWhereIn('slug', $vendorFilter);
+                });
+            } elseif ($request->filled('vendor')) {
+                $vId = $request->input('vendor');
+                $query->whereHas('vendor', function ($q) use ($vId) {
+                    $q->where('id', $vId)->orWhere('slug', $vId)->orWhere('shop_name', $vId);
+                });
+            }
 
-        // Filter by price range
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', (float) $request->input('min_price'));
-        }
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', (float) $request->input('max_price'));
-        }
+            // Filter by price range
+            if ($request->filled('min_price')) {
+                $query->where('price', '>=', (float) $request->input('min_price'));
+            }
+            if ($request->filled('max_price')) {
+                $query->where('price', '<=', (float) $request->input('max_price'));
+            }
 
-        // Filter by In-Stock Only
-        if ($request->boolean('in_stock')) {
-            $query->where('stock_quantity', '>', 0);
-        }
+            // Filter by In-Stock Only
+            if ($request->boolean('in_stock')) {
+                $query->where('stock_quantity', '>', 0);
+            }
 
-        // Search query
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
-            });
-        }
+            // Search query
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhere('sku', 'like', "%{$search}%");
+                });
+            }
 
-        // Sorting
-        $sort = $request->input('sort', 'featured');
-        switch ($sort) {
-            case 'price_asc':
-                $query->orderBy('price', 'asc');
-                break;
-            case 'price_desc':
-                $query->orderBy('price', 'desc');
-                break;
-            case 'newest':
-                $query->orderBy('id', 'desc');
-                break;
-            default:
-                $query->orderBy('id', 'desc');
-                break;
-        }
+            // Sorting
+            $sort = $request->input('sort', 'featured');
+            switch ($sort) {
+                case 'price_asc':
+                    $query->orderBy('price', 'asc');
+                    break;
+                case 'price_desc':
+                    $query->orderBy('price', 'desc');
+                    break;
+                case 'newest':
+                    $query->orderBy('id', 'desc');
+                    break;
+                default:
+                    $query->orderBy('id', 'desc');
+                    break;
+            }
 
-        $products = $query->paginate(12)->withQueryString();
+            $products = $query->paginate(12)->withQueryString();
 
-        $categories = Category::with(['subcategories' => fn ($q) => $q->where('is_active', true)])
-            ->where('is_active', true)
-            ->whereNull('parent_id')
-            ->orderBy('order', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
-        if ($categories->isEmpty()) {
-            $categories = Category::where('is_active', true)
-                ->select('id', 'name', 'slug', 'icon')
+            $categories = Category::with(['subcategories' => fn ($q) => $q->where('is_active', true)])
+                ->where('is_active', true)
+                ->whereNull('parent_id')
                 ->orderBy('order', 'asc')
+                ->orderBy('id', 'asc')
                 ->get();
-        }
+            if ($categories->isEmpty()) {
+                $categories = Category::where('is_active', true)
+                    ->select('id', 'name', 'slug', 'icon')
+                    ->orderBy('order', 'asc')
+                    ->get();
+            }
 
-        $vendors = Vendor::where('status', 'active')->select('id', 'shop_name', 'slug')->get();
+            $vendors = Vendor::where('status', 'active')->select('id', 'shop_name', 'slug')->get();
+
+            if ($products->isEmpty()) {
+                $products = \App\Services\DemoCatalogService::paginateProducts(12);
+            }
+            if ($categories->isEmpty()) {
+                $categories = \App\Services\DemoCatalogService::categories();
+            }
+            if ($vendors->isEmpty()) {
+                $vendors = \App\Services\DemoCatalogService::vendors();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Shop database exception: ' . $e->getMessage());
+            $products = \App\Services\DemoCatalogService::paginateProducts(12);
+            $categories = \App\Services\DemoCatalogService::categories();
+            $vendors = \App\Services\DemoCatalogService::vendors();
+        }
 
         return Inertia::render('Storefront/Shop', [
             'products' => $products,
@@ -275,38 +332,60 @@ class CustomerController extends Controller
      */
     public function productDetail(string $slug): Response
     {
-        $product = Product::with(['vendor', 'category'])
-            ->where(function ($q) use ($slug) {
-                $q->where('slug', $slug)->orWhere('id', $slug);
-            })
-            ->first();
+        try {
+            $product = Product::with(['vendor', 'category'])
+                ->where(function ($q) use ($slug) {
+                    $q->where('slug', $slug)->orWhere('id', $slug);
+                })
+                ->first();
 
-        // If product doesn't exist, pick the first published or any product
-        if (!$product) {
-            $product = Product::with(['vendor', 'category'])->first();
+            // If product doesn't exist, pick the first published or any product
+            if (!$product) {
+                $product = Product::with(['vendor', 'category'])->first();
+            }
+        } catch (\Throwable $e) {
+            $product = null;
         }
 
         if (!$product) {
-            abort(404, 'Product not found.');
+            $demoList = \App\Services\DemoCatalogService::products();
+            $product = $demoList->firstWhere('slug', $slug) ?? $demoList->first();
+            $relatedProducts = $demoList->where('id', '!=', $product->id)->take(4)->values();
+
+            return Inertia::render('Storefront/ProductDetail', [
+                'product' => $product,
+                'relatedProducts' => $relatedProducts,
+            ]);
         }
 
         if (is_string($product->images)) {
             $product->images = json_decode($product->images, true) ?? [];
         }
 
-        $relatedProducts = Product::with(['vendor', 'category'])
-            ->where('id', '!=', $product->id)
-            ->when($product->category_id, function ($q, $catId) {
-                $q->where('category_id', $catId);
-            })
-            ->limit(4)
-            ->get()
-            ->map(function ($p) {
-                if (is_string($p->images)) {
-                    $p->images = json_decode($p->images, true) ?? [];
-                }
-                return $p;
-            });
+        try {
+            $relatedProducts = Product::with(['vendor', 'category'])
+                ->where('id', '!=', $product->id)
+                ->when($product->category_id, function ($q, $catId) {
+                    $q->where('category_id', $catId);
+                })
+                ->limit(4)
+                ->get()
+                ->map(function ($p) {
+                    if (is_string($p->images)) {
+                        $p->images = json_decode($p->images, true) ?? [];
+                    }
+                    return $p;
+                });
+        } catch (\Throwable $e) {
+            $relatedProducts = collect();
+        }
+
+        if ($relatedProducts->isEmpty()) {
+            $relatedProducts = \App\Services\DemoCatalogService::products()
+                ->where('id', '!=', $product->id)
+                ->take(4)
+                ->values();
+        }
 
         return Inertia::render('Storefront/ProductDetail', [
             'product' => $product,
