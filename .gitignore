@@ -29,3 +29,5 @@ yarn-error.log
 /database/*.sqlite-journal
 .DS_Store
 Thumbs.db
+/database-backups/*.sql
+/database-backups/raw_data_backup/
