@@ -154,6 +154,10 @@ class AdminWorkforceController extends Controller
                 ->where('status', 'completed')
                 ->count();
 
+            $userPerms = ($employee->user && method_exists($employee->user, 'getAllPermissions'))
+                ? $employee->user->getAllPermissions()->pluck('name')->toArray()
+                : [];
+
             return [
                 'id' => $employee->id,
                 'user_id' => $employee->user_id,
@@ -161,7 +165,15 @@ class AdminWorkforceController extends Controller
                 'monthly_target' => $employee->monthly_target ?? 25,
                 'joining_date' => $employee->joining_date ? $employee->joining_date->format('Y-m-d') : null,
                 'status' => $employee->status,
-                'user' => $employee->user,
+                'user' => $employee->user ? [
+                    'id' => $employee->user->id,
+                    'name' => $employee->user->name,
+                    'email' => $employee->user->email,
+                    'phone' => $employee->user->phone,
+                    'avatar' => $employee->user->avatar,
+                    'status' => $employee->user->status,
+                    'permissions' => $userPerms,
+                ] : null,
                 'department' => $employee->department,
                 'designation' => $employee->designation,
                 'active_tasks_count' => $activeTasksCount,
@@ -272,5 +284,22 @@ class AdminWorkforceController extends Controller
         }
 
         return redirect()->back()->with('success', "Employee '{$name}' removed from workforce.");
+    }
+
+    /**
+     * Update tier and module permissions for an employee.
+     */
+    public function updatePermissions(Request $request, Employee $employee)
+    {
+        $validated = $request->validate([
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string|exists:permissions,name',
+        ]);
+
+        if ($employee->user) {
+            $employee->user->syncPermissions($validated['permissions'] ?? []);
+        }
+
+        return redirect()->back()->with('success', "Permissions updated for {$employee->user->name}.");
     }
 }

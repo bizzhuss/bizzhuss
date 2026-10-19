@@ -36,21 +36,73 @@ class CheckRole
         }
 
         // 3. Super Admin has universal supervisory authorization
-        if ($user->role === 'super_admin') {
+        if ($user->role === 'super_admin' || (method_exists($user, 'hasRole') && $user->hasRole('super_admin'))) {
             return $next($request);
         }
 
-        // 4. Strict Role Verification
-        if (!in_array($user->role, $roles)) {
+        // 4. Admin Operational Modules Permission Verification
+        if ($request->is('admin*') || in_array('super_admin', $roles)) {
+            $adminModuleMap = [
+                'admin/vendors*' => 'module.vendor_oversight',
+                'admin/marketing/curation*' => 'module.storefront_curation',
+                'admin/curation*' => 'module.storefront_curation',
+                'admin/workforce/departments*' => 'module.departments',
+                'admin/workforce/employees*' => 'module.workforce',
+                'admin/workforce/tasks*' => 'module.kanban',
+                'admin/settings*' => 'module.platform_settings',
+                'admin/dashboard' => 'module.central_command',
+                'admin' => 'module.central_command',
+            ];
+
+            $matchedPermission = null;
+            foreach ($adminModuleMap as $pattern => $permission) {
+                if ($request->is($pattern)) {
+                    $matchedPermission = $permission;
+                    break;
+                }
+            }
+
+            if ($matchedPermission) {
+                $hasPerm = method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo($matchedPermission);
+                if ($hasPerm) {
+                    return $next($request);
+                }
+
+                if ($request->expectsJson() && !$request->header('X-Inertia')) {
+                    return response()->json(['message' => "Forbidden: Missing permission [{$matchedPermission}]."], 403);
+                }
+
+                abort(403, "Access Denied: You do not have permission ({$matchedPermission}) to access this operational module.");
+            }
+
+            abort(403, "Access Denied: Super Admin authorization required.");
+        }
+
+        // 5. Tier Portal Permissions Verification
+        $hasTierAccess = false;
+        if ($request->is('vendor*') || in_array('vendor', $roles)) {
+            $hasTierAccess = in_array($user->role, ['vendor', 'super_admin']) || 
+                (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('tier.vendor_portal'));
+        } elseif ($request->is('employee*') || in_array('employee', $roles)) {
+            $hasTierAccess = in_array($user->role, ['employee', 'super_admin']) || 
+                (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('tier.employee_desk'));
+        } elseif ($request->is('marketing*') || in_array('marketing_manager', $roles)) {
+            $hasTierAccess = in_array($user->role, ['marketing_manager', 'super_admin']) || 
+                (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('tier.marketing_hub'));
+        } else {
+            $hasTierAccess = in_array($user->role, $roles);
+        }
+
+        if (!$hasTierAccess) {
             if ($request->expectsJson() && !$request->header('X-Inertia')) {
-                return response()->json(['message' => 'Forbidden: Unauthorized role access.'], 403);
+                return response()->json(['message' => 'Forbidden: Unauthorized portal access.'], 403);
             }
 
             abort(403, "Access Denied: Your account role ({$user->role}) is not authorized to access this portal.");
         }
 
-        // 5. Verify & Auto-create Vendor Profile if missing for authenticated vendor user
-        if ($user->role === 'vendor' && !$user->vendor) {
+        // 6. Verify & Auto-create Vendor Profile if missing for authenticated vendor user or staff with vendor portal access
+        if (($user->role === 'vendor' || (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('tier.vendor_portal'))) && !$user->vendor) {
             Vendor::create([
                 'user_id' => $user->id,
                 'shop_name' => ($user->name ?? 'Merchant') . "'s Store",

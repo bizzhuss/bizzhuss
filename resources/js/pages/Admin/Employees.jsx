@@ -22,8 +22,97 @@ import {
     Shield,
     AlertTriangle,
     Mail,
-    Phone
+    Phone,
+    Key,
+    ShieldCheck,
+    CheckSquare,
+    Settings,
+    Store,
+    Megaphone,
+    Sparkles,
+    Lock,
+    Check
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const TIER_PERMISSIONS = [
+    {
+        id: 'tier.vendor_portal',
+        name: 'Vendor Portal (Tier 3)',
+        badge: 'Tier 3',
+        desc: 'Access to vendor merchant management, product catalog & fulfillment (/vendor)',
+        icon: Store,
+        color: 'text-amber-600 bg-amber-50 border-amber-200',
+    },
+    {
+        id: 'tier.employee_desk',
+        name: 'Employee Desk (Tier 4)',
+        badge: 'Tier 4',
+        desc: 'Access to workforce desk, operational assignments & personal tickets (/employee)',
+        icon: Briefcase,
+        color: 'text-sky-600 bg-sky-50 border-sky-200',
+    },
+    {
+        id: 'tier.marketing_hub',
+        name: 'Marketing Hub (Tier 5)',
+        badge: 'Tier 5',
+        desc: 'Access to marketing campaigns, banners & curation hub (/marketing)',
+        icon: Megaphone,
+        color: 'text-purple-600 bg-purple-50 border-purple-200',
+    },
+];
+
+const MODULE_PERMISSIONS = [
+    {
+        id: 'module.central_command',
+        name: 'Central Command',
+        path: '/admin',
+        desc: 'Admin dashboard metrics & platform telemetry overview',
+        icon: Target,
+    },
+    {
+        id: 'module.vendor_oversight',
+        name: 'Vendor Oversight & Governance',
+        path: '/admin/vendors',
+        desc: 'Manage vendor approvals, commission rates & shop status',
+        icon: Store,
+    },
+    {
+        id: 'module.storefront_curation',
+        name: 'Storefront Curation',
+        path: '/admin/marketing/curation',
+        desc: 'Merchandising, flash sales & featured showcase products',
+        icon: Sparkles,
+    },
+    {
+        id: 'module.departments',
+        name: 'Departments & Hierarchy',
+        path: '/admin/workforce/departments',
+        desc: 'Corporate departments & operational designation titles',
+        icon: Building2,
+    },
+    {
+        id: 'module.workforce',
+        name: 'Workforce Directory',
+        path: '/admin/workforce/employees',
+        desc: 'Workforce personnel directory & staff permission delegation',
+        icon: Users,
+    },
+    {
+        id: 'module.kanban',
+        name: 'Task Delegation & Kanban',
+        path: '/admin/workforce/tasks',
+        desc: 'Interactive operational task kanban board & assignments',
+        icon: CheckSquare,
+    },
+    {
+        id: 'module.platform_settings',
+        name: 'Platform Settings',
+        path: '/admin/settings',
+        desc: 'Global configurations, maintenance mode & financial payouts',
+        icon: Settings,
+    },
+];
 
 export default function Employees({ employees = [], departments = [], metrics = {}, filters = {} }) {
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
@@ -47,6 +136,52 @@ export default function Employees({ employees = [], departments = [], metrics = 
 
     // Delete Confirmation
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
+
+    // Staff Permissions & Tier Access Modal State
+    const [permissionEmployee, setPermissionEmployee] = useState(null);
+    const [selectedPermissions, setSelectedPermissions] = useState([]);
+    const [isSavingPermissions, setIsSavingPermissions] = useState(false);
+
+    const handleOpenPermissions = (emp) => {
+        setPermissionEmployee(emp);
+        setSelectedPermissions(emp.user?.permissions || []);
+    };
+
+    const togglePermission = (permId) => {
+        setSelectedPermissions(prev =>
+            prev.includes(permId)
+                ? prev.filter(p => p !== permId)
+                : [...prev, permId]
+        );
+    };
+
+    const selectAllModules = () => {
+        const moduleIds = MODULE_PERMISSIONS.map(m => m.id);
+        setSelectedPermissions(prev => Array.from(new Set([...prev, ...moduleIds])));
+    };
+
+    const clearAllPermissions = () => {
+        setSelectedPermissions([]);
+    };
+
+    const handleSavePermissions = (e) => {
+        e.preventDefault();
+        if (!permissionEmployee) return;
+
+        setIsSavingPermissions(true);
+        router.post(`/admin/workforce/employees/${permissionEmployee.id}/permissions`, {
+            permissions: selectedPermissions,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsSavingPermissions(false);
+                setPermissionEmployee(null);
+            },
+            onError: () => {
+                setIsSavingPermissions(false);
+            }
+        });
+    };
 
     // Filter designations based on selected department in create form
     const selectedDeptObj = departments.find(d => d.id === parseInt(formData.department_id));
@@ -269,9 +404,32 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                                 <span className="font-bold text-slate-800 block">
                                                     {emp.department?.name || 'General Operations'}
                                                 </span>
-                                                <span className="text-[11px] text-brand-600 font-medium">
-                                                    {emp.designation?.title || 'Staff Associate'}
-                                                </span>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    <span className="text-[11px] text-brand-600 font-medium">
+                                                        {emp.designation?.title || 'Staff Associate'}
+                                                    </span>
+                                                    {emp.user?.permissions && emp.user.permissions.length > 0 ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleOpenPermissions(emp)}
+                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 transition-colors cursor-pointer"
+                                                            title={`${emp.user.permissions.length} permissions granted: ${emp.user.permissions.join(', ')}`}
+                                                        >
+                                                            <Key className="w-2.5 h-2.5 text-amber-600" />
+                                                            <span>{emp.user.permissions.length} perms</span>
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleOpenPermissions(emp)}
+                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer"
+                                                            title="Default role permissions only. Click to assign granular access."
+                                                        >
+                                                            <Shield className="w-2.5 h-2.5 text-slate-400" />
+                                                            <span>Default role</span>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
 
                                             {/* Active Tasks */}
@@ -321,6 +479,15 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                             <td className="px-5 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-1.5">
                                                     <button
+                                                        type="button"
+                                                        onClick={() => handleOpenPermissions(emp)}
+                                                        className="p-1.5 rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-50 border border-amber-200 transition-colors cursor-pointer"
+                                                        title="Manage Permissions & Tier Access"
+                                                    >
+                                                        <Key className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
                                                         onClick={() => setEditingEmployee({
                                                             ...emp,
                                                             department_id: emp.department?.id || '',
@@ -332,6 +499,7 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                                         <Edit className="w-3.5 h-3.5" />
                                                     </button>
                                                     <button
+                                                        type="button"
                                                         onClick={() => setEmployeeToDelete(emp)}
                                                         className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer"
                                                         title="Delete Employee"
@@ -599,6 +767,218 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Manage Permissions & Tier Access Modal */}
+            {permissionEmployee && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in overflow-y-auto">
+                    <div className="bg-white rounded-3xl max-w-2xl w-full my-8 shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold border border-amber-500/20 shadow-xs">
+                                    <Key className="w-5 h-5 text-amber-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                                        Manage Staff Permissions & Tier Access
+                                    </h3>
+                                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                                        <span className="font-semibold text-slate-700">{permissionEmployee.user?.name}</span>
+                                        <span>•</span>
+                                        <span className="font-mono text-[11px] text-slate-600 font-bold">{permissionEmployee.employee_code}</span>
+                                        <span>•</span>
+                                        <span className="text-brand-600 font-medium">{permissionEmployee.department?.name || 'General Operations'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button 
+                                type="button"
+                                onClick={() => setPermissionEmployee(null)} 
+                                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Scrollable Body */}
+                        <div className="p-6 overflow-y-auto space-y-6 text-xs flex-1">
+                            {/* Super Admin Tier 2 Protection Banner */}
+                            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-900 text-white border border-slate-800">
+                                <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                                    <Lock className="w-4 h-4" />
+                                </div>
+                                <div className="leading-relaxed">
+                                    <span className="font-bold text-amber-300 block text-xs">Super Admin Tier 2 Protection</span>
+                                    <p className="text-[11px] text-slate-300 mt-0.5">
+                                        Tier 2 (Command Center) is strictly reserved for root administrators and cannot be assigned to normal staff. Below, you can delegate access to individual operational sub-modules or secondary tiers.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Presets / Toolbar */}
+                            <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-slate-100">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                        Active Grants:
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20">
+                                        {selectedPermissions.length} selected
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={selectAllModules}
+                                        className="text-[11px] font-bold text-brand-600 hover:text-brand-700 px-2.5 py-1 rounded-lg hover:bg-brand-50 transition-colors cursor-pointer"
+                                    >
+                                        Select All Admin Modules
+                                    </button>
+                                    <span className="text-slate-300">|</span>
+                                    <button
+                                        type="button"
+                                        onClick={clearAllPermissions}
+                                        className="text-[11px] font-bold text-rose-600 hover:text-rose-700 px-2.5 py-1 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* SECTION 1: Top Portals & Tier Delegations */}
+                            <div>
+                                <div className="mb-3">
+                                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                        <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
+                                        Top Portals & Tier Delegations
+                                    </h4>
+                                    <p className="text-[11px] text-slate-400 mt-0.5">
+                                        Allow this employee to switch into dedicated tier portals alongside their staff responsibilities.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-2.5">
+                                    {TIER_PERMISSIONS.map((tier) => {
+                                        const Icon = tier.icon;
+                                        const isChecked = selectedPermissions.includes(tier.id);
+
+                                        return (
+                                            <label
+                                                key={tier.id}
+                                                onClick={() => togglePermission(tier.id)}
+                                                className={cn(
+                                                    "flex items-start gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer select-none",
+                                                    isChecked
+                                                        ? "bg-amber-50/50 border-amber-400 shadow-xs ring-1 ring-amber-400/30"
+                                                        : "bg-slate-50/70 border-slate-200 hover:bg-slate-100/70 hover:border-slate-300"
+                                                )}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={() => {}}
+                                                    className="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer"
+                                                />
+                                                <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border mt-0.5", tier.color)}>
+                                                    <Icon className="w-4 h-4" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-slate-900 text-xs">
+                                                            {tier.name}
+                                                        </span>
+                                                        <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 font-bold">
+                                                            {tier.badge}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-500 mt-0.5">
+                                                        {tier.desc}
+                                                    </p>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* SECTION 2: Admin / Operational Sub-Modules */}
+                            <div>
+                                <div className="mb-3">
+                                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                        <Settings className="w-3.5 h-3.5 text-brand-600" />
+                                        Admin Operational Modules (Sub-Tabs)
+                                    </h4>
+                                    <p className="text-[11px] text-slate-400 mt-0.5">
+                                        Select which operational tabs and commands in the Super Admin suite this employee can access.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    {MODULE_PERMISSIONS.map((mod) => {
+                                        const Icon = mod.icon;
+                                        const isChecked = selectedPermissions.includes(mod.id);
+
+                                        return (
+                                            <label
+                                                key={mod.id}
+                                                onClick={() => togglePermission(mod.id)}
+                                                className={cn(
+                                                    "flex items-start gap-3 p-3 rounded-2xl border transition-all cursor-pointer select-none",
+                                                    isChecked
+                                                        ? "bg-brand-50/50 border-brand-400 shadow-xs ring-1 ring-brand-400/30"
+                                                        : "bg-slate-50/70 border-slate-200 hover:bg-slate-100/70 hover:border-slate-300"
+                                                )}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isChecked}
+                                                    onChange={() => {}}
+                                                    className="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300 cursor-pointer"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Icon className={cn("w-3.5 h-3.5", isChecked ? "text-brand-600" : "text-slate-500")} />
+                                                        <span className="font-bold text-slate-900 text-xs truncate">
+                                                            {mod.name}
+                                                        </span>
+                                                    </div>
+                                                    <span className="font-mono text-[10px] text-brand-600 block mt-0.5">
+                                                        {mod.path}
+                                                    </span>
+                                                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-tight">
+                                                        {mod.desc}
+                                                    </p>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-5 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3 shrink-0">
+                            <Button 
+                                type="button" 
+                                variant="secondary" 
+                                onClick={() => setPermissionEmployee(null)}
+                                disabled={isSavingPermissions}
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                type="button" 
+                                variant="primary" 
+                                icon={Check}
+                                onClick={handleSavePermissions}
+                                disabled={isSavingPermissions}
+                            >
+                                {isSavingPermissions ? 'Saving Permissions...' : 'Save Permissions'}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}

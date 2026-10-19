@@ -26,6 +26,13 @@ export function TierNavbar() {
     const { totalItems, setIsCartOpen } = useApp();
     const currentUser = auth?.user;
     const currentRole = currentUser?.role;
+    const permissions = currentUser?.permissions || [];
+    const isSuperAdmin = currentRole === 'super_admin' || permissions.includes('*');
+
+    const hasAnyAdminModule = () => {
+        if (isSuperAdmin) return true;
+        return permissions.some(p => p.startsWith('module.'));
+    };
 
     // RBAC Tier Navigation Definitions
     const tiers = [
@@ -50,14 +57,14 @@ export function TierNavbar() {
             allowed: true,
         }] : []),
         {
-            name: 'Super Admin',
+            name: isSuperAdmin ? 'Super Admin' : 'Admin Suite',
             href: '/admin',
             active: url.startsWith('/admin'),
             icon: ShieldCheck,
             badge: 'Tier 2',
             badgeColor: 'border-brand-500/30 text-brand-300 bg-brand-950/60',
             activeStyles: 'bg-brand-600 text-white shadow-md shadow-brand-900/30',
-            allowed: !currentRole || currentRole === 'super_admin',
+            allowed: isSuperAdmin || hasAnyAdminModule(),
             requiredRole: 'super_admin',
         },
         {
@@ -68,7 +75,7 @@ export function TierNavbar() {
             badge: 'Tier 3',
             badgeColor: 'border-amber-500/30 text-amber-300 bg-amber-950/60',
             activeStyles: 'bg-amber-600 text-white shadow-md shadow-amber-900/30',
-            allowed: !currentRole || currentRole === 'vendor',
+            allowed: isSuperAdmin || currentRole === 'vendor' || permissions.includes('tier.vendor_portal'),
             requiredRole: 'vendor',
         },
         {
@@ -79,7 +86,7 @@ export function TierNavbar() {
             badge: 'Tier 4',
             badgeColor: 'border-sky-500/30 text-sky-300 bg-sky-950/60',
             activeStyles: 'bg-sky-600 text-white shadow-md shadow-sky-900/30',
-            allowed: !currentRole || currentRole === 'employee',
+            allowed: isSuperAdmin || currentRole === 'employee' || permissions.includes('tier.employee_desk'),
             requiredRole: 'employee',
         },
         {
@@ -90,31 +97,41 @@ export function TierNavbar() {
             badge: 'Tier 5',
             badgeColor: 'border-purple-500/30 text-purple-300 bg-purple-950/60',
             activeStyles: 'bg-purple-600 text-white shadow-md shadow-purple-900/30',
-            allowed: !currentRole || currentRole === 'marketing_manager' || currentRole === 'super_admin',
+            allowed: isSuperAdmin || currentRole === 'marketing_manager' || permissions.includes('tier.marketing_hub'),
             requiredRole: 'marketing_manager',
         },
     ];
 
+    const visibleTiers = tiers.filter(tier => tier.allowed);
+    const showTopSwitcher = isSuperAdmin || (currentUser && visibleTiers.length > 1);
+
     return (
         <header className="sticky top-0 z-50 bg-slate-950 text-white border-b border-slate-800 shadow-md">
-            {/* Top Persistent Role Switcher - Strictly for Super Admin Only */}
-            {currentUser?.role === 'super_admin' && (
+            {/* Top Persistent Role Switcher - For Super Admin and Authorized Multi-Tier Staff */}
+            {showTopSwitcher && (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-slate-800/60">
                     <div className="flex flex-col sm:flex-row items-center justify-between py-2 sm:py-2.5 gap-2.5">
                         {/* Role & Permissions Status */}
                         <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold tracking-wide">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                                <span>Super Admin View: <strong className="capitalize">{currentUser.name}</strong></span>
+                            <div className={cn(
+                                "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold tracking-wide border",
+                                isSuperAdmin 
+                                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                                    : "bg-brand-500/20 text-brand-300 border-brand-500/30"
+                            )}>
+                                <CheckCircle2 className={cn("w-3.5 h-3.5", isSuperAdmin ? "text-emerald-400" : "text-brand-400")} />
+                                <span>
+                                    {isSuperAdmin ? 'Super Admin View' : 'Authorized Access'}: <strong className="capitalize">{currentUser.name}</strong>
+                                </span>
                             </div>
                             <span className="hidden md:inline text-xs text-slate-400">
-                                Global Master Switcher:
+                                {isSuperAdmin ? 'Global Master Switcher:' : 'Authorized Portals:'}
                             </span>
                         </div>
 
                         {/* Navigation Pills */}
                         <div className="flex items-center flex-wrap justify-center gap-1.5 sm:gap-2">
-                            {tiers.map((tier) => {
+                            {visibleTiers.map((tier) => {
                                 const Icon = tier.icon;
 
                                 return (
@@ -181,7 +198,7 @@ export function TierNavbar() {
                                 <span>Customer Storefront</span>
                             </Link>
 
-                            {currentUser?.role === 'vendor' && (
+                            {(currentRole === 'vendor' || permissions.includes('tier.vendor_portal')) && (
                                 <Link 
                                     href="/vendor" 
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:text-white bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 transition-colors"
@@ -191,7 +208,7 @@ export function TierNavbar() {
                                 </Link>
                             )}
 
-                            {currentUser?.role === 'employee' && (
+                            {(currentRole === 'employee' || permissions.includes('tier.employee_desk')) && (
                                 <Link 
                                     href="/employee" 
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-sky-300 hover:text-white bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/30 transition-colors"
@@ -201,17 +218,17 @@ export function TierNavbar() {
                                 </Link>
                             )}
 
-                            {currentUser?.role === 'super_admin' && (
+                            {(isSuperAdmin || hasAnyAdminModule()) && (
                                 <Link 
                                     href="/admin" 
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-brand-300 hover:text-white bg-brand-500/20 hover:bg-brand-500/30 border border-brand-500/30 transition-colors"
                                 >
                                     <ShieldCheck className="w-3.5 h-3.5 text-brand-400" />
-                                    <span>Admin Panel</span>
+                                    <span>{isSuperAdmin ? 'Admin Suite' : 'Admin Operations'}</span>
                                 </Link>
                             )}
 
-                            {(currentUser?.role === 'marketing_manager' || currentUser?.role === 'super_admin') && (
+                            {(currentRole === 'marketing_manager' || permissions.includes('tier.marketing_hub') || isSuperAdmin) && (
                                 <Link 
                                     href="/marketing" 
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-300 hover:text-white bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 transition-colors"

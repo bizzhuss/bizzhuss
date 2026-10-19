@@ -19,53 +19,70 @@ import { ApplicationLogo } from '@/components/ApplicationLogo';
 export function AdminHeader({ title, subtitle, actions }) {
     const page = usePage();
     const url = page.url || (typeof window !== 'undefined' ? window.location.pathname : '') || '';
-    const { maintenance } = page.props || {};
+    const { auth, maintenance } = page.props || {};
+    const currentUser = auth?.user;
     const isMaintenanceActive = maintenance?.is_enabled || false;
+
+    const hasModuleAccess = (permission) => {
+        if (!currentUser) return false;
+        if (currentUser.role === 'super_admin') return true;
+        const userPerms = currentUser.permissions || [];
+        return userPerms.includes('*') || userPerms.includes(permission);
+    };
 
     const navTabs = [
         {
             name: 'Central Command',
+            permission: 'module.central_command',
             href: '/admin',
             active: url === '/admin' || url === '/admin/dashboard',
             icon: LayoutDashboard,
         },
         {
             name: 'Vendor Oversight',
+            permission: 'module.vendor_oversight',
             href: '/admin/vendors',
             active: url?.startsWith('/admin/vendors') || false,
             icon: Store,
         },
         {
             name: 'Storefront Curation',
+            permission: 'module.storefront_curation',
             href: '/admin/marketing/curation',
             active: (url?.startsWith('/admin/marketing/curation') || url?.startsWith('/admin/curation')) || false,
             icon: Sparkles,
         },
         {
             name: 'Departments',
+            permission: 'module.departments',
             href: '/admin/workforce/departments',
             active: url?.startsWith('/admin/workforce/departments') || false,
             icon: Building2,
         },
         {
             name: 'Workforce Directory',
+            permission: 'module.workforce',
             href: '/admin/workforce/employees',
             active: url?.startsWith('/admin/workforce/employees') || false,
             icon: Users,
         },
         {
             name: 'Task Delegation & Kanban',
+            permission: 'module.kanban',
             href: '/admin/workforce/tasks',
             active: url?.startsWith('/admin/workforce/tasks') || false,
             icon: CheckSquare,
         },
         {
             name: 'Platform Settings',
+            permission: 'module.platform_settings',
             href: '/admin/settings',
             active: url?.startsWith('/admin/settings') || false,
             icon: Settings,
         },
     ];
+
+    const visibleTabs = navTabs.filter(tab => hasModuleAccess(tab.permission));
 
     return (
         <div className="mb-8">
@@ -81,7 +98,7 @@ export function AdminHeader({ title, subtitle, actions }) {
                                 </h1>
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-brand-50 text-brand-700 border border-brand-200/60">
                                     <Sparkles className="w-2.5 h-2.5 text-brand-500" />
-                                    Tier 2 Super Admin
+                                    {currentUser?.role === 'super_admin' ? 'Tier 2 Super Admin' : 'Workforce Delegated Access'}
                                 </span>
                                 {isMaintenanceActive && (
                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-amber-50 text-amber-700 border border-amber-300 animate-pulse">
@@ -115,7 +132,7 @@ export function AdminHeader({ title, subtitle, actions }) {
             {/* Sub-Navigation Tabs */}
             <div className="mt-4 border-b border-slate-200 overflow-x-auto no-scrollbar">
                 <nav className="flex space-x-1 sm:space-x-2" aria-label="Admin Navigation Tabs">
-                    {navTabs.map((tab) => {
+                    {visibleTabs.map((tab) => {
                         const Icon = tab.icon;
                         return (
                             <Link
