@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model User {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  email           String         @unique
+  emailVerifiedAt DateTime?      @map("email_verified_at")
+  password        String?
+  googleId        String?        @map("google_id")
+  role            String?        @default("customer")
+  approvalStatus  String         @default("approved") @map("approval_status")
+  avatar          String?
+  rememberToken   String?        @map("remember_token")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  vendor          Vendor?
+  orders          Order[]
+  employee        Employee?
+  createdTasks    Task[]         @relation("CreatedTasks")
+  assignedTasks   Task[]         @relation("AssignedTasks")
+  taskActivities  TaskActivity[]
+
+  @@map("users")
+}
+
+model Vendor {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String         @unique @map("user_id") @db.ObjectId
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopName       String         @map("shop_name")
+  slug           String         @unique
+  description    String?
+  logo           String?
+  banner         String?
+  commissionRate Float          @default(10.0) @map("commission_rate")
+  status         String         @default("pending")
+  balance        Float          @default(0.0)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  products       Product[]
+  orderItems     OrderItem[]
+  payouts        VendorPayout[]
+
+  @@map("vendors")
+}
+
+model Category {
+  id                 String     @id @default(auto()) @map("_id") @db.ObjectId
+  parentId           String?    @map("parent_id") @db.ObjectId
+  parent             Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subcategories      Category[] @relation("CategoryHierarchy")
+  name               String
+  slug               String     @unique
+  icon               String?
+  image              String?
+  order              Int        @default(0)
+  isActive           Boolean    @default(true) @map("is_active")
+  isVerifiedFeatured Boolean    @default(false) @map("is_verified_featured")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
+
+  products           Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id               String      @id @default(auto()) @map("_id") @db.ObjectId
+  vendorId         String      @map("vendor_id") @db.ObjectId
+  vendor           Vendor      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  categoryId       String      @map("category_id") @db.ObjectId
+  category         Category    @relation(fields: [categoryId], references: [id])
+  title            String
+  slug             String      @unique
+  description      String?
+  price            Float
+  salePrice        Float?      @map("sale_price")
+  stock            Int         @default(0)
+  sku              String?
+  curationTier     String      @default("standard") @map("curation_tier")
+  isFeatured       Boolean     @default(false) @map("is_featured")
+  isOnSpecialSale  Boolean     @default(false) @map("is_on_special_sale")
+  featuredOrder    Int         @default(0) @map("featured_order")
+  totalSoldCount   Int         @default(0) @map("total_sold_count")
+  status           String      @default("published")
+  images           String[]    @default([])
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  orderItems       OrderItem[]
+
+  @@index([vendorId])
+  @@index([categoryId])
+  @@map("products")
+}
+
+model Order {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber     String      @unique @map("order_number")
+  userId          String?     @map("user_id") @db.ObjectId
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  totalAmount     Float       @map("total_amount")
+  subtotal        Float
+  tax             Float       @default(0.0)
+  shippingFee     Float       @default(0.0) @map("shipping_fee")
+  status          String      @default("pending")
+  paymentMethod   String      @default("cod") @map("payment_method")
+  paymentStatus   String      @default("unpaid") @map("payment_status")
+  customerDetails Json?       @map("customer_details")
+  shippingAddress Json?       @map("shipping_address")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  items           OrderItem[]
+
+  @@index([userId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId            String   @map("order_id") @db.ObjectId
+  order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId          String   @map("product_id") @db.ObjectId
+  product            Product  @relation(fields: [productId], references: [id])
+  vendorId           String   @map("vendor_id") @db.ObjectId
+  vendor             Vendor   @relation(fields: [vendorId], references: [id])
+  quantity           Int
+  unitPrice          Float    @map("unit_price")
+  subtotal           Float
+  commissionAmount   Float    @default(0.0) @map("commission_amount")
+  vendorPayoutAmount Float    @default(0.0) @map("vendor_payout_amount")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([vendorId])
+  @@map("order_items")
+}
+
+model VendorPayout {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  vendorId       String    @map("vendor_id") @db.ObjectId
+  vendor         Vendor    @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  amount         Float
+  payoutMethod   String    @map("payout_method")
+  accountDetails Json?     @map("account_details")
+  status         String    @default("pending")
+  processedAt    DateTime? @map("processed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([vendorId])
+  @@map("vendor_payouts")
+}
+
+model Coupon {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  code        String    @unique
+  type        String
+  value       Float
+  minSpend    Float?    @map("min_spend")
+  maxDiscount Float?    @map("max_discount")
+  usageLimit  Int?      @map("usage_limit")
+  usedCount   Int       @default(0) @map("used_count")
+  expiresAt   DateTime? @map("expires_at")
+  status      String    @default("active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("coupons")
+}
+
+model Banner {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  imageUrl  String   @map("image_url")
+  link      String?
+  section   String   @default("hero_carousel")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("promotional_banners")
+}
+
+model PromotionalCampaign {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  discountRate Float     @map("discount_rate")
+  startTime    DateTime? @map("start_time")
+  endTime      DateTime? @map("end_time")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("promotional_campaigns")
+}
+
+model Department {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  code         String        @unique
+  description  String?
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  designations Designation[]
+  employees    Employee[]
+
+  @@map("departments")
+}
+
+model Designation {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  departmentId String     @map("department_id") @db.ObjectId
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  title        String
+  level        Int        @default(1)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  employees    Employee[]
+
+  @@index([departmentId])
+  @@map("designations")
+}
+
+model Employee {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String      @unique @map("user_id") @db.ObjectId
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  departmentId  String      @map("department_id") @db.ObjectId
+  department    Department  @relation(fields: [departmentId], references: [id])
+  designationId String      @map("designation_id") @db.ObjectId
+  designation   Designation @relation(fields: [designationId], references: [id])
+  employeeCode  String      @unique @map("employee_code")
+  status        String      @default("active")
+  joinedAt      DateTime?   @map("joined_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@index([departmentId])
+  @@index([designationId])
+  @@map("employees")
+}
+
+model Task {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  status      String         @default("pending")
+  priority    String         @default("medium")
+  assignedTo  String?        @map("assigned_to") @db.ObjectId
+  assignee    User?          @relation("AssignedTasks", fields: [assignedTo], references: [id], onDelete: SetNull)
+  createdBy   String         @map("created_by") @db.ObjectId
+  creator     User           @relation("CreatedTasks", fields: [createdBy], references: [id])
+  dueDate     DateTime?      @map("due_date")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  activities  TaskActivity[]
+
+  @@index([assignedTo])
+  @@index([createdBy])
+  @@map("tasks")
+}
+
+model TaskActivity {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  taskId    String   @map("task_id") @db.ObjectId
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id") @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([taskId])
+  @@index([userId])
+  @@map("task_activities")
+}
+
+model Setting {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+model Role {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  guardName String   @default("web") @map("guard_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+model Permission {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  guardName String   @default("web") @map("guard_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("permissions")
+}
