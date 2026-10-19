@@ -20,32 +20,40 @@ class Setting extends Model
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        return Cache::rememberForever("setting_{$key}", function () use ($key, $default) {
-            $setting = static::where('key', $key)->first();
-            if (!$setting) {
-                return $default;
-            }
+        try {
+            return Cache::rememberForever("setting_{$key}", function () use ($key, $default) {
+                try {
+                    $setting = static::where('key', $key)->first();
+                    if (!$setting) {
+                        return $default;
+                    }
 
-            $val = $setting->value;
+                    $val = $setting->value;
 
-            // Handle boolean strings
-            if ($val === 'true') {
-                return true;
-            }
-            if ($val === 'false') {
-                return false;
-            }
+                    // Handle boolean strings
+                    if ($val === 'true') {
+                        return true;
+                    }
+                    if ($val === 'false') {
+                        return false;
+                    }
 
-            // Handle JSON arrays/objects
-            if (is_string($val) && (str_starts_with($val, '[') || str_starts_with($val, '{'))) {
-                $decoded = json_decode($val, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    return $decoded;
+                    // Handle JSON arrays/objects
+                    if (is_string($val) && (str_starts_with($val, '[') || str_starts_with($val, '{'))) {
+                        $decoded = json_decode($val, true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            return $decoded;
+                        }
+                    }
+
+                    return $val;
+                } catch (\Throwable $e) {
+                    return $default;
                 }
-            }
-
-            return $val;
-        });
+            });
+        } catch (\Throwable $e) {
+            return $default;
+        }
     }
 
     /**

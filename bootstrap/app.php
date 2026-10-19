@@ -39,11 +39,20 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $exception, \Illuminate\Http\Request $request) {
-            if (!app()->environment(['local', 'testing']) && in_array($response->getStatusCode(), [500, 503, 404, 403])) {
-                return \Inertia\Inertia::render('Error', ['status' => $response->getStatusCode()])
+            $status = $response->getStatusCode();
+            if ($status < 400 && $exception) {
+                $status = 500;
+            }
+
+            if (!app()->environment(['local', 'testing']) && in_array($status, [500, 503, 404, 403])) {
+                $message = config('app.debug') ? ($exception->getMessage() ?: 'Internal server exception encountered') : null;
+                return \Inertia\Inertia::render('Error', [
+                    'status' => $status,
+                    'message' => $message,
+                ])
                     ->toResponse($request)
-                    ->setStatusCode($response->getStatusCode());
-            } elseif ($response->getStatusCode() === 419) {
+                    ->setStatusCode($status);
+            } elseif ($status === 419) {
                 return back()->with([
                     'error' => 'The page session expired. Please submit again.',
                 ]);

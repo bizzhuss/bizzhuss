@@ -24,100 +24,118 @@ class CustomerController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug'])
-            ->where('status', 'published')
-            ->whereHas('vendor', function ($q) {
-                $q->where('status', 'active');
-            });
+        try {
+            $query = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug'])
+                ->where('status', 'published')
+                ->whereHas('vendor', function ($q) {
+                    $q->where('status', 'active');
+                });
 
-        if ($request->filled('category') && $request->input('category') !== 'all') {
-            $cat = $request->input('category');
-            $query->whereHas('category', function ($q) use ($cat) {
-                $q->where('slug', $cat)->orWhere('name', $cat);
-            });
+            if ($request->filled('category') && $request->input('category') !== 'all') {
+                $cat = $request->input('category');
+                $query->whereHas('category', function ($q) use ($cat) {
+                    $q->where('slug', $cat)->orWhere('name', $cat);
+                });
+            }
+
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            $products = $query->orderBy('id', 'desc')->get();
+            $categories = Category::where('is_active', true)
+                ->withCount('products')
+                ->with(['subcategories' => fn ($q) => $q->where('is_active', true)->withCount('products')])
+                ->orderBy('order', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+            $featuredVendors = Vendor::where('status', 'active')->limit(6)->get();
+
+            // Base relation query with active vendor gatekeeper
+            $curationBase = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug'])
+                ->where('status', 'published')
+                ->whereHas('vendor', function ($q) {
+                    $q->where('status', 'active');
+                });
+
+            // 1. Fetch dynamic hero carousel promotional banners
+            $heroBanners = Banner::active()
+                ->section('hero_carousel')
+                ->orderBy('sort_order', 'asc')
+                ->orderBy('id', 'desc')
+                ->get();
+
+            // 2. Fetch active promotional campaign & live countdown timer
+            $activeCampaign = PromotionalCampaign::active()
+                ->where(function ($q) {
+                    $q->whereNull('end_time')->orWhere('end_time', '>=', now());
+                })
+                ->orderBy('end_time', 'asc')
+                ->first();
+
+            $featuredProducts = (clone $curationBase)
+                ->where(function ($q) {
+                    $q->where('curation_tier', 'flagship_featured')->orWhere('is_featured', true);
+                })
+                ->orderBy('featured_order', 'asc')
+                ->orderBy('id', 'desc')
+                ->take(8)
+                ->get();
+
+            $specialSaleProducts = (clone $curationBase)
+                ->where(function ($q) {
+                    $q->where('curation_tier', 'special_flash_sale')->orWhere('is_on_special_sale', true);
+                })
+                ->orderBy('id', 'desc')
+                ->take(8)
+                ->get();
+
+            $bestSellingProducts = (clone $curationBase)
+                ->orderByDesc('total_sold_count')
+                ->take(8)
+                ->get();
+
+            $budgetPicks = (clone $curationBase)
+                ->where('curation_tier', 'smart_value_budget')
+                ->take(8)
+                ->get();
+            if ($budgetPicks->isEmpty()) {
+                $budgetPicks = (clone $curationBase)->orderBy('price', 'asc')->take(8)->get();
+            }
+
+            $enterpriseHeavyDuty = (clone $curationBase)
+                ->where('curation_tier', 'enterprise_heavy_duty')
+                ->take(8)
+                ->get();
+            if ($enterpriseHeavyDuty->isEmpty()) {
+                $enterpriseHeavyDuty = (clone $curationBase)->orderBy('price', 'desc')->take(8)->get();
+            }
+
+            $premiumLuxury = (clone $curationBase)
+                ->orderBy('price', 'desc')
+                ->take(8)
+                ->get();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Storefront database exception: ' . $e->getMessage());
+            if (config('app.debug')) {
+                throw $e;
+            }
+            $products = collect();
+            $heroBanners = collect();
+            $activeCampaign = null;
+            $featuredProducts = collect();
+            $specialSaleProducts = collect();
+            $bestSellingProducts = collect();
+            $budgetPicks = collect();
+            $enterpriseHeavyDuty = collect();
+            $premiumLuxury = collect();
+            $categories = collect();
+            $featuredVendors = collect();
         }
-
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        $products = $query->orderBy('id', 'desc')->get();
-        $categories = Category::where('is_active', true)
-            ->withCount('products')
-            ->with(['subcategories' => fn ($q) => $q->where('is_active', true)->withCount('products')])
-            ->orderBy('order', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
-        $featuredVendors = Vendor::where('status', 'active')->limit(6)->get();
-
-        // Base relation query with active vendor gatekeeper
-        $curationBase = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug'])
-            ->where('status', 'published')
-            ->whereHas('vendor', function ($q) {
-                $q->where('status', 'active');
-            });
-
-        // 1. Fetch dynamic hero carousel promotional banners
-        $heroBanners = Banner::active()
-            ->section('hero_carousel')
-            ->orderBy('sort_order', 'asc')
-            ->orderBy('id', 'desc')
-            ->get();
-
-        // 2. Fetch active promotional campaign & live countdown timer
-        $activeCampaign = PromotionalCampaign::active()
-            ->where(function ($q) {
-                $q->whereNull('end_time')->orWhere('end_time', '>=', now());
-            })
-            ->orderBy('end_time', 'asc')
-            ->first();
-
-        $featuredProducts = (clone $curationBase)
-            ->where(function ($q) {
-                $q->where('curation_tier', 'flagship_featured')->orWhere('is_featured', true);
-            })
-            ->orderBy('featured_order', 'asc')
-            ->orderBy('id', 'desc')
-            ->take(8)
-            ->get();
-
-        $specialSaleProducts = (clone $curationBase)
-            ->where(function ($q) {
-                $q->where('curation_tier', 'special_flash_sale')->orWhere('is_on_special_sale', true);
-            })
-            ->orderBy('id', 'desc')
-            ->take(8)
-            ->get();
-
-        $bestSellingProducts = (clone $curationBase)
-            ->orderByDesc('total_sold_count')
-            ->take(8)
-            ->get();
-
-        $budgetPicks = (clone $curationBase)
-            ->where('curation_tier', 'smart_value_budget')
-            ->take(8)
-            ->get();
-        if ($budgetPicks->isEmpty()) {
-            $budgetPicks = (clone $curationBase)->orderBy('price', 'asc')->take(8)->get();
-        }
-
-        $enterpriseHeavyDuty = (clone $curationBase)
-            ->where('curation_tier', 'enterprise_heavy_duty')
-            ->take(8)
-            ->get();
-        if ($enterpriseHeavyDuty->isEmpty()) {
-            $enterpriseHeavyDuty = (clone $curationBase)->orderBy('price', 'desc')->take(8)->get();
-        }
-
-        $premiumLuxury = (clone $curationBase)
-            ->orderBy('price', 'desc')
-            ->take(8)
-            ->get();
 
         return Inertia::render('Storefront/Home', [
             'products' => $products,
