@@ -89,15 +89,15 @@ class SocialAuthController extends Controller
 
             if ($user) {
                 $user->update([
-                    'google_id' => $googleUser->getId(),
+                    'google_id' => $googleId,
                     'avatar' => $user->avatar ?? $googleUser->getAvatar(),
                     'approval_status' => $user->approval_status ?? 'approved',
                 ]);
             } else {
                 $user = User::create([
                     'name' => $googleUser->getName() ?: ($googleUser->getNickname() ?: 'Google User'),
-                    'email' => $googleUser->getEmail(),
-                    'google_id' => $googleUser->getId(),
+                    'email' => $googleEmail,
+                    'google_id' => $googleId,
                     'avatar' => $googleUser->getAvatar(),
                     'password' => null,
                     'role' => 'customer',
