@@ -59,36 +59,14 @@ function getCategoryIcon(iconName) {
 const heroSlides = [
     {
         id: 1,
-        title: 'Mega Tech & Hardware Expo',
-        subtitle: 'Direct Manufacturer Pricing on Edge Gateways, Precision Tools & Server Infrastructure',
-        tag: 'EXCLUSIVE 48-HOUR EVENT',
-        discount: 'Up to 45% OFF',
+        title: 'Premier Multi-Vendor Marketplace',
+        subtitle: 'Verified Manufacturers, Direct Factory Pricing & Certified Enterprise Quality',
+        tag: 'OFFICIAL PLATFORM',
+        discount: 'Verified Merchant Network',
         bgGradient: 'from-slate-950 via-slate-900 to-indigo-950',
-        ctaText: 'Shop Flash Deals',
-        ctaLink: '#special-sales',
+        ctaText: 'Explore Catalog',
+        ctaLink: '/shop',
         image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-        id: 2,
-        title: 'Military-Grade Industrial Tooling',
-        subtitle: 'Torque Wrenches, Cleanroom Calibration & Pneumatics from Apex Heavy Tools',
-        tag: 'OFFICIAL BRAND DAY',
-        discount: 'Free Freight Included',
-        bgGradient: 'from-amber-950 via-slate-900 to-stone-900',
-        ctaText: 'Explore Apex Catalog',
-        ctaLink: '/?category=heavy-tooling',
-        image: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-        id: 3,
-        title: 'Executive Workspace & Ergonomics',
-        subtitle: 'Handcrafted Walnut Risers & Full-Grain Tuscan Leather Gear by Artisan Craft',
-        tag: 'STUDIO COLLECTION 2026',
-        discount: 'Starting at Rs. 15,000',
-        bgGradient: 'from-slate-900 via-stone-900 to-emerald-950',
-        ctaText: 'View Workspace Gear',
-        ctaLink: '/?category=executive-office',
-        image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&auto=format&fit=crop&q=80',
     }
 ];
 

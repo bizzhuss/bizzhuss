@@ -740,12 +740,12 @@ export default function Shop({
                     )}
 
                     {/* Products Container */}
-                    {products.data && products.data.length > 0 ? (
+                    {items && items.length > 0 ? (
                         <>
                             {/* LIST VIEW */}
                             {viewMode === 'list' ? (
                                 <div className="space-y-4">
-                                    {products.data.map((product) => {
+                                    {items.map((product) => {
                                         const imageUrl = getProductImage(product);
                                         const isWish = isInWishlist(product.id);
                                         const isAdded = !!addedIds[product.id];
@@ -894,7 +894,7 @@ export default function Shop({
                                         ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3' 
                                         : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
                                 }`}>
-                                    {products.data.map((product) => {
+                                    {items.map((product) => {
                                         const imageUrl = getProductImage(product);
                                         const isWish = isInWishlist(product.id);
                                         const isAdded = !!addedIds[product.id];

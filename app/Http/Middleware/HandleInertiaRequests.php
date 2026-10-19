@@ -61,9 +61,9 @@ class HandleInertiaRequests extends Middleware
                         ->with(['products', 'subcategories' => fn ($q) => $q->where('is_active', true)->with('products')])
                         ->orderBy('order', 'asc')
                         ->get();
-                    return $cats->isNotEmpty() ? $cats : \App\Services\DemoCatalogService::categories();
+                    return $cats;
                 } catch (\Throwable $e) {
-                    return \App\Services\DemoCatalogService::categories();
+                    return collect();
                 }
             },
             'flash' => [

@@ -133,49 +133,7 @@ class CustomerController extends Controller
             $premiumLuxury = collect();
         }
 
-        // Automatic fallback to DemoCatalogService if database is offline or empty
-        $demoProducts = \App\Services\DemoCatalogService::products();
-        $demoCategories = \App\Services\DemoCatalogService::categories();
-        $demoVendors = \App\Services\DemoCatalogService::vendors();
-        $demoBanners = \App\Services\DemoCatalogService::banners();
-
-        if ($products->isEmpty()) {
-            $products = $demoProducts;
-        }
-        if ($categories->isEmpty()) {
-            $categories = $demoCategories;
-        }
-        if ($featuredVendors->isEmpty()) {
-            $featuredVendors = $demoVendors;
-        }
-        if ($heroBanners->isEmpty()) {
-            $heroBanners = $demoBanners;
-        }
-        if ($featuredProducts->isEmpty()) {
-            $featuredProducts = $demoProducts->where('is_featured', true)->values();
-        }
-        if ($specialSaleProducts->isEmpty()) {
-            $specialSaleProducts = $demoProducts->where('is_on_special_sale', true)->values();
-        }
-        if ($bestSellingProducts->isEmpty()) {
-            $bestSellingProducts = $demoProducts->sortByDesc('total_sold_count')->values();
-        }
-        if ($budgetPicks->isEmpty()) {
-            $budgetPicks = $demoProducts->where('curation_tier', 'smart_value_budget')->values();
-            if ($budgetPicks->isEmpty()) {
-                $budgetPicks = $demoProducts->sortBy('price')->values();
-            }
-        }
-        if ($enterpriseHeavyDuty->isEmpty()) {
-            $enterpriseHeavyDuty = $demoProducts->where('curation_tier', 'enterprise_heavy_duty')->values();
-            if ($enterpriseHeavyDuty->isEmpty()) {
-                $enterpriseHeavyDuty = $demoProducts->sortByDesc('price')->values();
-            }
-        }
-        if ($premiumLuxury->isEmpty()) {
-            $premiumLuxury = $demoProducts->sortByDesc('price')->values();
-        }
-
+        // Strict MongoDB database catalog - no mock fallback
         return Inertia::render('Storefront/Home', [
             'products' => $products,
             'banners' => $heroBanners,
@@ -294,20 +252,14 @@ class CustomerController extends Controller
 
             $vendors = Vendor::where('status', 'active')->select('id', 'shop_name', 'slug')->get();
 
-            if ($products->isEmpty()) {
-                $products = \App\Services\DemoCatalogService::paginateProducts(12);
-            }
-            if ($categories->isEmpty()) {
-                $categories = \App\Services\DemoCatalogService::categories();
-            }
-            if ($vendors->isEmpty()) {
-                $vendors = \App\Services\DemoCatalogService::vendors();
-            }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Shop database exception: ' . $e->getMessage());
-            $products = \App\Services\DemoCatalogService::paginateProducts(12);
-            $categories = \App\Services\DemoCatalogService::categories();
-            $vendors = \App\Services\DemoCatalogService::vendors();
+            $products = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 12, 1, [
+                'path' => $request->url(),
+                'query' => $request->query()
+            ]);
+            $categories = collect();
+            $vendors = collect();
         }
 
         return Inertia::render('Storefront/Shop', [
@@ -347,14 +299,7 @@ class CustomerController extends Controller
         }
 
         if (!$product) {
-            $demoList = \App\Services\DemoCatalogService::products();
-            $product = $demoList->firstWhere('slug', $slug) ?? $demoList->first();
-            $relatedProducts = $demoList->where('id', '!=', $product->id)->take(4)->values();
-
-            return Inertia::render('Storefront/ProductDetail', [
-                'product' => $product,
-                'relatedProducts' => $relatedProducts,
-            ]);
+            abort(404, 'Product not found.');
         }
 
         if (is_string($product->images)) {
@@ -377,13 +322,6 @@ class CustomerController extends Controller
                 });
         } catch (\Throwable $e) {
             $relatedProducts = collect();
-        }
-
-        if ($relatedProducts->isEmpty()) {
-            $relatedProducts = \App\Services\DemoCatalogService::products()
-                ->where('id', '!=', $product->id)
-                ->take(4)
-                ->values();
         }
 
         return Inertia::render('Storefront/ProductDetail', [
