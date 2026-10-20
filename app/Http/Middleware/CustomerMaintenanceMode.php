@@ -17,11 +17,16 @@ class CustomerMaintenanceMode
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. Resolve maintenance state from Setting/Cache
-        $maintenanceEnabledSetting = Setting::get('maintenance_enabled', null);
-        $isMaintenanceActive = (bool) ($maintenanceEnabledSetting !== null 
-            ? $maintenanceEnabledSetting 
-            : Setting::get('maintenance_mode', false));
+        // 1. Resolve maintenance state from Setting/Cache / MongoDB collection
+        $storeMaintenanceDoc = Setting::get('store_maintenance_mode', null);
+        if (is_array($storeMaintenanceDoc) && isset($storeMaintenanceDoc['maintenance_enabled'])) {
+            $isMaintenanceActive = (bool) $storeMaintenanceDoc['maintenance_enabled'];
+        } else {
+            $maintenanceEnabledSetting = Setting::get('maintenance_enabled', null);
+            $isMaintenanceActive = (bool) ($maintenanceEnabledSetting !== null 
+                ? $maintenanceEnabledSetting 
+                : Setting::get('maintenance_mode', false));
+        }
 
         // 2. If maintenance mode is OFF:
         if (!$isMaintenanceActive) {
