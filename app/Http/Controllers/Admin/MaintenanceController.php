@@ -40,7 +40,10 @@ class MaintenanceController extends Controller
             $blockedRoles[] = 'guest';
         }
 
-        $settings = DB::connection('mongodb')->collection('settings');
+        $conn = DB::connection('mongodb');
+        $settings = method_exists($conn, 'collection')
+            ? $conn->collection('settings')
+            : $conn->table('settings');
         
         $settings->updateOrInsert(
             ['key' => 'store_maintenance_mode'],

@@ -243,6 +243,7 @@ export default function Employees({ employees = [], departments = [], metrics = 
         router.put(`/admin/workforce/employees/${editingEmployee.id}`, {
             name: editingEmployee.user.name,
             phone: editingEmployee.user.phone,
+            role: editingEmployee.user.role || 'staff',
             department_id: editingEmployee.department_id,
             designation_id: editingEmployee.designation_id,
             monthly_target: editingEmployee.monthly_target,
@@ -636,6 +637,21 @@ export default function Employees({ employees = [], departments = [], metrics = 
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                 <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Access Role *</label>
+                                    <select
+                                        required
+                                        value={formData.role}
+                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-500 bg-white font-semibold cursor-pointer"
+                                    >
+                                        <option value="staff">Staff (Standard Workforce)</option>
+                                        <option value="employee">Employee Desk Specialist</option>
+                                        <option value="vendor">Vendor Merchant Representative</option>
+                                        <option value="super_admin">Super Admin (Universal Access)</option>
+                                    </select>
+                                </div>
+
+                                <div>
                                     <label className="block font-bold text-slate-700 mb-1">Contact Phone</label>
                                     <input
                                         type="text"
@@ -645,19 +661,19 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-500"
                                     />
                                 </div>
+                            </div>
 
-                                <div>
-                                    <label className="block font-bold text-slate-700 mb-1">Monthly Target (Tasks) *</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        min="1"
-                                        max="500"
-                                        value={formData.monthly_target}
-                                        onChange={(e) => setFormData({ ...formData, monthly_target: parseInt(e.target.value) || 25 })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-500 font-bold"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block font-bold text-slate-700 mb-1">Monthly Target (Tasks) *</label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="1"
+                                    max="500"
+                                    value={formData.monthly_target}
+                                    onChange={(e) => setFormData({ ...formData, monthly_target: parseInt(e.target.value) || 25 })}
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-500 font-bold"
+                                />
                             </div>
 
                             <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
@@ -738,17 +754,20 @@ export default function Employees({ employees = [], departments = [], metrics = 
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block font-bold text-slate-700 mb-1">Monthly Target</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={editingEmployee.monthly_target}
+                                    <label className="block font-bold text-slate-700 mb-1">Access Role</label>
+                                    <select
+                                        value={editingEmployee.user?.role || 'staff'}
                                         onChange={(e) => setEditingEmployee({
                                             ...editingEmployee,
-                                            monthly_target: parseInt(e.target.value) || 25
+                                            user: { ...editingEmployee.user, role: e.target.value }
                                         })}
-                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none font-bold"
-                                    />
+                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none bg-white font-semibold"
+                                    >
+                                        <option value="staff">Staff</option>
+                                        <option value="employee">Employee</option>
+                                        <option value="vendor">Vendor</option>
+                                        <option value="super_admin">Super Admin</option>
+                                    </select>
                                 </div>
 
                                 <div>
@@ -766,6 +785,20 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                         <option value="on_leave">On Leave</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block font-bold text-slate-700 mb-1">Monthly Target</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={editingEmployee.monthly_target}
+                                    onChange={(e) => setEditingEmployee({
+                                        ...editingEmployee,
+                                        monthly_target: parseInt(e.target.value) || 25
+                                    })}
+                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none font-bold"
+                                />
                             </div>
 
                             <div className="flex items-center justify-end gap-3 pt-3">
