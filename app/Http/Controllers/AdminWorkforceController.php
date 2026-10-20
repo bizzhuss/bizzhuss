@@ -153,9 +153,11 @@ class AdminWorkforceController extends Controller
                 ->where('status', 'completed')
                 ->count();
 
-            $userPerms = ($employee->user && method_exists($employee->user, 'getAllPermissions'))
-                ? $employee->user->getAllPermissions()->pluck('name')->toArray()
-                : [];
+            $rawPerms = $employee->user?->permissions ?? $employee->permissions ?? [];
+            if (is_string($rawPerms)) {
+                $rawPerms = json_decode($rawPerms, true) ?: [];
+            }
+            $userPerms = is_array($rawPerms) ? array_values($rawPerms) : [];
 
             return [
                 'id' => $employee->id,
@@ -164,6 +166,7 @@ class AdminWorkforceController extends Controller
                 'monthly_target' => $employee->monthly_target ?? 25,
                 'joining_date' => $employee->joining_date ? $employee->joining_date->format('Y-m-d') : null,
                 'status' => $employee->status,
+                'permissions' => $userPerms,
                 'user' => $employee->user ? [
                     'id' => $employee->user->id,
                     'name' => $employee->user->name,
@@ -171,6 +174,7 @@ class AdminWorkforceController extends Controller
                     'phone' => $employee->user->phone,
                     'avatar' => $employee->user->avatar,
                     'status' => $employee->user->status,
+                    'role' => $employee->user->role,
                     'permissions' => $userPerms,
                 ] : null,
                 'department' => $employee->department,
@@ -371,10 +375,18 @@ class AdminWorkforceController extends Controller
             'permissions.*' => 'string|max:100',
         ]);
 
-        if ($employee->user) {
-            $employee->user->syncPermissions($validated['permissions'] ?? []);
+        $permissions = array_values(array_filter((array) ($validated['permissions'] ?? []), fn ($p) => is_string($p) && trim($p) !== ''));
+
+        $user = $employee->user ?? User::find($employee->user_id);
+        if ($user) {
+            $user->permissions = $permissions;
+            $user->save();
         }
 
-        return redirect()->back()->with('success', "Permissions updated for {$employee->user->name}.");
+        $employee->permissions = $permissions;
+        $employee->save();
+
+        $userName = $user?->name ?? 'Employee';
+        return redirect()->back()->with('success', "Permissions updated for {$userName}.");
     }
 }
