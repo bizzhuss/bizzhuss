@@ -131,8 +131,8 @@ export default function ErrorPage({ status = 404, message = null }) {
                     <div className="mt-6 pt-4 text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
                         <LifeBuoy className="w-3.5 h-3.5" />
                         <span>Need assistance? Contact</span>
-                        <a href="mailto:support@bizzhuss.com" className="text-brand-600 hover:underline font-medium">
-                            support@bizzhuss.com
+                        <a href="mailto:bizzhuss@gmail.com" className="text-brand-600 hover:underline font-medium">
+                            bizzhuss@gmail.com
                         </a>
                     </div>
                 </div>

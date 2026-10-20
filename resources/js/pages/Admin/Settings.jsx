@@ -105,8 +105,8 @@ export default function PlatformSettings({
         platform_currency: settings.platform_currency || 'PKR',
         default_commission_rate: settings.default_commission_rate || 10,
         platform_name: settings.platform_name || 'Bizzhuss Multi-Vendor Marketplace',
-        support_email: settings.support_email || 'support@bizzhuss.com',
-        support_phone: settings.support_phone || '+1 (800) 555-BIZZ',
+        support_email: settings.support_email || 'bizzhuss@gmail.com',
+        support_phone: settings.support_phone || '+92 335 7895884',
     });
     const [savingSettings, setSavingSettings] = useState(false);
 

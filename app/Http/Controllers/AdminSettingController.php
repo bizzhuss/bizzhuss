@@ -29,8 +29,11 @@ class AdminSettingController extends Controller
             'platform_currency' => Setting::get('platform_currency', 'PKR'),
             'default_commission_rate' => (float) Setting::get('default_commission_rate', '10.00'),
             'platform_name' => Setting::get('platform_name', 'Bizzhuss Multi-Vendor Marketplace'),
-            'support_email' => Setting::get('support_email', 'governance@bizzhuss.com'),
-            'support_phone' => Setting::get('support_phone', '+1 (800) 555-BIZZ'),
+            'support_email' => Setting::get('support_email', 'bizzhuss@gmail.com'),
+            'support_phone' => Setting::get('support_phone', '+92 335 7895884'),
+            'support_whatsapp' => Setting::get('support_whatsapp', 'https://wa.me/923357895884'),
+            'instagram_url' => Setting::get('instagram_url', 'https://www.instagram.com/bizzhuss/'),
+            'facebook_url' => Setting::get('facebook_url', 'https://www.facebook.com/share/1C2sHrcVQM/'),
         ];
 
         // 2. Categories with parent/child tree and product counts
