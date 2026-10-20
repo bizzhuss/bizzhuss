@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class EmployeeTask extends Model
+class EmployeeTask extends BaseModel
 {
     use HasFactory;
+
+    protected $connection = 'mongodb';
+    protected $collection = 'employee_tasks';
 
     protected $fillable = [
         'title',

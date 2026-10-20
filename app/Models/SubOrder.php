@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class SubOrder extends Model
+class SubOrder extends BaseModel
 {
     use HasFactory;
+
+    protected $connection = 'mongodb';
+    protected $collection = 'sub_orders';
 
     protected $fillable = [
         'order_id',

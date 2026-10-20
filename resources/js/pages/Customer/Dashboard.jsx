@@ -370,13 +370,13 @@ export default function CustomerDashboard({ user = {}, orders = [], addresses = 
                                                             </div>
                                                             <div>
                                                                 <Link 
-                                                                    href={`/product/${item.product?.slug || item.product?.id || 1}`}
+                                                                    href={`/product/${item.product?.slug || item.product?.id || ''}`}
                                                                     className="font-bold text-slate-900 hover:text-amber-600 line-clamp-1 transition-colors"
                                                                 >
-                                                                    {item.product?.title || 'Certified Enterprise Telemetry Device'}
+                                                                    {item.product?.title || item.product_name || 'Order Item'}
                                                                 </Link>
                                                                 <p className="text-[11px] text-slate-400 mt-0.5">
-                                                                    Vendor: <strong className="text-slate-600">{item.vendor?.shop_name || 'TechNova Dynamics'}</strong> • Qty: {item.quantity || 1}
+                                                                    Vendor: <strong className="text-slate-600">{item.vendor?.shop_name || 'Verified Merchant'}</strong> • Qty: {item.quantity || 1}
                                                                 </p>
                                                             </div>
                                                         </div>

@@ -48,4 +48,30 @@ abstract class BaseModel extends MongoModel
 
         return parent::asDecimal($value, $decimals);
     }
+
+    /**
+     * Cast an attribute to a native PHP type with MongoDB BSON safety.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return mixed
+     */
+    protected function castAttribute($key, $value)
+    {
+        if ($value instanceof Decimal128) {
+            $castType = $this->getCasts()[$key] ?? null;
+            if (in_array($castType, ['int', 'integer'])) {
+                return (int) (string) $value;
+            }
+            if (in_array($castType, ['real', 'float', 'double'])) {
+                return (float) (string) $value;
+            }
+            if ($castType && str_starts_with($castType, 'decimal')) {
+                return $this->asDecimal($value, explode(':', $castType, 2)[1] ?? 2);
+            }
+            return (float) (string) $value;
+        }
+
+        return parent::castAttribute($key, $value);
+    }
 }

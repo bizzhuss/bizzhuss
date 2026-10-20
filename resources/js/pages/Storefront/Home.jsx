@@ -812,114 +812,54 @@ export default function Home({
                     </Link>
                 </div>
 
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/80 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="font-bold text-white text-sm">TechNova Dynamics</h3>
-                                <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                                    ★ 4.96 Rating
-                                </span>
-                            </div>
-                            <p className="text-xs text-slate-400 leading-relaxed">
-                                Industrial edge computing, telemetry sensors, and automated manufacturing hardware.
+                <div className="mt-6">
+                    {featuredVendors && featuredVendors.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            {featuredVendors.map((vendor) => (
+                                <div key={vendor.id || vendor.slug} className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/80 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="font-bold text-white text-sm">{vendor.shop_name}</h3>
+                                            <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                                                ★ Verified Store
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+                                            {vendor.description || 'Verified enterprise merchant offering direct manufacturer pricing and authentic products.'}
+                                        </p>
+                                    </div>
+                                    <div className="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
+                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                            Active Store
+                                        </span>
+                                        <Link
+                                            href={`/shop?vendor=${vendor.slug || vendor.id}`}
+                                            className="text-brand-400 hover:text-brand-300 font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                        >
+                                            <span>Visit Store</span>
+                                            <Eye className="w-3.5 h-3.5" />
+                                        </Link>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-8 text-center max-w-2xl mx-auto">
+                            <Store className="w-10 h-10 text-brand-400 mx-auto mb-3 opacity-80" />
+                            <h3 className="text-base font-bold text-white mb-1">Certified Vendor Network Initializing</h3>
+                            <p className="text-xs text-slate-400 max-w-md mx-auto mb-4">
+                                Certified merchant stores are currently undergoing SLA verification. New enterprise supplier catalogs will be published here.
                             </p>
-                        </div>
-                        <div className="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                Active Store
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => setInspectedStore({
-                                    id: 1,
-                                    name: 'TechNova Dynamics',
-                                    rating: '4.96',
-                                    fee: '10%',
-                                    description: 'Industrial edge computing, telemetry sensors, and automated manufacturing hardware.',
-                                    compliance: 'Enterprise SLA Verified',
-                                    productsCount: '48+ Active Listings'
-                                })}
-                                className="text-brand-400 hover:text-brand-300 font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                            <Link
+                                href="/register?role=vendor"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs transition-colors"
                             >
-                                <span>Inspect Store</span>
-                                <Eye className="w-3.5 h-3.5" />
-                            </button>
+                                <Store className="w-3.5 h-3.5" />
+                                <span>Apply for Merchant Onboarding</span>
+                            </Link>
                         </div>
-                    </div>
-
-                    <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/80 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="font-bold text-white text-sm">Artisan Craft & Studio</h3>
-                                <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                                    ★ 4.91 Rating
-                                </span>
-                            </div>
-                            <p className="text-xs text-slate-400 leading-relaxed">
-                                Handcrafted workspace ergonomics, sustainable leather gear, and executive desk accessories.
-                            </p>
-                        </div>
-                        <div className="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                Active Store
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => setInspectedStore({
-                                    id: 2,
-                                    name: 'Artisan Craft & Studio',
-                                    rating: '4.91',
-                                    fee: '12%',
-                                    description: 'Handcrafted workspace ergonomics, sustainable leather gear, and executive desk accessories.',
-                                    compliance: 'Master Artisan Certified',
-                                    productsCount: '32+ Active Listings'
-                                })}
-                                className="text-brand-400 hover:text-brand-300 font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
-                            >
-                                <span>Inspect Store</span>
-                                <Eye className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/80 flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="font-bold text-white text-sm">Apex Heavy Tools</h3>
-                                <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                                    ★ 4.88 Rating
-                                </span>
-                            </div>
-                            <p className="text-xs text-slate-400 leading-relaxed">
-                                Military-grade pneumatic equipment, precision torque wrenches, and warehouse robotics.
-                            </p>
-                        </div>
-                        <div className="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                Active Store
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => setInspectedStore({
-                                    id: 3,
-                                    name: 'Apex Heavy Tools',
-                                    rating: '4.88',
-                                    fee: '8.5%',
-                                    description: 'Military-grade pneumatic equipment, precision torque wrenches, and warehouse robotics.',
-                                    compliance: 'Industrial Quality Certified',
-                                    productsCount: '24+ Active Listings'
-                                })}
-                                className="text-brand-400 hover:text-brand-300 font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
-                            >
-                                <span>Inspect Store</span>
-                                <Eye className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </section>
 

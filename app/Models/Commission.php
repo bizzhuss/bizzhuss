@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Commission extends Model
+class Commission extends BaseModel
 {
     use HasFactory;
+
+    protected $connection = 'mongodb';
+    protected $collection = 'commissions';
 
     protected $fillable = [
         'sub_order_id',
