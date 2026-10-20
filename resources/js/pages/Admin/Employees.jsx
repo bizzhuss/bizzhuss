@@ -125,6 +125,8 @@ export default function Employees({ employees = [], departments = [], metrics = 
         email: '',
         password: '',
         phone: '',
+        role: 'staff',
+        permissions: ['tier.employee_desk', 'module.kanban'],
         department_id: '',
         designation_id: '',
         employee_code: 'EMP-' + Math.floor(1000 + Math.random() * 9000),
@@ -209,7 +211,13 @@ export default function Employees({ employees = [], departments = [], metrics = 
 
     const handleOnboardSubmit = (e) => {
         e.preventDefault();
-        router.post('/admin/workforce/employees', formData, {
+        const payload = {
+            ...formData,
+            role: formData.role || 'staff',
+            permissions: formData.role === 'super_admin' ? ['*'] : (formData.permissions || ['tier.employee_desk', 'module.kanban']),
+        };
+
+        router.post('/admin/workforce/employees', payload, {
             onSuccess: () => {
                 setIsOnboardOpen(false);
                 setFormData({
@@ -217,6 +225,8 @@ export default function Employees({ employees = [], departments = [], metrics = 
                     email: '',
                     password: '',
                     phone: '',
+                    role: 'staff',
+                    permissions: ['tier.employee_desk', 'module.kanban'],
                     department_id: '',
                     designation_id: '',
                     employee_code: 'EMP-' + Math.floor(1000 + Math.random() * 9000),
