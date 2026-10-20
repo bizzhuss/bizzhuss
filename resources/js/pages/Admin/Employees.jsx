@@ -35,6 +35,16 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+export const DESIGNATION_OPTIONS = [
+    { label: "Operations Manager", value: "operations_manager", role: "staff" },
+    { label: "Catalog Specialist", value: "catalog_specialist", role: "staff" },
+    { label: "Merchant Auditor", value: "merchant_auditor", role: "staff" },
+    { label: "Customer Support Executive", value: "support_rep", role: "staff" },
+    { label: "Marketing Lead", value: "marketing_lead", role: "staff" },
+    { label: "Platform Staff / General", value: "staff", role: "staff" },
+    { label: "Vendor Partner Representative", value: "vendor_rep", role: "vendor" },
+];
+
 const TIER_PERMISSIONS = [
     {
         id: 'tier.vendor_portal',
@@ -128,7 +138,7 @@ export default function Employees({ employees = [], departments = [], metrics = 
         role: 'staff',
         permissions: ['tier.employee_desk', 'module.kanban'],
         department_id: '',
-        designation_id: '',
+        designation_id: 'operations_manager',
         employee_code: 'EMP-' + Math.floor(1000 + Math.random() * 9000),
         monthly_target: 25,
     });
@@ -186,12 +196,26 @@ export default function Employees({ employees = [], departments = [], metrics = 
     };
 
     // Filter designations based on selected department in create form
-    const selectedDeptObj = departments.find(d => d.id === parseInt(formData.department_id));
-    const availableDesignations = selectedDeptObj ? selectedDeptObj.designations : [];
+    const selectedDeptObj = departments.find(d => String(d.id) === String(formData.department_id));
+    const deptDesignations = (selectedDeptObj?.designations || []).map(d => ({
+        label: d.title,
+        value: String(d.id),
+        role: 'staff',
+    }));
+    const availableDesignations = deptDesignations.length > 0
+        ? [...deptDesignations, ...DESIGNATION_OPTIONS.filter(opt => !deptDesignations.some(d => d.label?.toLowerCase() === opt.label.toLowerCase()))]
+        : DESIGNATION_OPTIONS;
 
     // Filter designations based on selected department in edit form
-    const editDeptObj = editingEmployee ? departments.find(d => d.id === parseInt(editingEmployee.department_id)) : null;
-    const editAvailableDesignations = editDeptObj ? editDeptObj.designations : [];
+    const editDeptObj = editingEmployee ? departments.find(d => String(d.id) === String(editingEmployee.department_id)) : null;
+    const editDeptDesignations = (editDeptObj?.designations || []).map(d => ({
+        label: d.title,
+        value: String(d.id),
+        role: 'staff',
+    }));
+    const editAvailableDesignations = editDeptDesignations.length > 0
+        ? [...editDeptDesignations, ...DESIGNATION_OPTIONS.filter(opt => !editDeptDesignations.some(d => d.label?.toLowerCase() === opt.label.toLowerCase()))]
+        : DESIGNATION_OPTIONS;
 
     const handleSearch = (e) => {
         e.preventDefault();
