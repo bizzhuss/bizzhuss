@@ -122,6 +122,8 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::put('/workforce/employees/{employee}', [AdminWorkforceController::class, 'updateEmployee'])->name('workforce.employees.update');
     Route::post('/workforce/employees/{employee}/permissions', [AdminWorkforceController::class, 'updatePermissions'])->name('workforce.employees.permissions');
     Route::delete('/workforce/employees/{employee}', [AdminWorkforceController::class, 'destroyEmployee'])->name('workforce.employees.destroy');
+    Route::post('/workforce/staff', [\App\Http\Controllers\StaffController::class, 'store'])->name('workforce.staff.store');
+    Route::put('/workforce/staff/{user}', [\App\Http\Controllers\StaffController::class, 'update'])->name('workforce.staff.update');
 
     // 2.4 Task Delegation, Kanban & Performance
     Route::get('/workforce/tasks', [AdminTaskController::class, 'index'])->name('workforce.tasks');
