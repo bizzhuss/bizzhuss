@@ -38,11 +38,15 @@ class AdminSettingController extends Controller
 
         // 2. Categories with parent/child tree and product counts
         $categories = Category::with(['parent', 'subcategories', 'products'])
+            ->orderBy('order', 'asc')
             ->orderBy('name')
             ->get();
 
-        $rootCategories = Category::whereNull('parent_id')
+        $rootCategories = Category::where(function ($q) {
+                $q->whereNull('parent_id')->orWhere('parent_id', '')->orWhere('parent_id', '0');
+            })
             ->with(['subcategories.products', 'products'])
+            ->orderBy('order', 'asc')
             ->orderBy('name')
             ->get();
 
@@ -113,13 +117,23 @@ class AdminSettingController extends Controller
             'icon' => 'nullable|string|max:100',
             'banner' => 'nullable|string|max:500',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
-            'parent_id' => 'nullable|exists:categories,id',
+            'parent_id' => 'nullable|string',
             'is_verified_featured' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
+            'order' => 'nullable|integer',
         ]);
 
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['name']);
         }
+
+        if (empty($validated['parent_id'])) {
+            $validated['parent_id'] = null;
+        }
+
+        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_verified_featured'] = $request->boolean('is_verified_featured', false);
+        $validated['order'] = $request->filled('order') ? (int) $request->input('order') : 0;
 
         Category::create($validated);
 
@@ -137,9 +151,25 @@ class AdminSettingController extends Controller
             'icon' => 'nullable|string|max:100',
             'banner' => 'nullable|string|max:500',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
-            'parent_id' => 'nullable|exists:categories,id',
+            'parent_id' => 'nullable|string',
             'is_verified_featured' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
+            'order' => 'nullable|integer',
         ]);
+
+        if (empty($validated['parent_id'])) {
+            $validated['parent_id'] = null;
+        }
+
+        if ($request->has('is_active')) {
+            $validated['is_active'] = $request->boolean('is_active');
+        }
+        if ($request->has('is_verified_featured')) {
+            $validated['is_verified_featured'] = $request->boolean('is_verified_featured');
+        }
+        if ($request->has('order')) {
+            $validated['order'] = (int) $request->input('order', 0);
+        }
 
         $category->update($validated);
 

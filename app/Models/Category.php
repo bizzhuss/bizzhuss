@@ -13,20 +13,18 @@ class Category extends BaseModel
     protected $connection = 'mongodb';
     protected $collection = 'categories';
 
-    protected $fillable = [
-        'name',
-        'slug',
-        'icon',
-        'banner',
-        'commission_rate',
-        'parent_id',
-        'is_active',
-        'is_verified_featured',
-        'order',
+    protected $guarded = [];
+
+    protected $attributes = [
+        'is_active' => true,
+        'is_featured' => false,
+        'is_verified_featured' => false,
+        'order' => 0,
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_featured' => 'boolean',
         'is_verified_featured' => 'boolean',
         'order' => 'integer',
         'commission_rate' => 'float',
