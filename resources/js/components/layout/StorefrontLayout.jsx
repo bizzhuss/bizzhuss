@@ -623,7 +623,7 @@ function StorefrontLayoutInner({ children }) {
                 </div>
 
                 {/* Mobile Horizontal Quick Navigation Category Pills */}
-                <nav className="md:hidden bg-slate-950 border-t border-slate-800/80 px-3 py-2 overflow-x-auto no-scrollbar">
+                <nav className="md:hidden bg-slate-950 border-t border-slate-800/80 px-3 py-2 overflow-x-auto no-scrollbar scrollbar-none">
                     <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
                         <Link
                             href="/shop?tier=special_flash_sale"
@@ -771,7 +771,7 @@ function StorefrontLayoutInner({ children }) {
                             </div>
 
                             {/* Scrollable Department Quick Links */}
-                            <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar py-0.5">
+                            <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar scrollbar-none py-0.5">
                                 {desktopDepartments.map((dept) => {
                                     const Icon = dept.icon;
                                     return (
