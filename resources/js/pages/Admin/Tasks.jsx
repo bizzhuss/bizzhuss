@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { StatCard } from '@/components/ui/StatCard';
@@ -43,6 +43,14 @@ export default function Tasks({
     categories = [],
     filters = {} 
 }) {
+    const { auth } = usePage().props;
+    const userPerms = auth?.user?.permissions || [];
+    const canCreateTask = 
+        auth?.user?.role === 'super_admin' ||
+        userPerms.includes('*') ||
+        userPerms.includes('module.kanban') ||
+        userPerms.includes('/admin/workforce/tasks');
+
     const [viewMode, setViewMode] = useState('kanban'); // 'kanban' or 'table'
     const [priorityFilter, setPriorityFilter] = useState(filters.priority || 'all');
     const [categoryFilter, setCategoryFilter] = useState(filters.category || 'all');
@@ -80,6 +88,7 @@ export default function Tasks({
 
     const handleCreateTask = (e) => {
         e.preventDefault();
+        if (!canCreateTask) return;
         router.post('/admin/workforce/tasks', createForm, {
             onSuccess: () => {
                 setIsCreateOpen(false);
@@ -153,13 +162,15 @@ export default function Tasks({
                 title="Task Delegation & Employee Performance Tracking"
                 subtitle="Assign operational deliverables, oversee Kanban flow across departments, and track employee on-time completion scores."
                 actions={
-                    <Button 
-                        variant="primary" 
-                        icon={Plus} 
-                        onClick={() => setIsCreateOpen(true)}
-                    >
-                        Delegate New Task
-                    </Button>
+                    canCreateTask ? (
+                        <Button 
+                            variant="primary" 
+                            icon={Plus} 
+                            onClick={() => setIsCreateOpen(true)}
+                        >
+                            Delegate New Task
+                        </Button>
+                    ) : null
                 }
             />
 
@@ -731,7 +742,7 @@ export default function Tasks({
             )}
 
             {/* Create Task Modal */}
-            {isCreateOpen && (
+            {canCreateTask && isCreateOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
                     <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
                         <div className="flex items-center justify-between pb-4 border-b border-slate-100">

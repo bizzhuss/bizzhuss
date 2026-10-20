@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/Button';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
@@ -23,6 +23,14 @@ import {
 } from 'lucide-react';
 
 export default function EmployeeWorkspace({ tasks = [], employees = [], departments = [], metrics = {}, filters = {} }) {
+    const { auth } = usePage().props;
+    const userPerms = auth?.user?.permissions || [];
+    const canCreateTask = 
+        auth?.user?.role === 'super_admin' ||
+        userPerms.includes('*') ||
+        userPerms.includes('module.kanban') ||
+        userPerms.includes('/admin/workforce/tasks');
+
     const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'table'
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [departmentFilter, setDepartmentFilter] = useState(filters.department || 'all');
@@ -111,13 +119,15 @@ export default function EmployeeWorkspace({ tasks = [], employees = [], departme
                         </button>
                     </div>
 
-                    <Button
-                        variant="primary"
-                        icon={Plus}
-                        onClick={() => setIsTaskModalOpen(true)}
-                    >
-                        Create Task
-                    </Button>
+                    {canCreateTask && (
+                        <Button
+                            variant="primary"
+                            icon={Plus}
+                            onClick={() => setIsTaskModalOpen(true)}
+                        >
+                            Create Task
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -364,13 +374,15 @@ export default function EmployeeWorkspace({ tasks = [], employees = [], departme
             )}
 
             {/* Task Creation Modal */}
-            <TaskFormModal
-                isOpen={isTaskModalOpen}
-                onClose={() => setIsTaskModalOpen(false)}
-                employees={employees}
-                departments={departments}
-                postUrl="/employee/tasks"
-            />
+            {canCreateTask && (
+                <TaskFormModal
+                    isOpen={isTaskModalOpen}
+                    onClose={() => setIsTaskModalOpen(false)}
+                    employees={employees}
+                    departments={departments}
+                    postUrl="/employee/tasks"
+                />
+            )}
         </MainLayout>
     );
 }
