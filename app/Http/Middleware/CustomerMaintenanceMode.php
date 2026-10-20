@@ -61,7 +61,10 @@ class CustomerMaintenanceMode
         }
 
         // 5. Determine blocked roles list
-        $blockedRoles = Setting::get('maintenance_blocked_roles', ['guest', 'customer']);
+        $blockedRoles = (is_array($storeMaintenanceDoc) && !empty($storeMaintenanceDoc['blocked_roles']))
+            ? $storeMaintenanceDoc['blocked_roles']
+            : Setting::get('maintenance_blocked_roles', ['guest', 'customer']);
+
         if (is_string($blockedRoles)) {
             $decoded = json_decode($blockedRoles, true);
             $blockedRoles = is_array($decoded) ? $decoded : ['guest', 'customer'];
@@ -84,8 +87,14 @@ class CustomerMaintenanceMode
         }
 
         if ($isBlocked) {
+            $message = is_array($storeMaintenanceDoc) ? ($storeMaintenanceDoc['message'] ?? null) : null;
+            $socialLinks = is_array($storeMaintenanceDoc) ? ($storeMaintenanceDoc['social_links'] ?? null) : null;
+
             // Render modern Inertia maintenance page with HTTP status 503
-            return Inertia::render('Maintenance')
+            return Inertia::render('Maintenance', [
+                'message' => $message,
+                'social_links' => $socialLinks,
+            ])
                 ->toResponse($request)
                 ->setStatusCode(503);
         }
