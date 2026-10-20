@@ -4,27 +4,22 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Run the database seeds for MongoDB Roles and Document-Based Permissions.
      */
     public function run(): void
     {
-        // Reset cached roles and permissions
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
-
-        // Exact required permissions
-        $permissions = [
-            // Tiers
+        // Platform Permissions Matrix
+        $tierPermissions = [
             'tier.vendor_portal',
             'tier.employee_desk',
             'tier.marketing_hub',
-            // Sub-Tabs / Modules
+        ];
+
+        $modulePermissions = [
             'module.central_command',
             'module.vendor_oversight',
             'module.storefront_curation',
@@ -34,46 +29,64 @@ class RolesAndPermissionsSeeder extends Seeder
             'module.platform_settings',
         ];
 
-        foreach ($permissions as $perm) {
-            Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
-        }
+        // 1. Ensure Primary Super Admin exists and has full access
+        $superAdminEmails = [
+            'haseebkhanuddin44@gmail.com',
+            'admin@bizzhuss.com',
+            'superadmin@bizzhuss.com',
+            'bizzhuss@gmail.com',
+        ];
 
-        // Roles
-        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-        $employeeRole = Role::firstOrCreate(['name' => 'employee', 'guard_name' => 'web']);
-        $vendorRole = Role::firstOrCreate(['name' => 'vendor', 'guard_name' => 'web']);
-        $customerRole = Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'web']);
-        $marketingRole = Role::firstOrCreate(['name' => 'marketing_manager', 'guard_name' => 'web']);
-
-        // Give all permissions to super_admin
-        $superAdminRole->syncPermissions(Permission::all());
-
-        // Default baseline permissions for standard employee
-        $employeeRole->syncPermissions([
-            'tier.employee_desk',
-            'module.kanban',
-        ]);
-
-        // Default baseline permissions for marketing manager
-        $marketingRole->syncPermissions([
-            'tier.marketing_hub',
-            'module.storefront_curation',
-        ]);
-
-        // Assign super_admin role to any existing users with role 'super_admin'
-        $superAdmins = User::where('role', 'super_admin')->get();
-        foreach ($superAdmins as $admin) {
-            if (!$admin->hasRole('super_admin')) {
-                $admin->assignRole($superAdminRole);
+        foreach ($superAdminEmails as $email) {
+            $user = User::where('email', $email)->first();
+            if ($user) {
+                $user->update([
+                    'role' => 'super_admin',
+                    'status' => 'active',
+                    'approval_status' => 'approved',
+                    'permissions' => ['*'],
+                ]);
             }
         }
 
-        // Assign employee role to existing employees
-        $employees = User::where('role', 'employee')->get();
-        foreach ($employees as $emp) {
-            if (!$emp->hasRole('employee')) {
-                $emp->assignRole($employeeRole);
+        // 2. Ensure all other super admins have wildcard permissions
+        User::where('role', 'super_admin')->get()->each(function ($admin) {
+            $perms = $admin->permissions ?? [];
+            if (!in_array('*', (array) $perms)) {
+                $admin->syncPermissions(['*']);
             }
-        }
+        });
+
+        // 3. Ensure employees have baseline desk & kanban access
+        User::where('role', 'employee')->get()->each(function ($emp) {
+            $perms = (array) ($emp->permissions ?? []);
+            if (empty($perms)) {
+                $emp->syncPermissions([
+                    'tier.employee_desk',
+                    'module.kanban',
+                ]);
+            }
+        });
+
+        // 4. Ensure marketing managers have baseline marketing hub & curation access
+        User::where('role', 'marketing_manager')->get()->each(function ($mm) {
+            $perms = (array) ($mm->permissions ?? []);
+            if (empty($perms)) {
+                $mm->syncPermissions([
+                    'tier.marketing_hub',
+                    'module.storefront_curation',
+                ]);
+            }
+        });
+
+        // 5. Ensure vendors have vendor portal tier access
+        User::where('role', 'vendor')->get()->each(function ($vendor) {
+            $perms = (array) ($vendor->permissions ?? []);
+            if (empty($perms)) {
+                $vendor->syncPermissions([
+                    'tier.vendor_portal',
+                ]);
+            }
+        });
     }
 }

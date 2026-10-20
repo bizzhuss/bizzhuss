@@ -292,7 +292,7 @@ class AdminWorkforceController extends Controller
     {
         $validated = $request->validate([
             'permissions' => 'nullable|array',
-            'permissions.*' => 'string|exists:permissions,name',
+            'permissions.*' => 'string|max:100',
         ]);
 
         if ($employee->user) {
