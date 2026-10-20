@@ -63,7 +63,13 @@ class CheckRole
             }
 
             if ($matchedPermission) {
-                $hasPerm = method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo($matchedPermission);
+                if ($matchedPermission === 'module.central_command') {
+                    $hasPerm = $user->hasPermission('module.central_command') 
+                        || !empty(array_filter($user->getPermissionsList(), fn ($p) => str_starts_with($p, 'module.')));
+                } else {
+                    $hasPerm = $user->hasPermission($matchedPermission);
+                }
+
                 if ($hasPerm) {
                     return $next($request);
                 }
@@ -81,16 +87,13 @@ class CheckRole
         // 5. Tier Portal Permissions Verification
         $hasTierAccess = false;
         if ($request->is('vendor*') || in_array('vendor', $roles)) {
-            $hasTierAccess = in_array($user->role, ['vendor', 'super_admin']) || 
-                (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('tier.vendor_portal'));
+            $hasTierAccess = in_array($user->role, ['vendor', 'super_admin']) || $user->hasPermission('tier.vendor_portal');
         } elseif ($request->is('employee*') || in_array('employee', $roles)) {
-            $hasTierAccess = in_array($user->role, ['employee', 'super_admin']) || 
-                (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('tier.employee_desk'));
+            $hasTierAccess = in_array($user->role, ['employee', 'super_admin']) || $user->hasPermission('tier.employee_desk');
         } elseif ($request->is('marketing*') || in_array('marketing_manager', $roles)) {
-            $hasTierAccess = in_array($user->role, ['marketing_manager', 'super_admin']) || 
-                (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('tier.marketing_hub'));
+            $hasTierAccess = in_array($user->role, ['marketing_manager', 'super_admin']) || $user->hasPermission('tier.marketing_hub');
         } else {
-            $hasTierAccess = in_array($user->role, $roles);
+            $hasTierAccess = $user->hasRole($roles);
         }
 
         if (!$hasTierAccess) {
@@ -102,7 +105,7 @@ class CheckRole
         }
 
         // 6. Verify & Auto-create Vendor Profile if missing for authenticated vendor user or staff with vendor portal access
-        if (($user->role === 'vendor' || (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('tier.vendor_portal'))) && !$user->vendor) {
+        if (($user->role === 'vendor' || $user->hasPermission('tier.vendor_portal')) && !$user->vendor) {
             Vendor::create([
                 'user_id' => $user->id,
                 'shop_name' => ($user->name ?? 'Merchant') . "'s Store",
