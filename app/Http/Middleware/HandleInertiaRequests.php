@@ -51,8 +51,16 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'maintenance' => [
-                'is_enabled' => (bool) (\App\Models\Setting::get('maintenance_enabled', null) !== null ? \App\Models\Setting::get('maintenance_enabled') : \App\Models\Setting::get('maintenance_mode', false)),
-                'blocked_roles' => \App\Models\Setting::get('maintenance_blocked_roles', ['guest', 'customer']),
+                'is_enabled' => (bool) (
+                    (is_array(\App\Models\Setting::get('store_maintenance_mode')) && isset(\App\Models\Setting::get('store_maintenance_mode')['maintenance_enabled']))
+                        ? \App\Models\Setting::get('store_maintenance_mode')['maintenance_enabled']
+                        : (\App\Models\Setting::get('maintenance_enabled', null) !== null
+                            ? \App\Models\Setting::get('maintenance_enabled')
+                            : \App\Models\Setting::get('maintenance_mode', false))
+                ),
+                'blocked_roles' => (is_array(\App\Models\Setting::get('store_maintenance_mode')) && !empty(\App\Models\Setting::get('store_maintenance_mode')['blocked_roles']))
+                    ? \App\Models\Setting::get('store_maintenance_mode')['blocked_roles']
+                    : \App\Models\Setting::get('maintenance_blocked_roles', ['guest', 'customer']),
             ],
             'categories' => function () {
                 try {
