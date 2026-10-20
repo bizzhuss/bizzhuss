@@ -33,6 +33,18 @@ class StaffController extends Controller
             'status' => 'active',
         ]);
 
+        if ($request->filled('department_id') || $request->filled('designation_id')) {
+            \App\Models\Employee::create([
+                'user_id' => $employee->id,
+                'department_id' => $request->department_id,
+                'designation_id' => $request->designation_id,
+                'employee_code' => $request->employee_code ?: ('EMP-' . rand(1000, 9999)),
+                'monthly_target' => $request->monthly_target ?? 25,
+                'joining_date' => now(),
+                'status' => 'active',
+            ]);
+        }
+
         return back()->with('success', "Staff member '{$employee->name}' onboarded successfully.");
     }
 

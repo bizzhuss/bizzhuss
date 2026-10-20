@@ -639,20 +639,25 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                 </div>
 
                                 <div>
-                                    <label className="block font-bold text-slate-700 mb-1">Designation Title *</label>
+                                    <label className="block font-bold text-slate-700 mb-1">Designation Title / Role *</label>
                                     <select
                                         required
-                                        disabled={!formData.department_id}
                                         value={formData.designation_id}
-                                        onChange={(e) => setFormData({ ...formData, designation_id: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-500 bg-white font-semibold cursor-pointer disabled:bg-slate-100 disabled:cursor-not-allowed"
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const matched = availableDesignations.find(opt => opt.value === val);
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                designation_id: val,
+                                                role: matched?.role ? matched.role : prev.role,
+                                            }));
+                                        }}
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none focus:border-brand-500 bg-white font-semibold cursor-pointer"
                                     >
-                                        <option value="">
-                                            {formData.department_id ? 'Select Role' : 'Select Dept First'}
-                                        </option>
+                                        <option value="">Select Role / Designation</option>
                                         {availableDesignations.map((desig) => (
-                                            <option key={desig.id} value={desig.id}>
-                                                {desig.title}
+                                            <option key={desig.value} value={desig.value}>
+                                                {desig.label}
                                             </option>
                                         ))}
                                     </select>
@@ -760,17 +765,28 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                 </div>
 
                                 <div>
-                                    <label className="block font-bold text-slate-700 mb-1">Designation</label>
+                                    <label className="block font-bold text-slate-700 mb-1">Designation Title / Role</label>
                                     <select
                                         value={editingEmployee.designation_id}
-                                        onChange={(e) => setEditingEmployee({
-                                            ...editingEmployee,
-                                            designation_id: e.target.value
-                                        })}
-                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none bg-white font-semibold"
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const matched = editAvailableDesignations.find(opt => opt.value === val);
+                                            setEditingEmployee(prev => ({
+                                                ...prev,
+                                                designation_id: val,
+                                                user: {
+                                                    ...prev.user,
+                                                    role: matched?.role ? matched.role : (prev.user?.role || 'staff'),
+                                                }
+                                            }));
+                                        }}
+                                        className="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none bg-white font-semibold cursor-pointer"
                                     >
+                                        <option value="">Select Role / Designation</option>
                                         {editAvailableDesignations.map((desig) => (
-                                            <option key={desig.id} value={desig.id}>{desig.title}</option>
+                                            <option key={desig.value} value={desig.value}>
+                                                {desig.label}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
