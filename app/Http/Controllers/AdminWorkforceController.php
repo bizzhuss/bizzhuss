@@ -213,8 +213,8 @@ class AdminWorkforceController extends Controller
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
             'phone' => 'nullable|string|max:30',
-            'department_id' => 'nullable|exists:departments,id',
-            'designation_id' => 'nullable|exists:designations,id',
+            'department_id' => 'nullable|string|max:100',
+            'designation_id' => 'nullable|string|max:100',
             'employee_code' => 'nullable|string',
             'monthly_target' => 'nullable|integer|min:1',
         ]);
@@ -234,10 +234,12 @@ class AdminWorkforceController extends Controller
             'status' => 'active',
         ]);
 
+        $designationId = $this->resolveDesignationId($request->designation_id, $request->department_id);
+
         Employee::create([
             'user_id' => $employee->id,
             'department_id' => $request->department_id,
-            'designation_id' => $request->designation_id,
+            'designation_id' => $designationId,
             'employee_code' => $request->employee_code ?: ('EMP-' . rand(1000, 9999)),
             'monthly_target' => $request->monthly_target ?? 25,
             'joining_date' => now(),
@@ -255,8 +257,8 @@ class AdminWorkforceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:30',
-            'department_id' => 'nullable|exists:departments,id',
-            'designation_id' => 'nullable|exists:designations,id',
+            'department_id' => 'nullable|string|max:100',
+            'designation_id' => 'nullable|string|max:100',
             'monthly_target' => 'nullable|integer|min:1',
             'status' => 'required|in:active,inactive,on_leave',
             'role' => 'nullable|string|in:staff,vendor,super_admin,employee',
@@ -286,14 +288,61 @@ class AdminWorkforceController extends Controller
             $employee->user->update($userData);
         }
 
+        $designationId = $request->filled('designation_id') 
+            ? $this->resolveDesignationId($request->designation_id, $request->department_id ?? $employee->department_id) 
+            : $employee->designation_id;
+
         $employee->update([
             'department_id' => $validated['department_id'] ?? $employee->department_id,
-            'designation_id' => $validated['designation_id'] ?? $employee->designation_id,
+            'designation_id' => $designationId,
             'monthly_target' => $validated['monthly_target'] ?? $employee->monthly_target ?? 25,
             'status' => $validated['status'],
         ]);
 
         return redirect()->back()->with('success', "Employee record for '{$employee->user?->name}' updated.");
+    }
+
+    /**
+     * Resolve designation ID from either a standard slug value or ObjectId.
+     */
+    protected function resolveDesignationId(?string $designationId, ?string $departmentId): ?string
+    {
+        if (empty($designationId)) {
+            return null;
+        }
+
+        $standardMap = [
+            'operations_manager' => 'Operations Manager',
+            'catalog_specialist' => 'Catalog Specialist',
+            'merchant_auditor' => 'Merchant Auditor',
+            'support_rep' => 'Customer Support Executive',
+            'marketing_lead' => 'Marketing Lead',
+            'staff' => 'Platform Staff / General',
+            'vendor_rep' => 'Vendor Partner Representative',
+        ];
+
+        if (isset($standardMap[$designationId])) {
+            $title = $standardMap[$designationId];
+            $desig = Designation::firstOrCreate(
+                ['title' => $title],
+                ['department_id' => $departmentId]
+            );
+            return (string) $desig->id;
+        }
+
+        // If it's already an existing designation in database, return as is
+        $existing = Designation::find($designationId);
+        if ($existing) {
+            return (string) $existing->id;
+        }
+
+        // If it's a custom text slug/name
+        $title = ucwords(str_replace('_', ' ', $designationId));
+        $desig = Designation::firstOrCreate(
+            ['title' => $title],
+            ['department_id' => $departmentId]
+        );
+        return (string) $desig->id;
     }
 
     /**
