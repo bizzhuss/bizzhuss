@@ -151,6 +151,9 @@ function StorefrontLayoutInner({ children }) {
                                     <Link href="/employee" className="px-2 py-0.5 rounded font-semibold text-slate-300 hover:text-white hover:bg-slate-800">
                                         Workforce
                                     </Link>
+                                    <Link href="/marketing" className="px-2 py-0.5 rounded font-semibold text-slate-300 hover:text-white hover:bg-slate-800">
+                                        Marketing Hub
+                                    </Link>
                                 </div>
                             </div>
                         ) : auth?.user?.role === 'vendor' ? (
@@ -174,6 +177,17 @@ function StorefrontLayoutInner({ children }) {
                                     <span>Back to Workforce Desk</span>
                                 </Link>
                                 <span className="text-slate-500 text-[11px] hidden md:inline">• Enterprise Operations Desk</span>
+                            </div>
+                        ) : auth?.user?.role === 'marketing_manager' ? (
+                            <div className="flex items-center gap-2">
+                                <Link 
+                                    href="/marketing" 
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-purple-500/20 text-purple-300 hover:text-white hover:bg-purple-500/30 border border-purple-500/30 font-semibold text-[11px] transition-colors"
+                                >
+                                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                                    <span>Back to Marketing Hub</span>
+                                </Link>
+                                <span className="text-slate-500 text-[11px] hidden md:inline">• Storefront Merchandising</span>
                             </div>
                         ) : auth?.user?.role === 'customer' ? (
                             <div className="flex items-center gap-2 text-slate-400 text-[11px]">
@@ -424,7 +438,24 @@ function StorefrontLayoutInner({ children }) {
                                                     </>
                                                 )}
 
-                                                {auth.user.role === 'super_admin' && (
+                                                {auth.user.role === 'marketing_manager' && (
+                                                    <>
+                                                        <Link href="/marketing" className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 font-semibold text-purple-700">
+                                                            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                                                            <span>Marketing Hub</span>
+                                                        </Link>
+                                                        <Link href="/marketing/curation" className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 text-slate-700">
+                                                            <Package className="w-3.5 h-3.5 text-slate-400" />
+                                                            <span>Storefront Curation</span>
+                                                        </Link>
+                                                        <Link href="/shop" className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 text-slate-700">
+                                                            <Package className="w-3.5 h-3.5 text-slate-400" />
+                                                            <span>Browse Catalog</span>
+                                                        </Link>
+                                                    </>
+                                                )}
+
+                                                {(auth.user.role === 'super_admin' || auth.user.permissions?.includes('*')) && (
                                                     <>
                                                         <Link href="/admin" className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 font-semibold text-brand-700">
                                                             <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
@@ -437,6 +468,10 @@ function StorefrontLayoutInner({ children }) {
                                                         <Link href="/employee" className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 text-slate-700">
                                                             <Briefcase className="w-3.5 h-3.5 text-slate-400" />
                                                             <span>Workforce Desk</span>
+                                                        </Link>
+                                                        <Link href="/marketing" className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 text-slate-700">
+                                                            <Sparkles className="w-3.5 h-3.5 text-slate-400" />
+                                                            <span>Marketing Hub</span>
                                                         </Link>
                                                         <Link href="/shop" className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 text-slate-700">
                                                             <Package className="w-3.5 h-3.5 text-slate-400" />
