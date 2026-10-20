@@ -63,8 +63,11 @@ export default function PlatformSettings({
         if (e) e.preventDefault();
         setSavingMaintenance(true);
         router.post('/admin/settings/maintenance-mode', {
-            is_enabled: maintenanceForm.is_enabled,
+            maintenance_enabled: Boolean(maintenanceForm.is_enabled),
+            is_enabled: Boolean(maintenanceForm.is_enabled),
             blocked_roles: maintenanceForm.blocked_roles,
+            message: 'Store is temporarily under maintenance. Our systems are currently undergoing scheduled upgrades.',
+            social_links: [],
         }, {
             preserveScroll: true,
             onFinish: () => setSavingMaintenance(false),

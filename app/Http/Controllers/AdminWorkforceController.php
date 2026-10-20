@@ -201,43 +201,50 @@ class AdminWorkforceController extends Controller
     }
 
     /**
-     * Onboard a new employee.
+     * Onboard a new employee / staff member.
      */
     public function storeEmployee(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:150',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'nullable|string|min:6',
+            'role' => 'nullable|string|in:staff,vendor,super_admin,employee',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string',
             'phone' => 'nullable|string|max:30',
-            'department_id' => 'required|exists:departments,id',
-            'designation_id' => 'required|exists:designations,id',
-            'employee_code' => 'required|string|unique:employees,employee_code',
+            'department_id' => 'nullable|exists:departments,id',
+            'designation_id' => 'nullable|exists:designations,id',
+            'employee_code' => 'nullable|string',
             'monthly_target' => 'nullable|integer|min:1',
         ]);
 
-        DB::transaction(function () use ($validated) {
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'phone' => $validated['phone'] ?? null,
-                'role' => 'employee',
-                'status' => 'active',
-            ]);
+        $role = $request->role ?? 'staff';
+        $perms = $request->permissions ?? ($role === 'super_admin' ? ['*'] : ['tier.employee_desk', 'module.kanban']);
 
-            Employee::create([
-                'user_id' => $user->id,
-                'department_id' => $validated['department_id'],
-                'designation_id' => $validated['designation_id'],
-                'employee_code' => $validated['employee_code'],
-                'monthly_target' => $validated['monthly_target'] ?? 25,
-                'joining_date' => now(),
-                'status' => 'active',
-            ]);
-        });
+        $employee = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => $request->password ? Hash::make($request->password) : null,
+            'phone' => $request->phone ?? null,
+            'role' => $role,
+            'permissions' => $perms,
+            'approval_status' => 'approved',
+            'email_verified_at' => now(),
+            'status' => 'active',
+        ]);
 
-        return redirect()->back()->with('success', "Employee '{$validated['name']}' onboarded successfully.");
+        Employee::create([
+            'user_id' => $employee->id,
+            'department_id' => $request->department_id,
+            'designation_id' => $request->designation_id,
+            'employee_code' => $request->employee_code ?: ('EMP-' . rand(1000, 9999)),
+            'monthly_target' => $request->monthly_target ?? 25,
+            'joining_date' => now(),
+            'status' => 'active',
+        ]);
+
+        return redirect()->back()->with('success', "Staff member '{$employee->name}' onboarded successfully.");
     }
 
     /**
@@ -246,27 +253,47 @@ class AdminWorkforceController extends Controller
     public function updateEmployee(Request $request, Employee $employee)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:150',
+            'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:30',
-            'department_id' => 'required|exists:departments,id',
-            'designation_id' => 'required|exists:designations,id',
+            'department_id' => 'nullable|exists:departments,id',
+            'designation_id' => 'nullable|exists:designations,id',
             'monthly_target' => 'nullable|integer|min:1',
             'status' => 'required|in:active,inactive,on_leave',
+            'role' => 'nullable|string|in:staff,vendor,super_admin,employee',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string',
+            'password' => 'nullable|string|min:6',
         ]);
 
-        $employee->user->update([
+        $userData = [
             'name' => $validated['name'],
-            'phone' => $validated['phone'] ?? $employee->user->phone,
-        ]);
+            'phone' => $validated['phone'] ?? $employee->user?->phone,
+        ];
+
+        if ($request->filled('role')) {
+            $userData['role'] = $request->role;
+        }
+
+        if ($request->has('permissions')) {
+            $userData['permissions'] = (array) $request->permissions;
+        }
+
+        if ($request->filled('password')) {
+            $userData['password'] = Hash::make($request->password);
+        }
+
+        if ($employee->user) {
+            $employee->user->update($userData);
+        }
 
         $employee->update([
-            'department_id' => $validated['department_id'],
-            'designation_id' => $validated['designation_id'],
-            'monthly_target' => $validated['monthly_target'] ?? 25,
+            'department_id' => $validated['department_id'] ?? $employee->department_id,
+            'designation_id' => $validated['designation_id'] ?? $employee->designation_id,
+            'monthly_target' => $validated['monthly_target'] ?? $employee->monthly_target ?? 25,
             'status' => $validated['status'],
         ]);
 
-        return redirect()->back()->with('success', "Employee record for '{$employee->user->name}' updated.");
+        return redirect()->back()->with('success', "Employee record for '{$employee->user?->name}' updated.");
     }
 
     /**
