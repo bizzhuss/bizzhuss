@@ -97,6 +97,7 @@ class AuthController extends Controller
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'status' => 'active',
+            'approval_status' => 'approved',
             'avatar' => 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
         ]);
 
