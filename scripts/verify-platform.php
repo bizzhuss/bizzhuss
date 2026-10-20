@@ -2,6 +2,7 @@
 require __DIR__ . '/../vendor/autoload.php';
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$kernel->bootstrap();
 
 echo "=======================================================\n";
 echo "       BIZZHUSS END-TO-END PLATFORM HEALTH CHECK        \n";
@@ -53,7 +54,7 @@ $routesToTest = [
     '/shop' => [200],
     '/login' => [200],
     '/register' => [200],
-    '/maintenance' => [200],
+    '/maintenance' => [200, 302], // 200 when maintenance is active, 302 redirect to / when inactive
     '/admin' => [302], // redirect to login
     '/vendor' => [302], // redirect to login
 ];

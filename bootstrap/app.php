@@ -39,8 +39,13 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $exception, \Illuminate\Http\Request $request) {
+            // Never convert redirects (such as authentication or validation redirects) into error responses
+            if ($response->isRedirection()) {
+                return $response;
+            }
+
             $status = $response->getStatusCode();
-            if ($status < 400 && $exception) {
+            if ($status < 400) {
                 $status = 500;
             }
 
