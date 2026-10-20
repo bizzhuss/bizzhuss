@@ -84,6 +84,18 @@ class EmployeeController extends Controller
      */
     public function storeTask(EmployeeTaskRequest $request)
     {
+        $user = auth()->user();
+        $canCreateTask = $user && (
+            $user->role === 'super_admin' ||
+            $user->email === 'haseebkhanuddin44@gmail.com' ||
+            $user->hasPermission('module.kanban') ||
+            $user->hasPermission('/admin/workforce/tasks')
+        );
+
+        if (!$canCreateTask) {
+            abort(403, 'Unauthorized: Task creation requires Super Admin or Task Delegation & Kanban permission.');
+        }
+
         $validated = $request->validated();
         $assignedBy = auth()->id() ?? User::where('role', 'super_admin')->first()?->id ?? 1;
 
