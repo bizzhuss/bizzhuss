@@ -159,6 +159,18 @@ class AdminTaskController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $canCreateTask = $user && (
+            $user->role === 'super_admin' ||
+            $user->email === 'haseebkhanuddin44@gmail.com' ||
+            $user->hasPermission('module.kanban') ||
+            $user->hasPermission('/admin/workforce/tasks')
+        );
+
+        if (!$canCreateTask) {
+            abort(403, 'Unauthorized: Task creation requires Super Admin or Task Delegation & Kanban permission.');
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:200',
             'description' => 'nullable|string|max:1000',

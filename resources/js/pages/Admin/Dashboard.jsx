@@ -42,6 +42,10 @@ export default function AdminDashboard({
 }) {
     const permissions = auth?.user?.permissions || [];
     const isSuperAdmin = auth?.user?.role === 'super_admin' || permissions.includes('*');
+    const canCreateTask = 
+        isSuperAdmin ||
+        permissions.includes('module.kanban') ||
+        permissions.includes('/admin/workforce/tasks');
 
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [selectedVendorForReview, setSelectedVendorForReview] = useState(null);
@@ -57,13 +61,15 @@ export default function AdminDashboard({
                 title="Central Command"
                 subtitle="High-altitude platform governance, merchant compliance, and operational workforce delegation."
                 actions={
-                    <Button
-                        variant="primary"
-                        icon={Plus}
-                        onClick={() => setIsTaskModalOpen(true)}
-                    >
-                        Delegate Workforce Task
-                    </Button>
+                    canCreateTask ? (
+                        <Button
+                            variant="primary"
+                            icon={Plus}
+                            onClick={() => setIsTaskModalOpen(true)}
+                        >
+                            Delegate Workforce Task
+                        </Button>
+                    ) : null
                 }
             />
 
@@ -341,14 +347,16 @@ export default function AdminDashboard({
                                 >
                                     Kanban Board <ArrowRight className="w-3 h-3" />
                                 </Link>
-                                <Button
-                                    variant="outline"
-                                    size="xs"
-                                    icon={Plus}
-                                    onClick={() => setIsTaskModalOpen(true)}
-                                >
-                                    New Task
-                                </Button>
+                                {canCreateTask && (
+                                    <Button
+                                        variant="outline"
+                                        size="xs"
+                                        icon={Plus}
+                                        onClick={() => setIsTaskModalOpen(true)}
+                                    >
+                                        New Task
+                                    </Button>
+                                )}
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
@@ -464,12 +472,14 @@ export default function AdminDashboard({
             </Card>
 
             {/* Task Creation & Delegation Modal */}
-            <TaskFormModal
-                isOpen={isTaskModalOpen}
-                onClose={() => setIsTaskModalOpen(false)}
-                employees={employees}
-                departments={departments}
-            />
+            {canCreateTask && (
+                <TaskFormModal
+                    isOpen={isTaskModalOpen}
+                    onClose={() => setIsTaskModalOpen(false)}
+                    employees={employees}
+                    departments={departments}
+                />
+            )}
 
             {/* Vendor Review & Status Modal */}
             <VendorStatusModal

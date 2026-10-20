@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Modal } from '@/components/ui/Modal';
 import { Input, Select, Textarea } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 
 export function TaskFormModal({ isOpen, onClose, employees = [], departments = [], postUrl = '/admin/tasks' }) {
+    const { auth } = usePage().props;
+    const userPerms = auth?.user?.permissions || [];
+    const canCreateTask = 
+        auth?.user?.role === 'super_admin' ||
+        userPerms.includes('*') ||
+        userPerms.includes('module.kanban') ||
+        userPerms.includes('/admin/workforce/tasks');
+
+    if (!canCreateTask) return null;
     const [form, setForm] = useState({
         title: '',
         description: '',
