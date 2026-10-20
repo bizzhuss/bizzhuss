@@ -70,35 +70,7 @@ class AdminSettingController extends Controller
      */
     public function updateMaintenanceMode(Request $request)
     {
-        $validated = $request->validate([
-            'is_enabled' => 'required|boolean',
-            'blocked_roles' => 'nullable|array',
-            'blocked_roles.*' => 'string|in:guest,customer,vendor,employee,staff',
-        ]);
-
-        $isEnabled = (bool) $validated['is_enabled'];
-        $blockedRoles = $validated['blocked_roles'] ?? ['guest', 'customer'];
-
-        // Normalize customer / guest inclusion
-        if (in_array('guest', $blockedRoles) && !in_array('customer', $blockedRoles)) {
-            $blockedRoles[] = 'customer';
-        }
-        if (in_array('customer', $blockedRoles) && !in_array('guest', $blockedRoles)) {
-            $blockedRoles[] = 'guest';
-        }
-
-        Setting::set('maintenance_enabled', $isEnabled);
-        Setting::set('maintenance_mode', $isEnabled);
-        Setting::set('maintenance_blocked_roles', $blockedRoles);
-
-        cache()->forever('maintenance_enabled', $isEnabled);
-        cache()->forever('maintenance_blocked_roles', $blockedRoles);
-
-        $statusMsg = $isEnabled 
-            ? 'Dynamic Maintenance Mode enabled. Selected audiences are now restricted.' 
-            : 'Maintenance Mode deactivated. The marketplace is now live for all users.';
-
-        return redirect()->back()->with('success', $statusMsg);
+        return app(\App\Http\Controllers\Admin\MaintenanceController::class)->update($request);
     }
 
     /**

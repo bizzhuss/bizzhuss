@@ -133,7 +133,8 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     // 2.5 Global Platform Controls & Settings
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings');
     Route::post('/settings/general', [AdminSettingController::class, 'updateGeneralSettings'])->name('settings.general');
-    Route::post('/settings/maintenance-mode', [AdminSettingController::class, 'updateMaintenanceMode'])->name('settings.maintenance');
+    Route::post('/settings/maintenance-mode', [\App\Http\Controllers\Admin\MaintenanceController::class, 'update'])->name('settings.maintenance');
+    Route::post('/settings/maintenance', [\App\Http\Controllers\Admin\MaintenanceController::class, 'update'])->name('settings.maintenance.update');
     Route::post('/settings/categories', [AdminSettingController::class, 'storeCategory'])->name('settings.categories.store');
     Route::put('/settings/categories/{category}', [AdminSettingController::class, 'updateCategory'])->name('settings.categories.update');
     Route::post('/settings/categories/{category}/toggle-featured', [AdminSettingController::class, 'toggleVerifiedFeatured'])->name('settings.categories.toggle-featured');
