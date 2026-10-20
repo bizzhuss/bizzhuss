@@ -35,13 +35,14 @@ class StaffController extends Controller
 
         if ($request->filled('department_id') || $request->filled('designation_id')) {
             \App\Models\Employee::create([
-                'user_id' => $employee->id,
+                'user_id' => (string) $employee->id,
                 'department_id' => $request->department_id,
                 'designation_id' => $request->designation_id,
                 'employee_code' => $request->employee_code ?: ('EMP-' . rand(1000, 9999)),
                 'monthly_target' => $request->monthly_target ?? 25,
                 'joining_date' => now(),
                 'status' => 'active',
+                'permissions' => $request->permissions ?? [],
             ]);
         }
 
@@ -77,6 +78,7 @@ class StaffController extends Controller
 
         if ($request->has('permissions')) {
             $updateData['permissions'] = (array) $request->permissions;
+            \App\Models\Employee::where('user_id', (string) $user->id)->update(['permissions' => (array) $request->permissions]);
         }
 
         $user->update($updateData);

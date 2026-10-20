@@ -156,7 +156,8 @@ export default function Employees({ employees = [], departments = [], metrics = 
 
     const handleOpenPermissions = (emp) => {
         setPermissionEmployee(emp);
-        setSelectedPermissions(emp.user?.permissions || []);
+        const rawPerms = emp.user?.permissions || emp.permissions || [];
+        setSelectedPermissions(Array.isArray(rawPerms) ? [...rawPerms] : []);
     };
 
     const togglePermission = (permId) => {
@@ -443,27 +444,30 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                                     <span className="text-[11px] text-brand-600 font-medium">
                                                         {emp.designation?.title || 'Staff Associate'}
                                                     </span>
-                                                    {emp.user?.permissions && emp.user.permissions.length > 0 ? (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleOpenPermissions(emp)}
-                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 transition-colors cursor-pointer"
-                                                            title={`${emp.user.permissions.length} permissions granted: ${emp.user.permissions.join(', ')}`}
-                                                        >
-                                                            <Key className="w-2.5 h-2.5 text-amber-600" />
-                                                            <span>{emp.user.permissions.length} perms</span>
-                                                        </button>
-                                                    ) : (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleOpenPermissions(emp)}
-                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer"
-                                                            title="Default role permissions only. Click to assign granular access."
-                                                        >
-                                                            <Shield className="w-2.5 h-2.5 text-slate-400" />
-                                                            <span>Default role</span>
-                                                        </button>
-                                                    )}
+                                                    {(() => {
+                                                        const pList = emp.user?.permissions || emp.permissions || [];
+                                                        return pList.length > 0 ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleOpenPermissions(emp)}
+                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 transition-colors cursor-pointer"
+                                                                title={`${pList.length} permissions granted: ${pList.join(', ')}`}
+                                                            >
+                                                                <Key className="w-2.5 h-2.5 text-amber-600" />
+                                                                <span>{pList.length} perms</span>
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleOpenPermissions(emp)}
+                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer"
+                                                                title="Default role permissions only. Click to assign granular access."
+                                                            >
+                                                                <Shield className="w-2.5 h-2.5 text-slate-400" />
+                                                                <span>Default role</span>
+                                                            </button>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </td>
 
@@ -949,7 +953,7 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                         const isChecked = selectedPermissions.includes(tier.id);
 
                                         return (
-                                            <label
+                                            <div
                                                 key={tier.id}
                                                 onClick={() => togglePermission(tier.id)}
                                                 className={cn(
@@ -962,7 +966,11 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                                 <input
                                                     type="checkbox"
                                                     checked={isChecked}
-                                                    onChange={() => {}}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    onChange={(e) => {
+                                                        e.stopPropagation();
+                                                        togglePermission(tier.id);
+                                                    }}
                                                     className="mt-1 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-slate-300 cursor-pointer"
                                                 />
                                                 <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border mt-0.5", tier.color)}>
@@ -981,7 +989,7 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                                         {tier.desc}
                                                     </p>
                                                 </div>
-                                            </label>
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -1005,7 +1013,7 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                         const isChecked = selectedPermissions.includes(mod.id);
 
                                         return (
-                                            <label
+                                            <div
                                                 key={mod.id}
                                                 onClick={() => togglePermission(mod.id)}
                                                 className={cn(
@@ -1018,7 +1026,11 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                                 <input
                                                     type="checkbox"
                                                     checked={isChecked}
-                                                    onChange={() => {}}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    onChange={(e) => {
+                                                        e.stopPropagation();
+                                                        togglePermission(mod.id);
+                                                    }}
                                                     className="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300 cursor-pointer"
                                                 />
                                                 <div className="flex-1 min-w-0">
@@ -1035,7 +1047,7 @@ export default function Employees({ employees = [], departments = [], metrics = 
                                                         {mod.desc}
                                                     </p>
                                                 </div>
-                                            </label>
+                                            </div>
                                         );
                                     })}
                                 </div>
