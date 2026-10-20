@@ -421,7 +421,7 @@ function StorefrontLayoutInner({ children }) {
                                                     </>
                                                 )}
 
-                                                {auth.user.role === 'employee' && (
+                                                {(auth.user.role === 'employee' || auth.user.role === 'staff' || (auth.user.permissions && auth.user.permissions.includes('tier.employee_desk'))) && (
                                                     <>
                                                         <Link href="/employee" className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 font-semibold text-sky-700">
                                                             <Briefcase className="w-3.5 h-3.5 text-sky-600" />
@@ -543,7 +543,7 @@ function StorefrontLayoutInner({ children }) {
                                     href={
                                         auth.user.role === 'customer' ? '/customer/dashboard' :
                                         auth.user.role === 'vendor' ? '/vendor' :
-                                        auth.user.role === 'employee' ? '/employee' :
+                                        (auth.user.role === 'employee' || auth.user.role === 'staff' || (auth.user.permissions && auth.user.permissions.includes('tier.employee_desk'))) ? '/employee' :
                                         auth.user.role === 'marketing_manager' ? '/marketing/dashboard' :
                                         '/admin'
                                     }

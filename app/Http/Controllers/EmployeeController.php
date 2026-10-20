@@ -32,7 +32,7 @@ class EmployeeController extends Controller
 
         $tasks = $query->orderBy('due_date', 'asc')->get();
 
-        $employees = User::where('role', 'employee')
+        $employees = User::whereIn('role', ['employee', 'staff'])
             ->with('employee.department', 'employee.designation')
             ->select('id', 'name', 'email')
             ->get();

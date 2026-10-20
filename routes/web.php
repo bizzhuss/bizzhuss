@@ -99,6 +99,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     // 2.0 Command Center Dashboard
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard.alias');
+    Route::get('/central-command', [AdminController::class, 'index'])->name('central-command');
     Route::post('/vendors/status', [AdminController::class, 'updateVendorStatus'])->name('vendors.status');
     Route::post('/tasks', [AdminController::class, 'createTask'])->name('tasks.create');
 
@@ -187,10 +188,11 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
     Route::post('/payouts', [VendorController::class, 'requestPayout'])->name('payouts.request');
 });
 
-// Tier 4: Employee Workforce Workspace (Strictly role:employee)
-Route::middleware(['auth', 'role:employee'])->prefix('employee')->name('employee.')->group(function () {
+// Tier 4: Employee Workforce Workspace (role:employee,staff)
+Route::middleware(['auth', 'role:employee,staff'])->prefix('employee')->name('employee.')->group(function () {
     Route::get('/', [EmployeeController::class, 'index'])->name('workspace');
     Route::get('/dashboard', [EmployeeController::class, 'index'])->name('dashboard.alias');
+    Route::get('/desk', [EmployeeController::class, 'index'])->name('desk');
     Route::patch('/tasks/{task}/status', [EmployeeController::class, 'updateStatus'])->name('tasks.updateStatus');
     Route::post('/tasks', [EmployeeController::class, 'storeTask'])->name('tasks.store');
 });
@@ -199,6 +201,7 @@ Route::middleware(['auth', 'role:employee'])->prefix('employee')->name('employee
 Route::middleware(['auth', 'role:marketing_manager,super_admin'])->prefix('marketing')->name('marketing.')->group(function () {
     Route::get('/', [MarketingController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [MarketingController::class, 'index'])->name('dashboard.alias');
+    Route::get('/hub', [MarketingController::class, 'index'])->name('hub');
 
     // Curation Hub
     Route::get('/curation', [MarketingCurationController::class, 'index'])->name('curation.index');

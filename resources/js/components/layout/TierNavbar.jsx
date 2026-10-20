@@ -86,7 +86,7 @@ export function TierNavbar() {
             badge: 'Tier 4',
             badgeColor: 'border-sky-500/30 text-sky-300 bg-sky-950/60',
             activeStyles: 'bg-sky-600 text-white shadow-md shadow-sky-900/30',
-            allowed: isSuperAdmin || currentRole === 'employee' || permissions.includes('tier.employee_desk'),
+            allowed: isSuperAdmin || currentRole === 'employee' || currentRole === 'staff' || permissions.includes('tier.employee_desk'),
             requiredRole: 'employee',
         },
         {

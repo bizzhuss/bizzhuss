@@ -88,8 +88,8 @@ class CheckRole
         $hasTierAccess = false;
         if ($request->is('vendor*') || in_array('vendor', $roles)) {
             $hasTierAccess = in_array($user->role, ['vendor', 'super_admin']) || $user->hasPermission('tier.vendor_portal');
-        } elseif ($request->is('employee*') || in_array('employee', $roles)) {
-            $hasTierAccess = in_array($user->role, ['employee', 'super_admin']) || $user->hasPermission('tier.employee_desk');
+        } elseif ($request->is('employee*') || in_array('employee', $roles) || in_array('staff', $roles)) {
+            $hasTierAccess = in_array($user->role, ['employee', 'staff', 'super_admin']) || $user->hasPermission('tier.employee_desk');
         } elseif ($request->is('marketing*') || in_array('marketing_manager', $roles)) {
             $hasTierAccess = in_array($user->role, ['marketing_manager', 'super_admin']) || $user->hasPermission('tier.marketing_hub');
         } else {

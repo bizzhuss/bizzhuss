@@ -124,7 +124,12 @@ class User extends Authenticatable
 
     public function isEmployee(): bool
     {
-        return $this->role === 'employee';
+        return in_array($this->role, ['employee', 'staff']);
+    }
+
+    public function isStaff(): bool
+    {
+        return in_array($this->role, ['staff', 'employee']);
     }
 
     public function isCustomer(): bool

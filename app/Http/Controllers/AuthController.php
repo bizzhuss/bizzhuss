@@ -57,15 +57,56 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
-        // Role-based auto redirection
-        return match ($user->role) {
-            'super_admin' => redirect()->intended(route('admin.dashboard'))->with('success', "Welcome back, Administrator {$user->name}!"),
-            'marketing_manager' => redirect()->intended(route('marketing.dashboard'))->with('success', "Welcome to the Marketing Portal, {$user->name}!"),
-            'vendor' => redirect()->intended(route('vendor.portal'))->with('success', "Welcome to your Vendor Portal, {$user->name}!"),
-            'employee' => redirect()->intended(route('employee.workspace'))->with('success', "Logged in to Workforce Workspace, {$user->name}."),
-            'customer' => redirect()->intended(route('customer.dashboard'))->with('success', "Welcome back, {$user->name}!"),
-            default => redirect()->intended(route('storefront'))->with('success', "Welcome back, {$user->name}!"),
-        };
+        return $this->authenticated($request, $user);
+    }
+
+    /**
+     * Post-authentication redirection based on role and tier permissions.
+     */
+    protected function authenticated(Request $request, $user): RedirectResponse
+    {
+        // 1. Super Admin
+        if ($user->role === 'super_admin' || $user->email === 'haseebkhanuddin44@gmail.com') {
+            return redirect()->intended('/admin/central-command');
+        }
+
+        // 2. Staff / Employee with Permissions
+        if (in_array($user->role, ['staff', 'employee']) || !empty($user->permissions)) {
+            // Check assigned tier access
+            $perms = (array) ($user->permissions ?? []);
+            if (is_string($perms)) {
+                $decoded = json_decode($perms, true);
+                $perms = is_array($decoded) ? $decoded : [];
+            }
+
+            if (in_array('tier.employee_desk', $perms)) {
+                return redirect()->intended('/employee/desk');
+            }
+            if (in_array('tier.vendor_portal', $perms)) {
+                return redirect()->intended('/vendor/dashboard');
+            }
+            if (in_array('tier.marketing_hub', $perms)) {
+                return redirect()->intended('/marketing/hub');
+            }
+
+            // Check module permissions for Super Admin sub-tabs
+            foreach ($perms as $perm) {
+                if (is_string($perm) && str_starts_with($perm, 'module.')) {
+                    return redirect()->intended('/admin/central-command');
+                }
+            }
+
+            // Fallback to employee desk
+            return redirect()->intended('/employee/desk');
+        }
+
+        // 3. Vendor
+        if ($user->role === 'vendor') {
+            return redirect()->intended('/vendor/dashboard');
+        }
+
+        // 4. Default Customer
+        return redirect()->intended('/');
     }
 
     /**
