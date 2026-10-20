@@ -15,6 +15,27 @@ abstract class BaseModel extends MongoModel
     protected $connection = 'mongodb';
 
     /**
+     * Decode a JSON/Array value from a MongoDB attribute with BSON safety.
+     * Prevents TypeError when MongoDB driver returns native PHP array instead of JSON string.
+     *
+     * @param  mixed  $value
+     * @param  bool  $asObject
+     * @return mixed
+     */
+    public function fromJson($value, $asObject = false)
+    {
+        if (is_array($value)) {
+            return $asObject ? (object) $value : $value;
+        }
+
+        if (is_object($value)) {
+            return $asObject ? $value : (array) $value;
+        }
+
+        return parent::fromJson($value, $asObject);
+    }
+
+    /**
      * Decode the given float value from an attribute.
      *
      * @param  mixed  $value
