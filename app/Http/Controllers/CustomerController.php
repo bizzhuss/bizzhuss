@@ -47,10 +47,15 @@ class CustomerController extends Controller
             }
 
             $products = $query->orderBy('id', 'desc')->get();
-            $categories = Category::where('is_active', true)
-                ->whereNull('parent_id')
-                ->with(['products', 'subcategories' => fn ($q) => $q->where('is_active', true)->with('products')])
+            $categories = Category::where(function ($q) {
+                    $q->where('is_active', true)->orWhereNull('is_active');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('parent_id')->orWhere('parent_id', '')->orWhere('parent_id', '0');
+                })
+                ->with(['products', 'subcategories' => fn ($q) => $q->where(fn ($sub) => $sub->where('is_active', true)->orWhereNull('is_active'))->with('products')])
                 ->orderBy('order', 'asc')
+                ->orderBy('name', 'asc')
                 ->get();
             $featuredVendors = Vendor::where('status', 'active')->limit(6)->get();
 
@@ -237,16 +242,23 @@ class CustomerController extends Controller
 
             $products = $query->paginate(12)->withQueryString();
 
-            $categories = Category::with(['subcategories' => fn ($q) => $q->where('is_active', true)])
-                ->where('is_active', true)
-                ->whereNull('parent_id')
+            $categories = Category::with(['subcategories' => fn ($q) => $q->where(fn ($sub) => $sub->where('is_active', true)->orWhereNull('is_active'))])
+                ->where(function ($q) {
+                    $q->where('is_active', true)->orWhereNull('is_active');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('parent_id')->orWhere('parent_id', '')->orWhere('parent_id', '0');
+                })
                 ->orderBy('order', 'asc')
-                ->orderBy('id', 'asc')
+                ->orderBy('name', 'asc')
                 ->get();
             if ($categories->isEmpty()) {
-                $categories = Category::where('is_active', true)
-                    ->select('id', 'name', 'slug', 'icon')
+                $categories = Category::where(function ($q) {
+                        $q->where('is_active', true)->orWhereNull('is_active');
+                    })
+                    ->select('id', 'name', 'slug', 'icon', 'parent_id', 'is_verified_featured')
                     ->orderBy('order', 'asc')
+                    ->orderBy('name', 'asc')
                     ->get();
             }
 

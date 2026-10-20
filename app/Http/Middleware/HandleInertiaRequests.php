@@ -64,13 +64,19 @@ class HandleInertiaRequests extends Middleware
             ],
             'categories' => function () {
                 try {
-                    $cats = \App\Models\Category::whereNull('parent_id')
-                        ->where('is_active', true)
-                        ->with(['products', 'subcategories' => fn ($q) => $q->where('is_active', true)->with('products')])
+                    $cats = \App\Models\Category::where(function ($q) {
+                            $q->where('is_active', true)->orWhereNull('is_active');
+                        })
+                        ->where(function ($q) {
+                            $q->whereNull('parent_id')->orWhere('parent_id', '')->orWhere('parent_id', '0');
+                        })
+                        ->with(['products', 'subcategories' => fn ($q) => $q->where(fn ($sub) => $sub->where('is_active', true)->orWhereNull('is_active'))->with('products')])
                         ->orderBy('order', 'asc')
+                        ->orderBy('name', 'asc')
                         ->get();
                     return $cats;
                 } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Inertia categories error: ' . $e->getMessage());
                     return collect();
                 }
             },

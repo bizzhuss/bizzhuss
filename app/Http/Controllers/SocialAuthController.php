@@ -226,5 +226,4 @@ class SocialAuthController extends Controller
         // 4. Default Customer
         return redirect()->intended('/');
     }
-    }
 }
