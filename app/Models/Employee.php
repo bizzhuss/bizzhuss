@@ -18,12 +18,19 @@ class Employee extends BaseModel
         'monthly_target',
         'joining_date',
         'status',
+        'permissions',
+    ];
+
+    protected $casts = [
+        'joining_date' => 'date',
+        'permissions' => 'array',
     ];
 
     protected function casts(): array
     {
         return [
             'joining_date' => 'date',
+            'permissions' => 'array',
         ];
     }
 
