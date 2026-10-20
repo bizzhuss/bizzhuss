@@ -20,37 +20,37 @@ const CONTACT_CARDS = [
     {
         title: 'Priority Email Support',
         desc: 'Direct dispatch to customer care representatives. Typical response time under 2 hours.',
-        info: 'support@bizzhuss.com',
+        info: 'bizzhuss@gmail.com',
         actionText: 'Send an Email',
-        href: 'mailto:support@bizzhuss.com',
+        href: 'mailto:bizzhuss@gmail.com',
         icon: Mail,
         color: 'bg-amber-500/10 text-amber-600',
     },
     {
-        title: '24/7 Phone Hotline',
-        desc: 'Toll-free voice assistance for live ordering assistance and shipment tracking.',
-        info: '+1 (800) 555-BIZZ',
-        actionText: 'Call Toll-Free',
-        href: 'tel:18005552499',
+        title: 'Phone & Direct Hotline',
+        desc: 'Direct phone assistance for order inquiries, delivery status, and customer care.',
+        info: '+92 335 7895884 (0335 7895884)',
+        actionText: 'Call Helpline',
+        href: 'tel:+923357895884',
         icon: Phone,
         color: 'bg-emerald-500/10 text-emerald-600',
     },
     {
         title: 'WhatsApp Instant Chat',
-        desc: 'Connect with an automated concierge or human agent for swift order queries.',
-        info: '+1 (800) 555-2499',
+        desc: 'Connect with our official WhatsApp concierge for rapid order and merchant assistance.',
+        info: '+92 335 7895884',
         actionText: 'Open WhatsApp',
-        href: 'https://wa.me/18005552499',
+        href: 'https://wa.me/923357895884',
         icon: MessageCircle,
         color: 'bg-teal-500/10 text-teal-600',
     },
     {
-        title: 'Global Headquarters',
-        desc: 'Central commercial office and national carrier sorting hub.',
-        info: 'Bizzhuss Logistics Tower, 400 Silicon Avenue, Tech Corridor',
-        actionText: 'View On Maps',
-        href: 'https://maps.google.com',
-        icon: MapPin,
+        title: 'Official Social Channels',
+        desc: 'Follow our official Facebook and Instagram channels for promotions and announcements.',
+        info: '@bizzhuss (Instagram & Facebook)',
+        actionText: 'Visit Instagram',
+        href: 'https://www.instagram.com/bizzhuss/',
+        icon: ArrowUpRight,
         color: 'bg-indigo-500/10 text-indigo-600',
     },
 ];
@@ -230,7 +230,7 @@ export default function ContactUs() {
                                     type="tel"
                                     value={data.phone}
                                     onChange={(e) => setData('phone', e.target.value)}
-                                    placeholder="+1 (555) 000-0000"
+                                    placeholder="+92 335 7895884"
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                                 />
                             </div>

@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Official Support & Social Credentials
+    |--------------------------------------------------------------------------
+    */
+    'support' => [
+        'email' => env('SUPPORT_EMAIL', 'bizzhuss@gmail.com'),
+        'phone' => env('SUPPORT_PHONE', '+92 335 7895884'),
+        'whatsapp' => env('SUPPORT_WHATSAPP_URL', 'https://wa.me/923357895884'),
+        'instagram' => env('SOCIAL_INSTAGRAM_URL', 'https://www.instagram.com/bizzhuss/'),
+        'facebook' => env('SOCIAL_FACEBOOK_URL', 'https://www.facebook.com/share/1C2sHrcVQM/'),
+    ],
+
 ];

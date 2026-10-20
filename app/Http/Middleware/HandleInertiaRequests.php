@@ -74,6 +74,13 @@ class HandleInertiaRequests extends Middleware
                     return collect();
                 }
             },
+            'support' => [
+                'email' => config('services.support.email', 'bizzhuss@gmail.com'),
+                'phone' => config('services.support.phone', '+92 335 7895884'),
+                'whatsapp' => config('services.support.whatsapp', 'https://wa.me/923357895884'),
+                'instagram' => config('services.support.instagram', 'https://www.instagram.com/bizzhuss/'),
+                'facebook' => config('services.support.facebook', 'https://www.facebook.com/share/1C2sHrcVQM/'),
+            ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

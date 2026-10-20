@@ -23,7 +23,8 @@ import {
     Mail,
     ArrowUpRight,
     Sparkles,
-    CheckCircle2
+    CheckCircle2,
+    MessageCircle
 } from 'lucide-react';
 
 const navigationGroups = [
@@ -191,11 +192,20 @@ export function HelpLayout({
                                 </p>
                                 <div className="space-y-1.5 text-xs">
                                     <a
-                                        href="tel:18005552499"
+                                        href="tel:+923357895884"
                                         className="flex items-center gap-2 text-slate-700 hover:text-amber-600 font-semibold"
                                     >
                                         <PhoneCall className="w-3.5 h-3.5 text-slate-400" />
-                                        <span>+1 (800) 555-BIZZ</span>
+                                        <span>+92 335 7895884</span>
+                                    </a>
+                                    <a
+                                        href="https://wa.me/923357895884"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-semibold"
+                                    >
+                                        <MessageCircle className="w-3.5 h-3.5 text-emerald-500" />
+                                        <span>WhatsApp Support</span>
                                     </a>
                                     <Link
                                         href="/contact"
