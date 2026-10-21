@@ -5,6 +5,7 @@ import { MarketingHeader } from '@/components/marketing/MarketingHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import {
     Image as ImageIcon,
     Upload,
@@ -388,61 +389,20 @@ export default function MarketingBanners({
                                 </div>
                             </div>
 
-                            {/* Drag-and-Drop Image Uploader */}
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 mb-1">
-                                    Banner Image Artwork
-                                </label>
-                                
-                                <div
-                                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                                    onDragLeave={() => setIsDragging(false)}
-                                    onDrop={handleDrop}
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer ${
-                                        isDragging 
-                                            ? 'border-purple-500 bg-purple-50' 
-                                            : 'border-slate-300 hover:border-purple-400 bg-slate-50/50'
-                                    }`}
-                                >
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept=".jpg,.jpeg,.png,.webp"
-                                        className="hidden"
-                                        onChange={(e) => handleFileSelect(e.target.files[0])}
-                                    />
-                                    
-                                    <Upload className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                                    <p className="text-xs font-bold text-slate-800">
-                                        Click to browse or drag & drop high-resolution artwork
-                                    </p>
-                                    <p className="text-[11px] text-slate-400 mt-1">
-                                        Supports .jpg, .jpeg, .png, .webp (up to 5MB). Recommended ratio: 16:9 or 800x600.
-                                    </p>
-                                    {imageFile && (
-                                        <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold">
-                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                            <span>Selected: {imageFile.name}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="mt-2 flex items-center gap-2">
-                                    <span className="text-[10px] text-slate-400">Or use image URL:</span>
-                                    <input
-                                        type="text"
-                                        placeholder="https://images.unsplash.com/..."
-                                        value={imageUrlInput}
-                                        onChange={(e) => {
-                                            setImageUrlInput(e.target.value);
-                                            setImagePreview(e.target.value);
-                                            setImageFile(null);
-                                        }}
-                                        className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono text-[11px]"
-                                    />
-                                </div>
-                            </div>
+                            {/* Cloudinary Image Uploader */}
+                            <ImageUpload
+                                label="Banner Artwork Image"
+                                value={imageUrlInput || imagePreview}
+                                onChange={(url) => {
+                                    setImageUrlInput(url);
+                                    setImagePreview(url);
+                                    setImageFile(null);
+                                }}
+                                folder="bizzhuss_banners"
+                                aspectRatio="banner"
+                                recommendedSize="Recommended: 16:9 or 800x600 JPG, PNG, WebP up to 10MB"
+                                placeholder="Click or drag to upload high-converting banner artwork"
+                            />
 
                             {/* Form Input Fields */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

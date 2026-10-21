@@ -5,6 +5,7 @@ import { VendorHeader } from '@/components/vendor/VendorHeader';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { StatusBadge } from '@/components/ui/Badge';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import { 
     Store, 
     Save, 
@@ -134,31 +135,25 @@ export default function VendorSettings({ vendor = {} }) {
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                                        Shop Logo Image URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={form.logo}
-                                        onChange={(e) => setForm({ ...form, logo: e.target.value })}
-                                        placeholder="https://images.unsplash.com/... or hosted square logo URL"
-                                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-brand-500"
-                                    />
-                                </div>
+                                <ImageUpload
+                                    label="Shop Brand Logo"
+                                    value={form.logo}
+                                    onChange={(url) => setForm({ ...form, logo: url })}
+                                    folder="bizzhuss_vendor_logos"
+                                    aspectRatio="square"
+                                    recommendedSize="Recommended: 400x400 square JPG, PNG, or WebP"
+                                    placeholder="Click or drag to upload shop logo"
+                                />
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                                        Hero Banner Image URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={form.banner}
-                                        onChange={(e) => setForm({ ...form, banner: e.target.value })}
-                                        placeholder="https://images.unsplash.com/... or hosted wide banner URL"
-                                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-brand-500"
-                                    />
-                                </div>
+                                <ImageUpload
+                                    label="Storefront Hero Banner"
+                                    value={form.banner}
+                                    onChange={(url) => setForm({ ...form, banner: url })}
+                                    folder="bizzhuss_vendor_banners"
+                                    aspectRatio="banner"
+                                    recommendedSize="Recommended: 1600x500 wide JPG, PNG, or WebP"
+                                    placeholder="Click or drag to upload storefront banner"
+                                />
 
                                 <div>
                                     <label className="block text-xs font-bold text-slate-700 mb-1.5">
