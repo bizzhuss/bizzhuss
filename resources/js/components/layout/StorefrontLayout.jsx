@@ -56,7 +56,6 @@ function StorefrontLayoutInner({ children }) {
     const { auth, flash, categories: globalCategories = [] } = usePage().props;
     const { cartCount, totalItems, wishlistCount, setIsCartOpen, notification, showNotification, clearNotification } = useApp();
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('all');
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isDepartmentsOpen, setIsDepartmentsOpen] = useState(false);
@@ -109,7 +108,6 @@ function StorefrontLayoutInner({ children }) {
         e.preventDefault();
         router.get('/shop', {
             search: searchQuery || undefined,
-            category: selectedCategory !== 'all' ? selectedCategory : undefined,
         }, { preserveState: true });
     };
 
@@ -275,35 +273,25 @@ function StorefrontLayoutInner({ children }) {
                             </Link>
                         </div>
 
-                        {/* Central Full-Width Search Bar with Category Dropdown */}
-                        <form onSubmit={handleSearch} className="flex-1 max-w-3xl hidden md:flex items-center">
-                            <div className="flex w-full rounded-xl overflow-hidden shadow-inner bg-white border-2 border-brand-500 focus-within:ring-2 focus-within:ring-brand-400 transition-all">
-                                <select 
-                                    value={selectedCategory} 
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                    className="bg-slate-100 text-slate-700 text-xs px-3 py-2.5 border-r border-slate-200 outline-none font-medium cursor-pointer max-w-[150px] shrink-0"
-                                >
-                                    <option value="all">All Departments</option>
-                                    {allCategories.map((cat) => (
-                                        <option key={cat.id} value={cat.slug}>
-                                            {cat.name}
-                                        </option>
-                                    ))}
-                                </select>
-
+                        {/* Clean Full-Width Storefront Search Bar */}
+                        <form 
+                            onSubmit={handleSearch} 
+                            className="relative flex-1 max-w-2xl mx-4 sm:mx-6 hidden md:flex"
+                        >
+                            <div className="relative flex items-center w-full">
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Search 100,000+ certified products, equipment, SKUs, or vendors..."
-                                    className="flex-1 px-4 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 outline-none"
+                                    className="w-full h-11 pl-4 pr-12 text-sm text-slate-800 placeholder-slate-400 bg-white border border-slate-200 rounded-xl sm:rounded-2xl shadow-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
                                 />
-
                                 <button
                                     type="submit"
-                                    className="bg-brand-500 hover:bg-brand-600 text-white px-6 flex items-center justify-center font-bold text-xs transition-colors shrink-0 cursor-pointer"
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 sm:h-8 sm:w-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center transition shadow-sm cursor-pointer"
+                                    title="Search"
                                 >
-                                    <Search className="w-4 h-4" />
+                                    <Search className="w-4 h-4"/>
                                 </button>
                             </div>
                         </form>
