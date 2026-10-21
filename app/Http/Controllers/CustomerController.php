@@ -7,6 +7,7 @@ use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\PromotionalCampaign;
+use App\Models\Review;
 use App\Models\Vendor;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
@@ -318,6 +319,47 @@ class CustomerController extends Controller
             $product->images = json_decode($product->images, true) ?? [];
         }
 
+        // Load reviews from Review collection and combine with any embedded product reviews
+        try {
+            $dbReviews = Review::with('user:id,name,avatar')
+                ->where('product_id', (string) $product->id)
+                ->orWhere('product_id', $product->id)
+                ->latest()
+                ->get()
+                ->map(function ($r) {
+                    return [
+                        'id' => (string) $r->id,
+                        'author' => $r->user?->name ?? 'Verified Buyer',
+                        'rating' => (int) $r->rating,
+                        'comment' => $r->comment,
+                        'date' => $r->created_at ? $r->created_at->format('M d, Y') : date('M d, Y'),
+                        'created_at' => $r->created_at ? $r->created_at->toISOString() : null,
+                        'is_verified' => (bool) $r->is_verified_purchase,
+                    ];
+                })
+                ->toArray();
+
+            $embeddedReviews = is_array($product->reviews) ? $product->reviews : [];
+
+            $seenIds = [];
+            $combined = [];
+            foreach (array_merge($dbReviews, $embeddedReviews) as $rev) {
+                $id = $rev['id'] ?? md5(($rev['author'] ?? '') . ($rev['comment'] ?? '') . ($rev['date'] ?? ''));
+                if (!in_array($id, $seenIds)) {
+                    $seenIds[] = $id;
+                    $combined[] = $rev;
+                }
+            }
+
+            $product->reviews = $combined;
+            if (count($combined) > 0) {
+                $product->rating = round(collect($combined)->avg('rating') ?: 5, 1);
+                $product->ratings_count = count($combined);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed loading reviews for product ' . $product->id . ': ' . $e->getMessage());
+        }
+
         try {
             $relatedProducts = Product::with(['vendor', 'category'])
                 ->where('id', '!=', $product->id)
@@ -340,6 +382,60 @@ class CustomerController extends Controller
             'product' => $product,
             'relatedProducts' => $relatedProducts,
         ]);
+    }
+
+    /**
+     * Submit a customer review for a product.
+     */
+    public function submitReview(Request $request, string $slug)
+    {
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'required|string|min:3|max:1000',
+        ]);
+
+        try {
+            $product = Product::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+            $user = $request->user();
+
+            $rating = (int) $request->input('rating');
+            $comment = trim($request->input('comment'));
+
+            // 1. Create record in Review collection
+            $review = Review::create([
+                'user_id' => (string) $user->id,
+                'product_id' => (string) $product->id,
+                'rating' => $rating,
+                'comment' => $comment,
+                'status' => 'approved',
+                'is_verified_purchase' => true,
+            ]);
+
+            // 2. Keep embedded reviews array updated on the product
+            $existingReviews = is_array($product->reviews) ? $product->reviews : [];
+            $newReviewEntry = [
+                'id' => (string) $review->id,
+                'user_id' => (string) $user->id,
+                'author' => $user->name ?? 'Verified Buyer',
+                'rating' => $rating,
+                'comment' => $comment,
+                'date' => now()->format('M d, Y'),
+                'created_at' => now()->toISOString(),
+                'is_verified' => true,
+            ];
+            array_unshift($existingReviews, $newReviewEntry);
+
+            $avgRating = round(collect($existingReviews)->avg('rating') ?: 5, 1);
+            $product->reviews = $existingReviews;
+            $product->rating = $avgRating;
+            $product->ratings_count = count($existingReviews);
+            $product->save();
+
+            return back()->with('success', 'Thank you! Your review has been submitted successfully.');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Review submission error: ' . $e->getMessage());
+            return back()->withErrors(['review' => 'Unable to submit your review at this time. Please try again.']);
+        }
     }
 
     /**

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
 import SEOHead from '@/components/SEOHead';
@@ -24,7 +24,10 @@ import {
     ChevronDown,
     Award,
     CheckCircle2,
-    ThumbsUp
+    ThumbsUp,
+    Send,
+    AlertCircle,
+    LogIn
 } from 'lucide-react';
 
 export default function ProductDetail({ product = {}, relatedProducts = [] }) {
@@ -69,11 +72,125 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
     }, [product?.id]);
 
     const [quantity, setQuantity] = useState(1);
-    const [selectedColor, setSelectedColor] = useState('Graphite Black');
-    const [selectedVariant, setSelectedVariant] = useState('Enterprise Edition');
     const [isAdded, setIsAdded] = useState(false);
     const [isSellerOpen, setIsSellerOpen] = useState(true);
     const [isReviewsOpen, setIsReviewsOpen] = useState(true);
+
+    // Parse real product variations/variants if present in DB
+    const availableOptions = useMemo(() => {
+        const raw = product?.variations || product?.variants;
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw;
+        if (typeof raw === 'string') {
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+        return [];
+    }, [product?.variations, product?.variants]);
+
+    const getOptionLabel = (opt) => {
+        if (!opt) return '';
+        if (typeof opt === 'string') return opt;
+        if (typeof opt === 'number') return String(opt);
+        return opt.option_value || opt.name || opt.value || opt.label || opt.title || opt.sku || '';
+    };
+
+    const getOptionType = () => {
+        if (availableOptions.length > 0) {
+            const first = availableOptions[0];
+            if (typeof first === 'object' && first !== null) {
+                return first.option_type || first.type || 'Option';
+            }
+        }
+        return 'Option';
+    };
+
+    const isOptionSelected = (opt) => {
+        if (!selectedOption) return false;
+        if (typeof opt === 'string' && typeof selectedOption === 'string') {
+            return opt === selectedOption;
+        }
+        if (typeof opt === 'object' && typeof selectedOption === 'object') {
+            if (opt.sku && selectedOption.sku) return opt.sku === selectedOption.sku;
+            if (opt.option_value && selectedOption.option_value) return opt.option_value === selectedOption.option_value;
+            if (opt.id && selectedOption.id) return opt.id === selectedOption.id;
+        }
+        return getOptionLabel(opt) === getOptionLabel(selectedOption);
+    };
+
+    const [selectedOption, setSelectedOption] = useState(() => availableOptions[0] || null);
+
+    useEffect(() => {
+        if (availableOptions.length > 0) {
+            setSelectedOption(availableOptions[0]);
+        } else {
+            setSelectedOption(null);
+        }
+    }, [availableOptions]);
+
+    const selectedVariantLabel = selectedOption ? getOptionLabel(selectedOption) : null;
+
+    // Review Form State
+    const [reviewRating, setReviewRating] = useState(5);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [reviewComment, setReviewComment] = useState('');
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [reviewSuccess, setReviewSuccess] = useState('');
+    const [reviewError, setReviewError] = useState('');
+
+    // Dynamic Review & Rating Statistics
+    const reviewsList = Array.isArray(product?.reviews) ? product.reviews : [];
+    const reviewCount = reviewsList.length;
+    const averageRating = reviewCount > 0 
+        ? (reviewsList.reduce((acc, r) => acc + (Number(r?.rating) || 5), 0) / reviewCount)
+        : (Number(product?.rating) || 5.0);
+
+    const ratingBreakdown = [5, 4, 3, 2, 1].map((stars) => {
+        const count = reviewsList.filter((r) => Math.round(Number(r?.rating) || 5) === stars).length;
+        const pct = reviewCount > 0 ? Math.round((count / reviewCount) * 100) : 0;
+        return { stars, pct, count };
+    });
+
+    const handleReviewSubmit = (e) => {
+        e.preventDefault();
+        setReviewError('');
+        setReviewSuccess('');
+
+        if (!auth?.user) {
+            router.visit(`/login?intended=${encodeURIComponent(window.location.pathname)}&message=${encodeURIComponent('Please sign in to write a review.')}`);
+            return;
+        }
+
+        if (reviewComment.trim().length < 3) {
+            setReviewError('Please write at least 3 characters in your review comment.');
+            return;
+        }
+
+        setIsSubmittingReview(true);
+        router.post(`/product/${product?.slug || product?.id}/review`, {
+            rating: reviewRating,
+            comment: reviewComment.trim(),
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsSubmittingReview(false);
+                setReviewComment('');
+                setReviewRating(5);
+                setReviewSuccess('Thank you! Your verified review has been submitted successfully.');
+                showNotification('Review submitted successfully!', 'success');
+            },
+            onError: (errs) => {
+                setIsSubmittingReview(false);
+                const msg = errs?.review || errs?.comment || errs?.rating || 'Failed to submit review. Please try again.';
+                setReviewError(msg);
+                showNotification(msg, 'error');
+            }
+        });
+    };
 
     const price = Number(product?.price) || 0;
     const comparePrice = Number(product?.compare_price) || (price > 0 ? price * 1.25 : 0);
@@ -100,11 +217,11 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
             ...product,
             price: price,
             image: activeImage,
-            variant: `${selectedColor} - ${selectedVariant}`
-        }, quantity, `${selectedColor} - ${selectedVariant}`);
+            variant: selectedVariantLabel
+        }, quantity, selectedVariantLabel);
 
         setIsAdded(true);
-        showNotification(`Added ${quantity}x "${product?.title || 'Product'}" to your cart!`, 'success');
+        showNotification(`Added ${quantity}x "${product?.title || product?.name || 'Product'}" to your cart!`, 'success');
         setTimeout(() => setIsAdded(false), 2000);
     };
 
@@ -117,8 +234,8 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
             ...product,
             price: price,
             image: activeImage,
-            variant: `${selectedColor} - ${selectedVariant}`
-        }, quantity, `${selectedColor} - ${selectedVariant}`);
+            variant: selectedVariantLabel
+        }, quantity, selectedVariantLabel);
 
         router.visit('/checkout');
     };

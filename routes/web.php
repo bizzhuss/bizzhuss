@@ -50,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CustomerController::class, 'checkoutPage'])->name('checkout.page');
     Route::post('/checkout', [CustomerController::class, 'checkout'])->name('checkout');
     Route::get('/checkout/{any}', [CustomerController::class, 'checkoutPage'])->where('any', '.*');
+    Route::post('/product/{slug}/review', [CustomerController::class, 'submitReview'])->name('product.review.submit');
 });
 
 // Public Informational & Customer Care Suite

@@ -31,6 +31,10 @@ class Product extends BaseModel
         'thumbnail',
         'description',
         'variants',
+        'variations',
+        'reviews',
+        'rating',
+        'ratings_count',
         'status',
         'is_featured',
         'is_on_special_sale',
@@ -59,7 +63,16 @@ class Product extends BaseModel
             'flash_sale_end_time' => 'datetime',
             'images' => 'array',
             'variants' => 'array',
+            'variations' => 'array',
+            'reviews' => 'array',
+            'rating' => 'float',
+            'ratings_count' => 'integer',
         ];
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 
     public function vendor(): BelongsTo
