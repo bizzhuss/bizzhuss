@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
+import SEOHead from '@/components/SEOHead';
+import { generateProductSchema, generateBreadcrumbSchema } from '@/lib/seo';
+import { getProductImage } from '@/lib/productImage';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency } from '@/lib/utils';
 import { 
@@ -132,9 +135,26 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
         );
     };
 
+    const primaryImg = selectedImage || getProductImage(product);
+    const cleanDesc = product?.description ? product.description.replace(/<[^>]*>?/gm, '').trim().slice(0, 160) : null;
+
     return (
         <StorefrontLayout>
-            <Head title={`${product?.title || 'Product Details'} | Bizzhuss Marketplace`} />
+            <SEOHead 
+                title={product?.title || product?.name || 'Product Details'}
+                description={cleanDesc || `Buy ${product?.title} on Bizzhuss. Verified seller, authentic quality and fast shipping across Pakistan.`}
+                image={primaryImg}
+                url={`/product/${product?.slug || product?.id}`}
+                type="product"
+                schemaData={[
+                    generateProductSchema(product, primaryImg),
+                    generateBreadcrumbSchema([
+                        { name: 'Home', url: '/' },
+                        { name: product?.category?.name || 'Catalog', url: product?.category?.slug ? `/shop?category=${product.category.slug}` : '/shop' },
+                        { name: product?.title || 'Product', url: `/product/${product?.slug || product?.id}` }
+                    ])
+                ]}
+            />
 
             {/* Breadcrumb Navigation */}
             <nav className="mb-4 flex items-center gap-2 text-xs text-slate-500">
