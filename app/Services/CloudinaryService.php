@@ -19,17 +19,17 @@ class CloudinaryService
      */
     public static function uploadImage($file, $folder = 'bizzhuss_products'): string
     {
-        $cloudName = config('services.cloudinary.cloud_name');
+        $cloudName = config('services.cloudinary.cloud_name', 'ngspxgta');
         if (empty($cloudName) || $cloudName === '${CLOUDINARY_CLOUD_NAME}' || str_contains($cloudName, '$')) {
-            $cloudName = env('CLOUDINARY_CLOUD_NAME') ?: '';
-            if ($cloudName === '${CLOUDINARY_CLOUD_NAME}' || str_contains($cloudName, '$')) {
-                $cloudName = '';
+            $cloudName = env('CLOUDINARY_CLOUD_NAME') ?: 'ngspxgta';
+            if (empty($cloudName) || $cloudName === '${CLOUDINARY_CLOUD_NAME}' || str_contains($cloudName, '$')) {
+                $cloudName = 'ngspxgta';
             }
         }
 
-        $apiKey = config('services.cloudinary.api_key') ?: env('CLOUDINARY_API_KEY');
-        $apiSecret = config('services.cloudinary.api_secret') ?: env('CLOUDINARY_API_SECRET');
-        $uploadPreset = config('services.cloudinary.upload_preset', 'bizzhuss_preset');
+        $apiKey = config('services.cloudinary.api_key', '454417634251512') ?: env('CLOUDINARY_API_KEY', '454417634251512');
+        $apiSecret = config('services.cloudinary.api_secret', 'QFvHkYLE9bU97Pur0LQgZ5nR-gI') ?: env('CLOUDINARY_API_SECRET', 'QFvHkYLE9bU97Pur0LQgZ5nR-gI');
+        $uploadPreset = config('services.cloudinary.upload_preset', 'bizzhuss_preset') ?: env('CLOUDINARY_UPLOAD_PRESET', 'bizzhuss_preset');
 
         if (empty($cloudName) || empty($apiKey) || empty($apiSecret)) {
             Log::error("Cloudinary credentials missing in environment! [cloud_name: {$cloudName}, api_key: " . (empty($apiKey) ? 'MISSING' : 'CONFIGURED') . ", api_secret: " . (empty($apiSecret) ? 'MISSING' : 'CONFIGURED') . "]");

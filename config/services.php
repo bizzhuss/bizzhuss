@@ -38,9 +38,9 @@ return [
     ],
 
     'cloudinary' => [
-        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-        'api_key' => env('CLOUDINARY_API_KEY'),
-        'api_secret' => env('CLOUDINARY_API_SECRET'),
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME', 'ngspxgta'),
+        'api_key' => env('CLOUDINARY_API_KEY', '454417634251512'),
+        'api_secret' => env('CLOUDINARY_API_SECRET', 'QFvHkYLE9bU97Pur0LQgZ5nR-gI'),
         'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'bizzhuss_preset'),
     ],
 
