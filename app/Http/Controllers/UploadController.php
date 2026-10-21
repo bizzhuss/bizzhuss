@@ -29,7 +29,7 @@ class UploadController extends Controller
             ], 422);
         }
 
-        $folder = $request->input('folder', 'bizzhuss_catalog');
+        $folder = $request->input('folder', 'bizzhuss_products');
 
         try {
             $url = CloudinaryService::uploadImage($file, $folder);
