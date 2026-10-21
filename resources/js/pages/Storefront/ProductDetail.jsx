@@ -135,25 +135,55 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
         );
     };
 
-    const primaryImg = selectedImage || getProductImage(product);
-    const cleanDesc = product?.description ? product.description.replace(/<[^>]*>?/gm, '').trim().slice(0, 160) : null;
+    // Safe product images array for gallery & schema
+    const productImages = Array.isArray(product?.images) && product.images.length > 0 
+        ? product.images 
+        : [product?.image || activeImage || getProductImage(product) || '/placeholder-product.svg'];
+
+    const primaryImg = activeImage || productImages[0] || '/placeholder-product.svg';
+    const cleanDesc = product?.description 
+        ? product.description.replace(/<[^>]*>?/gm, '').trim().slice(0, 160) 
+        : "Built for Buyers | Powered by Sellers";
+
+    const productSchema = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": product?.title || product?.name || "Bizzhuss Product",
+        "image": productImages,
+        "description": product?.description 
+            ? product.description.replace(/<[^>]*>?/gm, '').slice(0, 200) 
+            : `${product?.title || product?.name || 'Product'} on Bizzhuss - Built for Buyers | Powered by Sellers`,
+        "sku": product?.sku || `SKU-${product?.id || 'PROD'}`,
+        "offers": {
+            "@type": "Offer",
+            "url": `https://www.bizzhuss.com/product/${product?.slug || product?.id || ''}`,
+            "priceCurrency": "PKR",
+            "price": Number(product?.price || 0),
+            "availability": (product?.stock_quantity ?? product?.stock ?? 0) > 0 
+                ? "https://schema.org/InStock" 
+                : "https://schema.org/OutOfStock",
+            "seller": {
+                "@type": "Organization",
+                "name": product?.vendor?.shop_name || product?.vendor?.name || "Bizzhuss Verified Seller"
+            }
+        }
+    };
+
+    const breadcrumbSchema = generateBreadcrumbSchema([
+        { name: 'Home', url: '/' },
+        { name: product?.category?.name || 'Catalog', url: product?.category?.slug ? `/shop?category=${product.category.slug}` : '/shop' },
+        { name: product?.title || product?.name || 'Product', url: `/product/${product?.slug || product?.id || ''}` }
+    ]);
 
     return (
         <StorefrontLayout>
             <SEOHead 
-                title={product?.title || product?.name || 'Product Details'}
-                description={cleanDesc || `Buy ${product?.title} on Bizzhuss. Verified seller, authentic quality and fast shipping across Pakistan.`}
+                title={product?.title || product?.name || "Product Details"}
+                description={cleanDesc}
                 image={primaryImg}
-                url={`/product/${product?.slug || product?.id}`}
+                url={`https://www.bizzhuss.com/product/${product?.slug || product?.id || ''}`}
                 type="product"
-                schemaData={[
-                    generateProductSchema(product, primaryImg),
-                    generateBreadcrumbSchema([
-                        { name: 'Home', url: '/' },
-                        { name: product?.category?.name || 'Catalog', url: product?.category?.slug ? `/shop?category=${product.category.slug}` : '/shop' },
-                        { name: product?.title || 'Product', url: `/product/${product?.slug || product?.id}` }
-                    ])
-                ]}
+                schemaData={[productSchema, breadcrumbSchema]}
             />
 
             {/* Breadcrumb Navigation */}
