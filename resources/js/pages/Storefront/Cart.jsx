@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
+import SEOHead from '@/components/SEOHead';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency } from '@/lib/utils';
 import { 
@@ -59,7 +60,7 @@ export default function Cart() {
 
     return (
         <StorefrontLayout>
-            <Head title="Shopping Cart | Bizzhuss Marketplace" />
+            <SEOHead title="Shopping Cart" noindex={true} url="/cart" />
 
             <div className="mb-8">
                 <h1 className="text-2xl font-black text-slate-900 tracking-tight">Shopping Cart</h1>
