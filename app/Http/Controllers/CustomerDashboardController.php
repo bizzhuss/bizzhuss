@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Vendor;
+use App\Services\CloudinaryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -198,8 +199,8 @@ class CustomerDashboardController extends Controller
             }
         }
 
-        $path = $request->file('avatar')->store('avatars', 'public');
-        $user->update(['avatar' => '/storage/' . $path]);
+        $path = CloudinaryService::uploadImage($request->file('avatar'), 'bizzhuss_avatars');
+        $user->update(['avatar' => $path]);
 
         return back()->with('success', 'Profile picture updated successfully!');
     }

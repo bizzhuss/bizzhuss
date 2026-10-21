@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge, StatusBadge } from '@/components/ui/Badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import { 
     Settings, 
     ToggleLeft, 
@@ -946,16 +947,15 @@ export default function PlatformSettings({
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="block font-bold text-slate-700 mb-1">Banner Image URL</label>
-                                <input
-                                    type="text"
-                                    value={categoryForm.banner}
-                                    onChange={(e) => setCategoryForm({ ...categoryForm, banner: e.target.value })}
-                                    placeholder="https://images.unsplash.com/..."
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 outline-none"
-                                />
-                            </div>
+                            <ImageUpload
+                                label="Banner Artwork / Cover Image"
+                                value={categoryForm.banner}
+                                onChange={(url) => setCategoryForm({ ...categoryForm, banner: url })}
+                                folder="bizzhuss_categories"
+                                aspectRatio="banner"
+                                recommendedSize="Recommended: 1200x400 JPG, PNG, or WebP"
+                                placeholder="Click or drag to upload category banner artwork"
+                            />
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
@@ -1058,16 +1058,15 @@ export default function PlatformSettings({
                                 />
                             </div>
 
-                            <div>
-                                <label className="block font-bold text-slate-700 mb-1">Receipt URL or Attachment Ref</label>
-                                <input
-                                    type="text"
-                                    value={approveForm.receipt_url}
-                                    onChange={(e) => setApproveForm({ ...approveForm, receipt_url: e.target.value })}
-                                    placeholder="https://banking.portal/receipt/..."
-                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none"
-                                />
-                            </div>
+                            <ImageUpload
+                                label="Disbursement Wire Receipt / Transfer Slip"
+                                value={approveForm.receipt_url}
+                                onChange={(url) => setApproveForm({ ...approveForm, receipt_url: url })}
+                                folder="bizzhuss_payout_receipts"
+                                aspectRatio="auto"
+                                placeholder="Upload bank slip or screenshot proof"
+                                recommendedSize="PNG, JPG, PDF up to 10MB"
+                            />
 
                             <div className="flex items-center justify-end gap-3 pt-3">
                                 <Button type="button" variant="secondary" onClick={() => setPayoutToApprove(null)}>Cancel</Button>
