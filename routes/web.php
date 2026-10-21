@@ -20,6 +20,7 @@ use App\Http\Controllers\MarketingCampaignController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\UploadController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -73,6 +74,10 @@ Route::prefix('business')->name('business.')->group(function () {
 Route::get('/operations/order-routing', [PageController::class, 'orderRouting'])->name('operations.order-routing');
 Route::get('/terms', [PageController::class, 'privacyTerms'])->name('terms');
 Route::get('/privacy', [PageController::class, 'privacyTerms'])->name('privacy');
+
+// SEO & Search Engine Indexing Architecture
+Route::get('/sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 Route::get('/security', [PageController::class, 'complianceSecurity'])->name('security');
 Route::get('/status', [PageController::class, 'systemStatus'])->name('status');
 Route::get('/maintenance', fn () => \Inertia\Inertia::render('Maintenance'))->name('maintenance');

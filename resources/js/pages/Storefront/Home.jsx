@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
+import SEOHead from '@/components/SEOHead';
+import { generateOrganizationSchema, generateWebSiteSchema } from '@/lib/seo';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency } from '@/lib/utils';
 import { getProductImage } from '@/lib/productImage';
