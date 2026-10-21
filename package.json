@@ -3,7 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "prisma generate && vite build"
+        "build": "vite build"
     },
     "devDependencies": {
         "@vitejs/plugin-react": "^4.3.4",

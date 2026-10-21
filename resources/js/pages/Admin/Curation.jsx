@@ -32,6 +32,7 @@ import {
     SlidersHorizontal,
     ShoppingBag
 } from 'lucide-react';
+import { getProductImage } from '@/lib/productImage';
 
 export default function Curation({ products = [], categories = [], vendors = [], metrics = {}, filters = {} }) {
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
@@ -397,8 +398,9 @@ export default function Curation({ products = [], categories = [], vendors = [],
                                             <td className="py-4 px-2 max-w-xs">
                                                 <div className="flex items-center gap-3">
                                                     <img
-                                                        src={(product.images && product.images[0]) || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200'}
+                                                        src={getProductImage(product)}
                                                         alt={product.title}
+                                                        onError={(e) => { e.currentTarget.src = '/placeholder-product.svg'; }}
                                                         className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0 bg-slate-100"
                                                     />
                                                     <div className="min-w-0">

@@ -24,6 +24,7 @@ import {
     Eye,
     Plus
 } from 'lucide-react';
+import { getProductImage } from '@/lib/productImage';
 
 export default function MarketingDashboard({
     metrics = {
@@ -355,20 +356,14 @@ export default function MarketingDashboard({
                             <p className="text-xs text-slate-400 py-4 text-center">No products curated yet.</p>
                         ) : (
                             curatedProducts.map((p) => {
-                                const resolveImg = () => {
-                                    if (p.image) return p.image;
-                                    if (Array.isArray(p.images) && p.images[0]) return p.images[0];
-                                    return 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300';
-                                };
-
                                 return (
                                     <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/80 bg-white hover:border-purple-300 transition-colors">
                                         <img 
-                                            src={resolveImg()} 
+                                            src={getProductImage(p)} 
                                             alt={p.title} 
                                             className="w-12 h-12 object-cover rounded-lg shrink-0 border border-slate-200"
                                             onError={(e) => {
-                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300';
+                                                e.currentTarget.src = '/placeholder-product.svg';
                                             }}
                                         />
                                         <div className="flex-1 min-w-0">

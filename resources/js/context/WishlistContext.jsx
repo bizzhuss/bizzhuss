@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { usePage, router } from '@inertiajs/react';
+import { getProductImage } from '@/lib/productImage';
 
 export const WishlistContext = createContext(null);
 
@@ -74,17 +75,7 @@ export function WishlistProvider({ children }) {
 
     // Resolve safe product image
     const resolveProductImage = (product) => {
-        if (product.image) return product.image;
-        if (Array.isArray(product.images) && product.images.length > 0) return product.images[0];
-        if (typeof product.images === 'string') {
-            try {
-                const parsed = JSON.parse(product.images);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
-            } catch {
-                return product.images;
-            }
-        }
-        return 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+        return getProductImage(product);
     };
 
     /**

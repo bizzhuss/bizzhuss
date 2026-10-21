@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency } from '@/lib/utils';
+import { getProductImage } from '@/lib/productImage';
 import { 
     Search, 
     Filter, 
@@ -245,21 +246,6 @@ export default function Shop({
         setTimeout(() => {
             setAddedIds(prev => ({ ...prev, [product.id]: false }));
         }, 1800);
-    };
-
-    // Helper: Safe Image resolver
-    const getProductImage = (prod) => {
-        if (prod.image) return prod.image;
-        if (Array.isArray(prod.images) && prod.images.length > 0) return prod.images[0];
-        if (typeof prod.images === 'string') {
-            try {
-                const parsed = JSON.parse(prod.images);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
-            } catch {
-                return prod.images;
-            }
-        }
-        return 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
     };
 
     // Reusable Sidebar Filter Content
@@ -766,7 +752,7 @@ export default function Shop({
                                                             src={imageUrl}
                                                             alt={product.title}
                                                             onError={(e) => {
-                                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+                                                                e.currentTarget.src = '/placeholder-product.svg';
                                                             }}
                                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                         />
@@ -915,7 +901,7 @@ export default function Shop({
                                                             src={imageUrl}
                                                             alt={product.title}
                                                             onError={(e) => {
-                                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+                                                                e.currentTarget.src = '/placeholder-product.svg';
                                                             }}
                                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                         />

@@ -28,6 +28,7 @@ import {
     X,
     ArrowUpRight
 } from 'lucide-react';
+import { getProductImage } from '@/lib/productImage';
 
 export default function ProductsIndex({ 
     vendor = {}, 
@@ -249,7 +250,7 @@ export default function ProductsIndex({
                                 </tr>
                             ) : (
                                 products.map((product) => {
-                                    const primaryImg = (product.images && product.images.length > 0) ? product.images[0] : null;
+                                    const primaryImg = getProductImage(product);
                                     const isLowStock = product.stock_quantity > 0 && product.stock_quantity <= (product.low_stock_threshold ?? 5);
                                     const isOutOfStock = product.stock_quantity <= 0;
 
@@ -259,20 +260,14 @@ export default function ProductsIndex({
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3.5">
                                                     <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
-                                                        {primaryImg ? (
-                                                            <img
-                                                                src={primaryImg}
-                                                                alt={product.title}
-                                                                onError={(e) => {
-                                                                    e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500';
-                                                                }}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                                                <Package className="w-5 h-5" />
-                                                            </div>
-                                                        )}
+                                                        <img
+                                                            src={primaryImg}
+                                                            alt={product.title}
+                                                            onError={(e) => {
+                                                                e.currentTarget.src = '/placeholder-product.svg';
+                                                            }}
+                                                            className="w-full h-full object-cover"
+                                                        />
                                                     </div>
                                                     <div>
                                                         <div className="font-bold text-slate-900 line-clamp-1 hover:text-brand-600">

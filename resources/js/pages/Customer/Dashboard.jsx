@@ -29,6 +29,7 @@ import {
     Camera,
     Upload
 } from 'lucide-react';
+import { getProductImage } from '@/lib/productImage';
 
 export default function CustomerDashboard({ user = {}, orders = [], addresses = [], vouchers = [] }) {
     const { showNotification } = useApp();
@@ -363,8 +364,9 @@ export default function CustomerDashboard({ user = {}, orders = [], addresses = 
                                                         <div className="flex items-center gap-3.5">
                                                             <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                                                                 <img
-                                                                    src={item.product?.image || (Array.isArray(item.product?.images) && item.product?.images[0]) || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200'}
+                                                                    src={getProductImage(item.product)}
                                                                     alt={item.product?.title || 'Product'}
+                                                                    onError={(e) => { e.currentTarget.src = '/placeholder-product.svg'; }}
                                                                     className="w-full h-full object-cover"
                                                                 />
                                                             </div>

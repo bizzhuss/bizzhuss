@@ -132,8 +132,9 @@ export default function Wishlist() {
                                 <div className="relative aspect-square overflow-hidden bg-slate-100">
                                     <Link href={`/product/${item.slug || item.id}`}>
                                         <img
-                                            src={item.image || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80'}
+                                            src={item.image || '/placeholder-product.svg'}
                                             alt={item.title}
+                                            onError={(e) => { e.currentTarget.src = '/placeholder-product.svg'; }}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />
                                     </Link>

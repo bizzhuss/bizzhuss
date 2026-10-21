@@ -27,6 +27,7 @@ import {
     SlidersHorizontal,
     Clock
 } from 'lucide-react';
+import { getProductImage } from '@/lib/productImage';
 
 export default function MarketingCuration({ 
     products = [], 
@@ -321,12 +322,6 @@ export default function MarketingCuration({
                             ) : (
                                 products.map((product) => {
                                     const isSelected = selectedIds.includes(product.id);
-                                    const resolveImg = () => {
-                                        if (product.image) return product.image;
-                                        if (Array.isArray(product.images) && product.images[0]) return product.images[0];
-                                        return 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300';
-                                    };
-
                                     const currentTier = product.curation_tier || (product.is_featured ? 'flagship_featured' : (product.is_on_special_sale ? 'special_flash_sale' : 'none'));
 
                                     return (
@@ -349,11 +344,11 @@ export default function MarketingCuration({
                                             <td className="p-3">
                                                 <div className="flex items-center gap-3">
                                                     <img
-                                                        src={resolveImg()}
+                                                        src={getProductImage(product)}
                                                         alt={product.title}
                                                         className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0"
                                                         onError={(e) => {
-                                                            e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=300';
+                                                            e.currentTarget.src = '/placeholder-product.svg';
                                                         }}
                                                     />
                                                     <div className="min-w-0">

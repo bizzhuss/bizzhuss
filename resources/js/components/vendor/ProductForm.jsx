@@ -569,7 +569,7 @@ export function ProductForm({
                                                             alt={item.name || `Product image ${idx + 1}`}
                                                             className="w-full h-full object-cover"
                                                             onError={(e) => {
-                                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500';
+                                                                e.currentTarget.src = '/placeholder-product.svg';
                                                             }}
                                                         />
                                                     </div>

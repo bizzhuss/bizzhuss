@@ -121,8 +121,9 @@ export default function Cart() {
                                             <div className="flex items-center gap-4">
                                                 <div className="w-16 h-16 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                                                     <img
-                                                        src={item.image || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=200'}
+                                                        src={item.image || '/placeholder-product.svg'}
                                                         alt={item.title}
+                                                        onError={(e) => { e.currentTarget.src = '/placeholder-product.svg'; }}
                                                         className="w-full h-full object-cover"
                                                     />
                                                 </div>

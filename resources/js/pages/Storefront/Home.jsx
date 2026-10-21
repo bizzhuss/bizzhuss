@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency } from '@/lib/utils';
+import { getProductImage } from '@/lib/productImage';
 import { 
     Flame, 
     Clock, 
@@ -209,22 +210,7 @@ export default function Home({
     // Reusable Product Card Component
     const renderCard = (product, { badge, badgeColor, sublabel, rank } = {}) => {
         const isAdded = addedIds[product.id];
-        const resolveImg = () => {
-            if (product.image && typeof product.image === 'string') return product.image;
-            if (Array.isArray(product.images) && product.images.length > 0 && typeof product.images[0] === 'string') {
-                return product.images[0];
-            }
-            if (typeof product.images === 'string') {
-                try {
-                    const parsed = JSON.parse(product.images);
-                    if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
-                } catch {
-                    return product.images;
-                }
-            }
-            return 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500';
-        };
-        const imageSrc = resolveImg();
+        const imageSrc = getProductImage(product);
         const vendorName = product.vendor?.shop_name || 'Verified Supplier';
         const discountPercent = product.discount_percentage
             ? Math.round(Number(product.discount_percentage))
@@ -280,7 +266,7 @@ export default function Home({
                         src={imageSrc}
                         alt={product.title}
                         onError={(e) => {
-                            e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500';
+                            e.currentTarget.src = '/placeholder-product.svg';
                         }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />

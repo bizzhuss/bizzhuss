@@ -51,18 +51,13 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
         }
 
         if (imgs.length === 0) {
-            return [
-                'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
-                'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
-                'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&auto=format&fit=crop&q=80',
-                'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=80',
-            ];
+            return ['/placeholder-product.svg'];
         }
 
         return imgs;
     })();
 
-    const [activeImage, setActiveImage] = useState(galleryImages[0] || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80');
+    const [activeImage, setActiveImage] = useState(galleryImages[0] || '/placeholder-product.svg');
 
     useEffect(() => {
         if (galleryImages.length > 0) {
@@ -166,7 +161,7 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
                                 src={activeImage}
                                 alt={product?.title}
                                 onError={(e) => {
-                                    e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+                                    e.currentTarget.src = '/placeholder-product.svg';
                                 }}
                                 className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                             />
@@ -192,7 +187,7 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
                                         src={img}
                                         alt="thumbnail"
                                         onError={(e) => {
-                                            e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80';
+                                            e.currentTarget.src = '/placeholder-product.svg';
                                         }}
                                         className="w-full h-full object-cover"
                                     />
@@ -555,7 +550,7 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
                                 : (typeof relProduct?.images === 'string' ? (() => { try { return JSON.parse(relProduct.images); } catch { return [relProduct.images]; } })() : []);
                             const relImg = Array.isArray(relImgs) && relImgs.length > 0
                                 ? relImgs[0]
-                                : (relProduct?.thumbnail || relProduct?.image || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800');
+                                : (relProduct?.thumbnail || relProduct?.image || '/placeholder-product.svg');
 
                             return (
                                 <div
@@ -567,7 +562,7 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
                                             src={relImg}
                                             alt={relProduct.title || 'Product'}
                                             onError={(e) => {
-                                                e.currentTarget.src = 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800';
+                                                e.currentTarget.src = '/placeholder-product.svg';
                                             }}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />

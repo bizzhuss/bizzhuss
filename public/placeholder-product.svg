@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#f1f5f9" />
+    </linearGradient>
+    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e2e8f0" />
+      <stop offset="100%" stop-color="#cbd5e1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" />
+  <g transform="translate(140, 120)">
+    <!-- Package Box Icon -->
+    <path d="M60 10 L115 40 L60 70 L5 40 Z" fill="#94a3b8" opacity="0.8" />
+    <path d="M5 40 L60 70 L60 135 L5 105 Z" fill="#64748b" opacity="0.9" />
+    <path d="M60 70 L115 40 L115 105 L60 135 Z" fill="#475569" opacity="0.9" />
+    <!-- Center Ribbon Lines -->
+    <path d="M32.5 55 L87.5 25" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round" opacity="0.6" />
+    <path d="M60 70 L60 135" stroke="#334155" stroke-width="2" opacity="0.5" />
+  </g>
+  <text x="200" y="290" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#64748b" letter-spacing="0.5">BIZZHUSS MARKETPLACE</text>
+  <text x="200" y="312" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#94a3b8">Product Image Coming Soon</text>
+</svg>
