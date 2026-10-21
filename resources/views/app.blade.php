@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title inertia>{{ config('app.name', 'Bizzhuss') }} - Enterprise Multi-Vendor & Workforce Platform</title>
+    <title inertia>{{ config('app.name', 'Bizzhuss') }} | Built for Buyers | Powered by Sellers</title>
+    <meta name="description" content="Bizzhuss is Pakistan's premier multi-vendor e-commerce marketplace connecting verified local sellers with smart shoppers. Built for Buyers | Powered by Sellers.">
+    <meta name="author" content="Bizzhuss">
+    <link rel="canonical" href="https://www.bizzhuss.com">
     <link rel="icon" type="image/png" href="/images/bizzhuss-logo.png">
 
     <!-- Fonts -->

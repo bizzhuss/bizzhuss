@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
+import SEOHead from '@/components/SEOHead';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
 import { useApp } from '@/context/AppContext';
@@ -50,7 +51,7 @@ export default function Wishlist() {
 
     return (
         <StorefrontLayout>
-            <Head title="My Wishlist | Bizzhuss Enterprise Marketplace" />
+            <SEOHead title="My Wishlist" noindex={true} url="/wishlist" />
 
             <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>

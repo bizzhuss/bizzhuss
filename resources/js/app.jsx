@@ -41,7 +41,7 @@ import { AppProvider } from '@/context/AppContext';
 
 createInertiaApp({
     page: initialPage,
-    title: (title) => (title ? `${title}` : `${appName} - Multi-Vendor Platform`),
+    title: (title) => (title ? `${title}` : `Bizzhuss | Built for Buyers | Powered by Sellers`),
     resolve: (name) => {
         // Resolve both lowercase 'pages' and uppercase 'Pages'
         const pages = import.meta.glob(['./pages/**/*.jsx', './Pages/**/*.jsx'], { eager: true });
