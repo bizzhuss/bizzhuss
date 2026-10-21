@@ -344,7 +344,15 @@ export default function Home({
 
     return (
         <StorefrontLayout>
-            <Head title="Bizzhuss - High-Scale Multi-Vendor Marketplace" />
+            <SEOHead 
+                title=""
+                description="Bizzhuss is Pakistan's premier multi-vendor e-commerce marketplace connecting verified local sellers with smart shoppers. Built for Buyers | Powered by Sellers."
+                url="https://www.bizzhuss.com"
+                schemaData={[
+                    generateOrganizationSchema(),
+                    generateWebSiteSchema()
+                ]}
+            />
 
             {/* 1. Main Hero Area: Category Sidebar + Promo Carousel */}
             <section className="mb-8">
