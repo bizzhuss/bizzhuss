@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Vendor;
 use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -146,115 +147,178 @@ class VendorProductController extends Controller
      */
     public function store(Request $request)
     {
-        $vendor = $this->getVendor($request);
+        try {
+            $vendor = $this->getVendor($request);
 
-        $rules = [
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'brand' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0.01',
-            'compare_price' => 'nullable|numeric|min:0',
-            'cost_per_item' => 'nullable|numeric|min:0',
-            'sku' => 'required|string|max:100|unique:products,sku',
-            'barcode' => 'nullable|string|max:100',
-            'stock_quantity' => 'required|integer|min:0',
-            'low_stock_threshold' => 'nullable|integer|min:0',
-            'images' => 'nullable|array|max:5',
-            'existing_images' => 'nullable|array|max:5',
-            'existing_images.*' => 'nullable|string',
-            'image_order' => 'nullable|string',
-            'variants' => 'nullable|array',
-            'status' => 'required|in:published,pending_review,draft',
-        ];
+            // Validation rules without SQL relational rules (exists:categories,id etc.)
+            $rules = [
+                'title' => 'nullable|string|max:255',
+                'name' => 'nullable|string|max:255',
+                'slug' => 'nullable|string|max:255',
+                'category_id' => 'nullable|string',
+                'brand' => 'nullable|string|max:100',
+                'description' => 'nullable|string',
+                'price' => 'required|numeric|min:0',
+                'compare_price' => 'nullable|numeric|min:0',
+                'cost_per_item' => 'nullable|numeric|min:0',
+                'sku' => 'nullable|string|max:100',
+                'barcode' => 'nullable|string|max:100',
+                'stock_quantity' => 'nullable|integer|min:0',
+                'stock' => 'nullable|integer|min:0',
+                'low_stock_threshold' => 'nullable|integer|min:0',
+                'image' => 'nullable', // string URL or UploadedFile
+                'images' => 'nullable', // array or string
+                'existing_images' => 'nullable|array|max:10',
+                'existing_images.*' => 'nullable|string',
+                'image_order' => 'nullable|string',
+                'variants' => 'nullable|array',
+                'status' => 'nullable|string',
+            ];
 
-        if ($request->hasFile('images')) {
-            $rules['images.*'] = 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096';
-        } else {
-            $rules['images.*'] = 'nullable|string';
-        }
+            if ($request->hasFile('images')) {
+                $rules['images.*'] = 'nullable|file|mimes:jpeg,png,jpg,webp,svg,gif|max:10240';
+            }
+            if ($request->hasFile('image')) {
+                $rules['image'] = 'nullable|file|mimes:jpeg,png,jpg,webp,svg,gif|max:10240';
+            }
 
-        $validated = $request->validate($rules);
+            $validated = $request->validate($rules);
 
-        $slugBase = !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['title']);
-        $uniqueSlug = $slugBase . '-' . Str::lower(Str::random(5));
+            // 1. Resolve Title / Name
+            $title = $validated['title'] ?? $validated['name'] ?? $request->input('title') ?? $request->input('name') ?? 'Untitled Product';
 
-        // If vendor is not active, enforce pending_review status
-        if ($vendor->status !== 'active') {
-            $validated['status'] = 'pending_review';
-        }
+            // 2. Resolve Slug
+            $slugBase = !empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($title);
+            $uniqueSlug = $slugBase . '-' . Str::lower(Str::random(5));
 
-        // Process uploaded image files via Cloudinary / Storage
-        $imagePaths = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
+            // 3. Resolve SKU
+            $sku = !empty($validated['sku']) ? Str::upper($validated['sku']) : 'SKU-' . Str::upper(Str::random(8));
+
+            // 4. Resolve Stock
+            $stockQuantity = isset($validated['stock_quantity']) 
+                ? (int) $validated['stock_quantity'] 
+                : (isset($validated['stock']) ? (int) $validated['stock'] : 100);
+
+            // 5. Resolve Status
+            $status = $validated['status'] ?? 'published';
+            if ($status === 'active') {
+                $status = 'published';
+            }
+            if ($vendor && $vendor->status !== 'active') {
+                $status = 'pending_review';
+            }
+
+            // 6. Image collection & Cloudinary uploads
+            $imagePaths = [];
+
+            // A. Single direct file upload 'image'
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
                 if ($file && $file->isValid()) {
                     $url = CloudinaryService::uploadImage($file, 'bizzhuss_products');
                     $imagePaths[] = $url;
                 }
+            } elseif ($request->filled('image') && is_string($request->input('image'))) {
+                $imagePaths[] = $request->input('image');
             }
-        }
 
-        // Support string images if provided (e.g. from existing_images or initial data / testing)
-        if ($request->filled('existing_images') && is_array($request->input('existing_images'))) {
-            foreach ($request->input('existing_images') as $img) {
-                if (is_string($img) && !empty($img) && !in_array($img, $imagePaths)) {
-                    $imagePaths[] = $img;
+            // B. Multiple file uploads 'images'
+            if ($request->hasFile('images')) {
+                $files = $request->file('images');
+                if (is_array($files)) {
+                    foreach ($files as $file) {
+                        if ($file && $file->isValid()) {
+                            $url = CloudinaryService::uploadImage($file, 'bizzhuss_products');
+                            $imagePaths[] = $url;
+                        }
+                    }
+                } elseif ($files instanceof \Illuminate\Http\UploadedFile && $files->isValid()) {
+                    $url = CloudinaryService::uploadImage($files, 'bizzhuss_products');
+                    $imagePaths[] = $url;
                 }
             }
-        } elseif ($request->filled('images') && is_array($request->input('images')) && !$request->hasFile('images')) {
-            foreach ($request->input('images') as $img) {
-                if (is_string($img) && !empty($img) && !in_array($img, $imagePaths)) {
-                    $imagePaths[] = $img;
-                }
-            }
-        }
 
-        // Re-order if image_order metadata is passed
-        if ($request->filled('image_order')) {
-            $order = json_decode($request->input('image_order'), true);
-            if (is_array($order)) {
-                $ordered = [];
-                foreach ($order as $item) {
-                    if (isset($item['type']) && $item['type'] === 'new' && isset($item['index']) && isset($imagePaths[$item['index']])) {
-                        $ordered[] = $imagePaths[$item['index']];
-                    } elseif (isset($item['type']) && $item['type'] === 'existing' && !empty($item['url']) && in_array($item['url'], $imagePaths)) {
-                        $ordered[] = $item['url'];
+            // C. String images provided in 'existing_images' or 'images'
+            if ($request->filled('existing_images') && is_array($request->input('existing_images'))) {
+                foreach ($request->input('existing_images') as $img) {
+                    if (is_string($img) && !empty($img) && !in_array($img, $imagePaths)) {
+                        $imagePaths[] = $img;
                     }
                 }
-                foreach ($imagePaths as $p) {
-                    if (!in_array($p, $ordered)) {
-                        $ordered[] = $p;
+            }
+            if ($request->filled('images') && is_array($request->input('images')) && !$request->hasFile('images')) {
+                foreach ($request->input('images') as $img) {
+                    if (is_string($img) && !empty($img) && !in_array($img, $imagePaths)) {
+                        $imagePaths[] = $img;
                     }
                 }
-                if (!empty($ordered)) {
-                    $imagePaths = $ordered;
+            } elseif ($request->filled('images') && is_string($request->input('images')) && !in_array($request->input('images'), $imagePaths)) {
+                $imagePaths[] = $request->input('images');
+            }
+
+            // D. Re-order if image_order metadata is passed
+            if ($request->filled('image_order')) {
+                $order = json_decode($request->input('image_order'), true);
+                if (is_array($order)) {
+                    $ordered = [];
+                    foreach ($order as $item) {
+                        if (isset($item['type']) && $item['type'] === 'new' && isset($item['index']) && isset($imagePaths[$item['index']])) {
+                            $ordered[] = $imagePaths[$item['index']];
+                        } elseif (isset($item['type']) && $item['type'] === 'existing' && !empty($item['url']) && in_array($item['url'], $imagePaths)) {
+                            $ordered[] = $item['url'];
+                        }
+                    }
+                    foreach ($imagePaths as $p) {
+                        if (!in_array($p, $ordered)) {
+                            $ordered[] = $p;
+                        }
+                    }
+                    if (!empty($ordered)) {
+                        $imagePaths = $ordered;
+                    }
                 }
             }
+
+            $primaryImage = !empty($imagePaths) ? $imagePaths[0] : null;
+            $vendorId = $vendor ? $vendor->id : (string) (auth()->id() ?? '');
+
+            $product = Product::create([
+                'vendor_id' => $vendorId,
+                'category_id' => $validated['category_id'] ?? null,
+                'brand' => $validated['brand'] ?? null,
+                'title' => $title,
+                'name' => $title,
+                'slug' => $uniqueSlug,
+                'sku' => $sku,
+                'barcode' => $validated['barcode'] ?? null,
+                'price' => (float) $validated['price'],
+                'compare_price' => !empty($validated['compare_price']) ? (float) $validated['compare_price'] : null,
+                'cost_per_item' => !empty($validated['cost_per_item']) ? (float) $validated['cost_per_item'] : null,
+                'stock_quantity' => $stockQuantity,
+                'stock' => $stockQuantity,
+                'low_stock_threshold' => isset($validated['low_stock_threshold']) ? (int) $validated['low_stock_threshold'] : 5,
+                'image' => $primaryImage,
+                'images' => array_values(array_unique($imagePaths)),
+                'featured_image' => $primaryImage,
+                'thumbnail' => $primaryImage,
+                'description' => $validated['description'] ?? '',
+                'variants' => $validated['variants'] ?? [],
+                'status' => $status,
+            ]);
+
+            return redirect()->route('vendor.products.index')
+                ->with('success', "Product '{$product->title}' created successfully.");
+
+        } catch (\Throwable $e) {
+            Log::error('Product creation failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->except(['images', 'image']),
+            ]);
+
+            return redirect()->back()->withErrors([
+                'error' => 'Product creation failed: ' . $e->getMessage()
+            ])->withInput();
         }
-
-        $product = Product::create([
-            'vendor_id' => $vendor->id,
-            'category_id' => $validated['category_id'],
-            'brand' => $validated['brand'] ?? null,
-            'title' => $validated['title'],
-            'slug' => $uniqueSlug,
-            'sku' => Str::upper($validated['sku']),
-            'barcode' => $validated['barcode'] ?? null,
-            'price' => $validated['price'],
-            'compare_price' => $validated['compare_price'] ?? null,
-            'cost_per_item' => $validated['cost_per_item'] ?? null,
-            'stock_quantity' => $validated['stock_quantity'],
-            'low_stock_threshold' => $validated['low_stock_threshold'] ?? 5,
-            'images' => array_values(array_unique($imagePaths)),
-            'description' => $validated['description'] ?? '',
-            'variants' => $validated['variants'] ?? [],
-            'status' => $validated['status'],
-        ]);
-
-        return redirect()->route('vendor.products.index')
-            ->with('success', "Product '{$product->title}' created successfully.");
     }
 
     /**
@@ -288,133 +352,169 @@ class VendorProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $vendor = $this->getVendor($request);
+        try {
+            $vendor = $this->getVendor($request);
 
-        if ($product->vendor_id !== $vendor->id) {
-            abort(403, 'Unauthorized access to product.');
-        }
-
-        $rules = [
-            'title' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'brand' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0.01',
-            'compare_price' => 'nullable|numeric|min:0',
-            'cost_per_item' => 'nullable|numeric|min:0',
-            'sku' => "required|string|max:100|unique:products,sku,{$product->id}",
-            'barcode' => 'nullable|string|max:100',
-            'stock_quantity' => 'required|integer|min:0',
-            'low_stock_threshold' => 'nullable|integer|min:0',
-            'images' => 'nullable|array|max:5',
-            'existing_images' => 'nullable|array|max:5',
-            'existing_images.*' => 'nullable|string',
-            'image_order' => 'nullable|string',
-            'variants' => 'nullable|array',
-            'status' => 'required|in:published,pending_review,draft',
-        ];
-
-        if ($request->hasFile('images')) {
-            $rules['images.*'] = 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096';
-        } else {
-            $rules['images.*'] = 'nullable|string';
-        }
-
-        $validated = $request->validate($rules);
-
-        if (!empty($validated['slug']) && $validated['slug'] !== $product->slug) {
-            $validated['slug'] = Str::slug($validated['slug']) . '-' . Str::lower(Str::random(4));
-        } else {
-            unset($validated['slug']);
-        }
-
-        $validated['sku'] = Str::upper($validated['sku']);
-
-        // If vendor is not active, enforce pending_review status
-        if ($vendor->status !== 'active') {
-            $validated['status'] = 'pending_review';
-        }
-
-        // 1. Gather retained existing images
-        $existingImages = $request->input('existing_images', []);
-        if (!is_array($existingImages)) {
-            $existingImages = [];
-        }
-
-        // Support string images if provided in 'images' (legacy/tests)
-        if ($request->filled('images') && is_array($request->input('images')) && !$request->hasFile('images')) {
-            foreach ($request->input('images') as $img) {
-                if (is_string($img) && !empty($img) && !in_array($img, $existingImages)) {
-                    $existingImages[] = $img;
-                }
+            if ($product->vendor_id !== $vendor->id && auth()->user()->role !== 'super_admin') {
+                abort(403, 'Unauthorized access to product.');
             }
-        }
 
-        // 2. Upload new image files via Cloudinary / Storage
-        $newPaths = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
+            $rules = [
+                'title' => 'nullable|string|max:255',
+                'name' => 'nullable|string|max:255',
+                'slug' => 'nullable|string|max:255',
+                'category_id' => 'nullable|string',
+                'brand' => 'nullable|string|max:100',
+                'description' => 'nullable|string',
+                'price' => 'required|numeric|min:0',
+                'compare_price' => 'nullable|numeric|min:0',
+                'cost_per_item' => 'nullable|numeric|min:0',
+                'sku' => 'nullable|string|max:100',
+                'barcode' => 'nullable|string|max:100',
+                'stock_quantity' => 'nullable|integer|min:0',
+                'stock' => 'nullable|integer|min:0',
+                'low_stock_threshold' => 'nullable|integer|min:0',
+                'image' => 'nullable',
+                'images' => 'nullable',
+                'existing_images' => 'nullable|array|max:10',
+                'existing_images.*' => 'nullable|string',
+                'image_order' => 'nullable|string',
+                'variants' => 'nullable|array',
+                'status' => 'nullable|string',
+            ];
+
+            if ($request->hasFile('images')) {
+                $rules['images.*'] = 'nullable|file|mimes:jpeg,png,jpg,webp,svg,gif|max:10240';
+            }
+            if ($request->hasFile('image')) {
+                $rules['image'] = 'nullable|file|mimes:jpeg,png,jpg,webp,svg,gif|max:10240';
+            }
+
+            $validated = $request->validate($rules);
+
+            if (!empty($validated['slug']) && $validated['slug'] !== $product->slug) {
+                $validated['slug'] = Str::slug($validated['slug']) . '-' . Str::lower(Str::random(4));
+            } else {
+                unset($validated['slug']);
+            }
+
+            if (!empty($validated['sku'])) {
+                $validated['sku'] = Str::upper($validated['sku']);
+            }
+
+            if (!empty($validated['name']) && empty($validated['title'])) {
+                $validated['title'] = $validated['name'];
+            }
+
+            if (isset($validated['stock']) && !isset($validated['stock_quantity'])) {
+                $validated['stock_quantity'] = (int) $validated['stock'];
+            }
+
+            // If vendor is not active, enforce pending_review status
+            if ($vendor && $vendor->status !== 'active') {
+                $validated['status'] = 'pending_review';
+            }
+
+            // 1. Gather retained existing images
+            $existingImages = $request->input('existing_images', []);
+            if (!is_array($existingImages)) {
+                $existingImages = [];
+            }
+
+            // Support string images if provided in 'images' (legacy/tests)
+            if ($request->filled('images') && is_array($request->input('images')) && !$request->hasFile('images')) {
+                foreach ($request->input('images') as $img) {
+                    if (is_string($img) && !empty($img) && !in_array($img, $existingImages)) {
+                        $existingImages[] = $img;
+                    }
+                }
+            } elseif ($request->filled('images') && is_string($request->input('images')) && !in_array($request->input('images'), $existingImages)) {
+                $existingImages[] = $request->input('images');
+            }
+
+            // Support direct string in 'image'
+            if ($request->filled('image') && is_string($request->input('image')) && !in_array($request->input('image'), $existingImages)) {
+                $existingImages[] = $request->input('image');
+            }
+
+            // 2. Upload new image files via Cloudinary
+            $newPaths = [];
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
                 if ($file && $file->isValid()) {
                     $url = CloudinaryService::uploadImage($file, 'bizzhuss_products');
                     $newPaths[] = $url;
                 }
             }
-        }
+            if ($request->hasFile('images')) {
+                $files = $request->file('images');
+                if (is_array($files)) {
+                    foreach ($files as $file) {
+                        if ($file && $file->isValid()) {
+                            $url = CloudinaryService::uploadImage($file, 'bizzhuss_products');
+                            $newPaths[] = $url;
+                        }
+                    }
+                } elseif ($files instanceof \Illuminate\Http\UploadedFile && $files->isValid()) {
+                    $url = CloudinaryService::uploadImage($files, 'bizzhuss_products');
+                    $newPaths[] = $url;
+                }
+            }
 
-        // 3. Assemble final ordered images
-        $finalImages = [];
-        if ($request->filled('image_order')) {
-            $order = json_decode($request->input('image_order'), true);
-            if (is_array($order)) {
-                foreach ($order as $item) {
-                    if (isset($item['type']) && $item['type'] === 'existing' && in_array($item['url'], $existingImages)) {
-                        $finalImages[] = $item['url'];
-                    } elseif (isset($item['type']) && $item['type'] === 'new' && isset($item['index']) && isset($newPaths[$item['index']])) {
-                        $finalImages[] = $newPaths[$item['index']];
+            // 3. Assemble final ordered images
+            $finalImages = [];
+            if ($request->filled('image_order')) {
+                $order = json_decode($request->input('image_order'), true);
+                if (is_array($order)) {
+                    foreach ($order as $item) {
+                        if (isset($item['type']) && $item['type'] === 'existing' && in_array($item['url'], $existingImages)) {
+                            $finalImages[] = $item['url'];
+                        } elseif (isset($item['type']) && $item['type'] === 'new' && isset($item['index']) && isset($newPaths[$item['index']])) {
+                            $finalImages[] = $newPaths[$item['index']];
+                        }
                     }
                 }
             }
-        }
 
-        // Append any images that were not in order list
-        foreach ($existingImages as $img) {
-            if (!in_array($img, $finalImages)) {
-                $finalImages[] = $img;
-            }
-        }
-        foreach ($newPaths as $img) {
-            if (!in_array($img, $finalImages)) {
-                $finalImages[] = $img;
-            }
-        }
-
-        // 4. In the update method, handle deleting old unneeded files from disk when a vendor removes an image
-        $oldImages = is_array($product->images) ? $product->images : [];
-        foreach ($oldImages as $oldImg) {
-            if (is_string($oldImg) && !in_array($oldImg, $finalImages)) {
-                if (str_starts_with($oldImg, '/storage/')) {
-                    $relative = Str::after($oldImg, '/storage/');
-                    if (Storage::disk('public')->exists($relative)) {
-                        Storage::disk('public')->delete($relative);
-                    }
+            // Append any images that were not in order list
+            foreach ($existingImages as $img) {
+                if (!in_array($img, $finalImages)) {
+                    $finalImages[] = $img;
                 }
             }
+            foreach ($newPaths as $img) {
+                if (!in_array($img, $finalImages)) {
+                    $finalImages[] = $img;
+                }
+            }
+
+            // If no new files or existing images were sent
+            if (!$request->has('images') && !$request->has('existing_images') && !$request->hasFile('images') && !$request->hasFile('image') && !$request->has('image')) {
+                unset($validated['images']);
+            } else {
+                $validated['images'] = array_values(array_unique($finalImages));
+                $validated['image'] = $finalImages[0] ?? null;
+                $validated['featured_image'] = $finalImages[0] ?? null;
+                $validated['thumbnail'] = $finalImages[0] ?? null;
+            }
+
+            unset($validated['existing_images'], $validated['image_order']);
+
+            $product->update($validated);
+
+            return redirect()->route('vendor.products.index')
+                ->with('success', "Product '{$product->title}' updated successfully.");
+
+        } catch (\Throwable $e) {
+            Log::error('Product update failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'product_id' => $product->id,
+            ]);
+
+            return redirect()->back()->withErrors([
+                'error' => 'Product update failed: ' . $e->getMessage()
+            ])->withInput();
         }
-
-        // If no new files or existing images were sent (or neither was present in request at all, e.g. partial test update)
-        if (!$request->has('images') && !$request->has('existing_images') && !$request->hasFile('images')) {
-            unset($validated['images']);
-        } else {
-            $validated['images'] = array_values(array_unique($finalImages));
-        }
-
-        unset($validated['existing_images'], $validated['image_order']);
-
-        $product->update($validated);
-
-        return redirect()->route('vendor.products.index')
-            ->with('success', "Product '{$product->title}' updated successfully.");
     }
 
     /**
