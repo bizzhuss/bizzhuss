@@ -19,12 +19,16 @@ class CloudinaryService
     public static function uploadImage($file, $folder = 'bizzhuss_catalog'): string
     {
         $cloudName = config('services.cloudinary.cloud_name', env('CLOUDINARY_CLOUD_NAME'));
+        if ($cloudName === '${CLOUDINARY_CLOUD_NAME}' || empty($cloudName)) {
+            $cloudName = getenv('CLOUDINARY_CLOUD_NAME') ?: '';
+        }
         $apiKey = config('services.cloudinary.api_key', env('CLOUDINARY_API_KEY'));
         $apiSecret = config('services.cloudinary.api_secret', env('CLOUDINARY_API_SECRET'));
+        $uploadPreset = config('services.cloudinary.upload_preset', env('CLOUDINARY_UPLOAD_PRESET'));
 
         // If Cloudinary credentials are not set, fall back safely to local public disk
-        if (empty($cloudName) || empty($apiKey) || empty($apiSecret)) {
-            Log::info('Cloudinary credentials missing or incomplete; storing image locally.');
+        if (empty($cloudName) || $cloudName === '${CLOUDINARY_CLOUD_NAME}' || empty($apiKey) || empty($apiSecret)) {
+            Log::info('Cloudinary cloud name or credentials missing; storing image locally.');
             if ($file instanceof \Illuminate\Http\UploadedFile) {
                 $path = $file->store($folder, 'public');
                 return '/storage/' . $path;
@@ -37,6 +41,9 @@ class CloudinaryService
             'folder' => $folder,
             'timestamp' => $timestamp,
         ];
+        if (!empty($uploadPreset)) {
+            $paramsToSign['upload_preset'] = $uploadPreset;
+        }
         ksort($paramsToSign);
 
         $stringToSign = collect($paramsToSign)
@@ -44,6 +51,16 @@ class CloudinaryService
             ->implode('&') . $apiSecret;
 
         $signature = sha1($stringToSign);
+
+        $postData = [
+            'api_key' => $apiKey,
+            'timestamp' => $timestamp,
+            'signature' => $signature,
+            'folder' => $folder,
+        ];
+        if (!empty($uploadPreset)) {
+            $postData['upload_preset'] = $uploadPreset;
+        }
 
         try {
             $request = Http::timeout(30);
@@ -53,20 +70,10 @@ class CloudinaryService
                     'file',
                     file_get_contents($file->getRealPath()),
                     $file->getClientOriginalName()
-                )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
-                    'api_key' => $apiKey,
-                    'timestamp' => $timestamp,
-                    'signature' => $signature,
-                    'folder' => $folder,
-                ]);
+                )->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", $postData);
             } elseif (is_string($file)) {
-                $response = $request->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", [
-                    'file' => $file,
-                    'api_key' => $apiKey,
-                    'timestamp' => $timestamp,
-                    'signature' => $signature,
-                    'folder' => $folder,
-                ]);
+                $postData['file'] = $file;
+                $response = $request->post("https://api.cloudinary.com/v1_1/{$cloudName}/image/upload", $postData);
             } else {
                 throw new \InvalidArgumentException("Invalid file type provided for Cloudinary upload.");
             }
