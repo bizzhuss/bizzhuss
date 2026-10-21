@@ -1,2 +1,13 @@
 User-agent: *
-Disallow:
+Disallow: /admin/
+Disallow: /employee/
+Disallow: /vendor/
+Disallow: /marketing/
+Disallow: /customer/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /wishlist
+Allow: /
+
+Sitemap: https://www.bizzhuss.com/sitemap.xml
