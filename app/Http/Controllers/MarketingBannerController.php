@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Banner;
+use App\Services\CloudinaryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -67,7 +68,7 @@ class MarketingBannerController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('banners', 'public');
+            $imagePath = CloudinaryService::uploadImage($request->file('image'), 'bizzhuss_banners');
         } elseif ($request->filled('image_url')) {
             $imagePath = $request->input('image_url');
         } else {
@@ -126,7 +127,7 @@ class MarketingBannerController extends Controller
             if ($banner->image_path && !str_starts_with($banner->image_path, 'http') && Storage::disk('public')->exists($banner->image_path)) {
                 Storage::disk('public')->delete($banner->image_path);
             }
-            $updateData['image_path'] = $request->file('image')->store('banners', 'public');
+            $updateData['image_path'] = CloudinaryService::uploadImage($request->file('image'), 'bizzhuss_banners');
         } elseif ($request->filled('image_url')) {
             $updateData['image_path'] = $request->input('image_url');
         }

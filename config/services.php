@@ -37,6 +37,13 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', 'https://www.bizzhuss.com/auth/google/callback'),
     ],
 
+    'cloudinary' => [
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key' => env('CLOUDINARY_API_KEY'),
+        'api_secret' => env('CLOUDINARY_API_SECRET'),
+        'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
+    ],
+
     'support' => [
         'email' => env('SUPPORT_EMAIL', 'bizzhuss@gmail.com'),
         'phone' => env('SUPPORT_PHONE', '+92 335 7895884'),

@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -184,13 +185,13 @@ class VendorProductController extends Controller
             $validated['status'] = 'pending_review';
         }
 
-        // Process uploaded image files
+        // Process uploaded image files via Cloudinary / Storage
         $imagePaths = [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
                 if ($file && $file->isValid()) {
-                    $path = $file->store('products', 'public');
-                    $imagePaths[] = '/storage/' . $path;
+                    $url = CloudinaryService::uploadImage($file, 'bizzhuss_products');
+                    $imagePaths[] = $url;
                 }
             }
         }
@@ -350,13 +351,13 @@ class VendorProductController extends Controller
             }
         }
 
-        // 2. Upload new image files
+        // 2. Upload new image files via Cloudinary / Storage
         $newPaths = [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
                 if ($file && $file->isValid()) {
-                    $path = $file->store('products', 'public');
-                    $newPaths[] = '/storage/' . $path;
+                    $url = CloudinaryService::uploadImage($file, 'bizzhuss_products');
+                    $newPaths[] = $url;
                 }
             }
         }

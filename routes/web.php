@@ -19,6 +19,7 @@ use App\Http\Controllers\MarketingBannerController;
 use App\Http\Controllers\MarketingCampaignController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SocialAuthController;
+use App\Http\Controllers\UploadController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -84,6 +85,9 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
+// Universal Image Upload Route (Cloudinary / S3 / Local fallback)
+Route::middleware(['auth'])->post('/upload/image', [UploadController::class, 'upload'])->name('upload.image');
 
 // Tier 1B: Dedicated Customer Portal (Strictly role:customer)
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
