@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
+import SEOHead from '@/components/SEOHead';
+import { generateBreadcrumbSchema } from '@/lib/seo';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency } from '@/lib/utils';
 import { getProductImage } from '@/lib/productImage';
@@ -504,9 +506,34 @@ export default function Shop({
         </div>
     );
 
+    const activeCategoryObj = activeCategories.length > 0 
+        ? categories.find(c => activeCategories.includes(c.slug) || activeCategories.includes(String(c.id)))
+        : null;
+
+    const pageTitle = activeCategoryObj 
+        ? `${activeCategoryObj.name} Products` 
+        : (filters.search ? `Search: "${filters.search}"` : 'Shop All Products');
+
+    const pageDesc = activeCategoryObj 
+        ? `Explore the latest ${activeCategoryObj.name} on Bizzhuss. Verified sellers, direct manufacturer pricing & nationwide delivery across Pakistan.`
+        : "Discover premium electronics, apparel, lifestyle, and industrial hardware on Bizzhuss. Built for Buyers | Powered by Sellers.";
+
+    const canonicalPath = activeCategoryObj 
+        ? `/shop?category=${activeCategoryObj.slug}` 
+        : '/shop';
+
     return (
         <StorefrontLayout>
-            <Head title="Shop All Products | Bizzhuss Enterprise Marketplace" />
+            <SEOHead 
+                title={pageTitle}
+                description={pageDesc}
+                url={canonicalPath}
+                schemaData={generateBreadcrumbSchema([
+                    { name: 'Home', url: '/' },
+                    { name: 'Shop', url: '/shop' },
+                    ...(activeCategoryObj ? [{ name: activeCategoryObj.name, url: canonicalPath }] : [])
+                ])}
+            />
 
             {/* Breadcrumb & Catalog Banner */}
             <div className="mb-6 space-y-3">
