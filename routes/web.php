@@ -162,6 +162,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::post('/marketing/curation/{product}/special-sale', [\App\Http\Controllers\AdminCurationController::class, 'toggleSpecialSale'])->name('curation.toggleSpecialSale');
     Route::patch('/marketing/curation/{product}/order', [\App\Http\Controllers\AdminCurationController::class, 'updateOrder'])->name('curation.updateOrder');
     Route::patch('/marketing/curation/{product}/sold-count', [\App\Http\Controllers\AdminCurationController::class, 'updateSoldCount'])->name('curation.updateSoldCount');
+    Route::post('/marketing/curation/{product}/tier', [\App\Http\Controllers\AdminCurationController::class, 'updateTier'])->name('curation.updateTier');
     Route::post('/marketing/curation/bulk', [\App\Http\Controllers\AdminCurationController::class, 'bulkAction'])->name('curation.bulkAction');
 });
 

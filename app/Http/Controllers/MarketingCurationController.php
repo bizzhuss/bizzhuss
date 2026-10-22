@@ -114,44 +114,74 @@ class MarketingCurationController extends Controller
     /**
      * Update Curation Tier and Merchandising Flags for a product.
      */
-    public function updateTier(Request $request, Product $product): RedirectResponse
+    public function updateTier(Request $request, $id): RedirectResponse
     {
-        $validated = $request->validate([
-            'curation_tier' => 'required|string|in:none,flagship_featured,special_flash_sale,smart_value_budget,enterprise_heavy_duty',
+        $request->validate([
+            'curation_tier' => 'required|string',
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'sale_badge_label' => 'nullable|string|max:100',
             'flash_sale_end_time' => 'nullable|date',
         ]);
 
-        $tier = $validated['curation_tier'];
-        $product->curation_tier = $tier;
-        $product->discount_percentage = $validated['discount_percentage'] ?? null;
-        $product->sale_badge_label = $validated['sale_badge_label'] ?? null;
-        $product->flash_sale_end_time = $validated['flash_sale_end_time'] ?? null;
+        $product = Product::where('_id', $id)->orWhere('id', $id)->first();
+        if (!$product && $id instanceof Product) {
+            $product = $id;
+        }
+        if (!$product) {
+            $product = Product::where('slug', $id)->firstOrFail();
+        }
 
-        // Keep backwards compatibility with existing storefront boolean flags
-        if ($tier === 'flagship_featured') {
-            $product->is_featured = true;
-        } elseif ($tier === 'special_flash_sale') {
-            $product->is_on_special_sale = true;
-            $product->special_sale_title = $validated['sale_badge_label'] ?: 'Limited Deal';
-        } elseif ($tier === 'none') {
+        // Normalize tier value
+        $tier = strtolower(trim($request->input('curation_tier')));
+
+        $product->curation_tier = $tier;
+        $product->tier = $tier;
+
+        if ($request->has('discount_percentage')) {
+            $product->discount_percentage = $request->input('discount_percentage') !== null && $request->input('discount_percentage') !== ''
+                ? (float) $request->input('discount_percentage')
+                : null;
+        }
+        if ($request->filled('sale_badge_label')) {
+            $product->sale_badge_label = $request->input('sale_badge_label');
+        }
+        if ($request->has('flash_sale_end_time')) {
+            $product->flash_sale_end_time = $request->input('flash_sale_end_time') ?: null;
+        }
+
+        // If set to standard/none, ensure it removes any tier-specific promotional flags
+        if (in_array($tier, ['standard', 'standard_catalog', 'standard catalog', 'none', 'uncurated'])) {
             $product->is_featured = false;
+            $product->is_flash_sale = false;
             $product->is_on_special_sale = false;
+            $product->curation_tier = 'none';
+            $product->tier = 'none';
             $product->special_sale_title = null;
+        } elseif (in_array($tier, ['flagship', 'flagship_featured', 'featured'])) {
+            $product->is_featured = true;
+        } elseif (in_array($tier, ['flash_sale', 'special_flash_sale', 'flash-sale'])) {
+            $product->is_flash_sale = true;
+            $product->is_on_special_sale = true;
+            if ($request->filled('sale_badge_label')) {
+                $product->sale_badge_label = $request->input('sale_badge_label');
+                $product->special_sale_title = $request->input('sale_badge_label');
+            } elseif (!$product->sale_badge_label) {
+                $product->sale_badge_label = 'Flash Deal';
+                $product->special_sale_title = 'Flash Deal';
+            }
+        } elseif (in_array($tier, ['enterprise', 'enterprise_tier', 'enterprise_heavy_duty', 'enterprise-tier'])) {
+            if ($request->filled('sale_badge_label')) {
+                $product->sale_badge_label = $request->input('sale_badge_label');
+            }
+        } elseif (in_array($tier, ['smart_value', 'smart_value_budget', 'budget_picks', 'budget-picks'])) {
+            if ($request->filled('sale_badge_label')) {
+                $product->sale_badge_label = $request->input('sale_badge_label');
+            }
         }
 
         $product->save();
 
-        $tierLabels = [
-            'none' => 'Standard Catalog',
-            'flagship_featured' => 'Flagship Featured Showcase',
-            'special_flash_sale' => 'Special Flash Sale Tier',
-            'smart_value_budget' => 'Smart Value & Budget Tier',
-            'enterprise_heavy_duty' => 'Enterprise & Heavy Duty Tier',
-        ];
-
-        return back()->with('success', "Product \"{$product->title}\" assigned to {$tierLabels[$tier]}.");
+        return redirect()->back()->with('success', 'Product curation tier updated successfully.');
     }
 
     /**
@@ -161,9 +191,8 @@ class MarketingCurationController extends Controller
     {
         $validated = $request->validate([
             'product_ids' => 'required|array|min:1',
-            'product_ids.*' => 'exists:products,id',
             'action' => 'required|string|in:set_tier,reset_tier,set_discount',
-            'tier' => 'nullable|string|in:none,flagship_featured,special_flash_sale,smart_value_budget,enterprise_heavy_duty',
+            'tier' => 'nullable|string',
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'sale_badge_label' => 'nullable|string|max:100',
         ]);
@@ -172,45 +201,73 @@ class MarketingCurationController extends Controller
         $count = count($ids);
 
         if ($validated['action'] === 'set_tier') {
-            $tier = $validated['tier'] ?? 'none';
-            $updateData = ['curation_tier' => $tier];
+            $tier = strtolower(trim($validated['tier'] ?? 'none'));
+            $updateData = [
+                'curation_tier' => $tier,
+                'tier' => $tier,
+            ];
 
-            if ($validated['sale_badge_label']) {
+            if (!empty($validated['sale_badge_label'])) {
                 $updateData['sale_badge_label'] = $validated['sale_badge_label'];
             }
             if ($validated['discount_percentage'] !== null) {
                 $updateData['discount_percentage'] = $validated['discount_percentage'];
             }
 
-            if ($tier === 'flagship_featured') {
+            if (in_array($tier, ['standard', 'standard_catalog', 'standard catalog', 'none', 'uncurated'])) {
+                $updateData['is_featured'] = false;
+                $updateData['is_flash_sale'] = false;
+                $updateData['is_on_special_sale'] = false;
+                $updateData['curation_tier'] = 'none';
+                $updateData['tier'] = 'none';
+                $updateData['special_sale_title'] = null;
+            } elseif (in_array($tier, ['flagship', 'flagship_featured', 'featured'])) {
                 $updateData['is_featured'] = true;
-            } elseif ($tier === 'special_flash_sale') {
+            } elseif (in_array($tier, ['flash_sale', 'special_flash_sale', 'flash-sale'])) {
+                $updateData['is_flash_sale'] = true;
                 $updateData['is_on_special_sale'] = true;
                 $updateData['special_sale_title'] = $validated['sale_badge_label'] ?: 'Flash Deal';
             }
 
-            Product::whereIn('id', $ids)->update($updateData);
-            return back()->with('success', "Updated {$count} products to {$tier} tier.");
+            foreach ($ids as $id) {
+                $p = Product::where('_id', $id)->orWhere('id', $id)->first();
+                if ($p) {
+                    $p->update($updateData);
+                }
+            }
+            return redirect()->back()->with('success', "Updated {$count} products to {$tier} tier.");
         }
 
         if ($validated['action'] === 'set_discount') {
-            Product::whereIn('id', $ids)->update([
-                'discount_percentage' => $validated['discount_percentage'],
-                'sale_badge_label' => $validated['sale_badge_label'] ?: 'Special Offer',
-            ]);
-            return back()->with('success', "Applied {$validated['discount_percentage']}% promotional discount to {$count} products.");
+            foreach ($ids as $id) {
+                $p = Product::where('_id', $id)->orWhere('id', $id)->first();
+                if ($p) {
+                    $p->update([
+                        'discount_percentage' => $validated['discount_percentage'],
+                        'sale_badge_label' => $validated['sale_badge_label'] ?: 'Special Offer',
+                    ]);
+                }
+            }
+            return redirect()->back()->with('success', "Applied {$validated['discount_percentage']}% promotional discount to {$count} products.");
         }
 
         if ($validated['action'] === 'reset_tier') {
-            Product::whereIn('id', $ids)->update([
-                'curation_tier' => 'none',
-                'is_featured' => false,
-                'is_on_special_sale' => false,
-                'discount_percentage' => null,
-                'sale_badge_label' => null,
-                'flash_sale_end_time' => null,
-            ]);
-            return back()->with('success', "Reset merchandising tier for {$count} products.");
+            foreach ($ids as $id) {
+                $p = Product::where('_id', $id)->orWhere('id', $id)->first();
+                if ($p) {
+                    $p->update([
+                        'curation_tier' => 'none',
+                        'tier' => 'none',
+                        'is_featured' => false,
+                        'is_flash_sale' => false,
+                        'is_on_special_sale' => false,
+                        'discount_percentage' => null,
+                        'sale_badge_label' => null,
+                        'flash_sale_end_time' => null,
+                    ]);
+                }
+            }
+            return redirect()->back()->with('success', "Reset merchandising tier for {$count} products.");
         }
 
         return back()->with('error', 'Unknown action specified.');

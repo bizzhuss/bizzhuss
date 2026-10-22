@@ -92,10 +92,24 @@ export default function MarketingCuration({
         }, { preserveScroll: true });
     };
 
+    const normalizeDropdownTier = (tierVal, isFeatured, isSpecial) => {
+        if (!tierVal || tierVal === 'none' || tierVal === 'standard' || tierVal === 'uncurated') {
+            if (isFeatured) return 'flagship_featured';
+            if (isSpecial) return 'special_flash_sale';
+            return 'none';
+        }
+        const lower = String(tierVal).toLowerCase();
+        if (['flagship_featured', 'flagship', 'featured'].includes(lower)) return 'flagship_featured';
+        if (['special_flash_sale', 'flash_sale', 'flash-sale'].includes(lower)) return 'special_flash_sale';
+        if (['smart_value_budget', 'budget_picks', 'budget-picks', 'smart_value', 'smart-value'].includes(lower)) return 'smart_value_budget';
+        if (['enterprise_heavy_duty', 'enterprise_tier', 'enterprise', 'enterprise-tier'].includes(lower)) return 'enterprise_heavy_duty';
+        return lower;
+    };
+
     // Open detailed edit modal
     const handleOpenEditModal = (product) => {
         setEditingProduct(product);
-        setModalTier(product.curation_tier || (product.is_featured ? 'flagship_featured' : (product.is_on_special_sale ? 'special_flash_sale' : 'none')));
+        setModalTier(normalizeDropdownTier(product.curation_tier || product.tier, product.is_featured, product.is_on_special_sale || product.is_flash_sale));
         setModalDiscount(product.discount_percentage || '');
         setModalBadge(product.sale_badge_label || product.special_sale_title || '');
         setModalEndDate(product.flash_sale_end_time ? product.flash_sale_end_time.substring(0, 16) : '');
@@ -322,7 +336,7 @@ export default function MarketingCuration({
                             ) : (
                                 products.map((product) => {
                                     const isSelected = selectedIds.includes(product.id);
-                                    const currentTier = product.curation_tier || (product.is_featured ? 'flagship_featured' : (product.is_on_special_sale ? 'special_flash_sale' : 'none'));
+                                    const currentTier = normalizeDropdownTier(product.curation_tier || product.tier, product.is_featured, product.is_on_special_sale || product.is_flash_sale);
 
                                     return (
                                         <tr key={product.id} className={`hover:bg-slate-50/80 transition-colors ${isSelected ? 'bg-purple-50/40' : ''}`}>

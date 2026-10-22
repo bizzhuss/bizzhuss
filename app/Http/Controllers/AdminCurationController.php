@@ -190,13 +190,68 @@ class AdminCurationController extends Controller
     }
 
     /**
+     * Update Curation Tier for a product in Admin Merchandising Suite.
+     */
+    public function updateTier(Request $request, $id): RedirectResponse
+    {
+        $request->validate([
+            'curation_tier' => 'required|string',
+        ]);
+
+        $product = Product::where('_id', $id)->orWhere('id', $id)->first();
+        if (!$product && $id instanceof Product) {
+            $product = $id;
+        }
+        if (!$product) {
+            $product = Product::where('slug', $id)->firstOrFail();
+        }
+
+        // Normalize tier value
+        $tier = strtolower(trim($request->input('curation_tier')));
+
+        $product->curation_tier = $tier;
+        $product->tier = $tier;
+
+        // If set to standard/none, ensure it removes any tier-specific promotional flags
+        if (in_array($tier, ['standard', 'standard_catalog', 'standard catalog', 'none', 'uncurated'])) {
+            $product->is_featured = false;
+            $product->is_flash_sale = false;
+            $product->is_on_special_sale = false;
+            $product->curation_tier = 'none';
+            $product->tier = 'none';
+            $product->special_sale_title = null;
+        } elseif (in_array($tier, ['flagship', 'flagship_featured', 'featured'])) {
+            $product->is_featured = true;
+        } elseif (in_array($tier, ['flash_sale', 'special_flash_sale', 'flash-sale'])) {
+            $product->is_flash_sale = true;
+            $product->is_on_special_sale = true;
+            if ($request->filled('sale_badge_label')) {
+                $product->sale_badge_label = $request->input('sale_badge_label');
+            } elseif (!$product->sale_badge_label) {
+                $product->sale_badge_label = 'Flash Deal';
+            }
+        } elseif (in_array($tier, ['enterprise', 'enterprise_tier', 'enterprise_heavy_duty', 'enterprise-tier'])) {
+            if ($request->filled('sale_badge_label')) {
+                $product->sale_badge_label = $request->input('sale_badge_label');
+            }
+        } elseif (in_array($tier, ['smart_value', 'smart_value_budget', 'budget_picks', 'budget-picks'])) {
+            if ($request->filled('sale_badge_label')) {
+                $product->sale_badge_label = $request->input('sale_badge_label');
+            }
+        }
+
+        $product->save();
+
+        return redirect()->back()->with('success', 'Product curation tier updated successfully.');
+    }
+
+    /**
      * Bulk Action Execution (Featured / Special Sale / Reset).
      */
     public function bulkAction(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'product_ids' => 'required|array|min:1',
-            'product_ids.*' => 'exists:products,id',
             'action' => 'required|in:make_featured,remove_featured,make_special_sale,remove_special_sale,reset_curation',
             'special_sale_title' => 'nullable|string|max:100',
         ]);
@@ -207,39 +262,57 @@ class AdminCurationController extends Controller
 
         switch ($action) {
             case 'make_featured':
-                Product::whereIn('id', $ids)->update(['is_featured' => true]);
+                foreach ($ids as $id) {
+                    $p = Product::where('_id', $id)->orWhere('id', $id)->first();
+                    if ($p) $p->update(['is_featured' => true]);
+                }
                 $msg = "Added {$count} products to Storefront Featured row.";
                 break;
 
             case 'remove_featured':
-                Product::whereIn('id', $ids)->update(['is_featured' => false]);
+                foreach ($ids as $id) {
+                    $p = Product::where('_id', $id)->orWhere('id', $id)->first();
+                    if ($p) $p->update(['is_featured' => false]);
+                }
                 $msg = "Removed {$count} products from Featured row.";
                 break;
 
             case 'make_special_sale':
                 $title = $request->input('special_sale_title') ?: 'Exclusive Flash Deal';
-                Product::whereIn('id', $ids)->update([
-                    'is_on_special_sale' => true,
-                    'special_sale_title' => $title,
-                ]);
+                foreach ($ids as $id) {
+                    $p = Product::where('_id', $id)->orWhere('id', $id)->first();
+                    if ($p) $p->update([
+                        'is_on_special_sale' => true,
+                        'special_sale_title' => $title,
+                    ]);
+                }
                 $msg = "Applied special sale \"{$title}\" to {$count} products.";
                 break;
 
             case 'remove_special_sale':
-                Product::whereIn('id', $ids)->update([
-                    'is_on_special_sale' => false,
-                    'special_sale_title' => null,
-                ]);
+                foreach ($ids as $id) {
+                    $p = Product::where('_id', $id)->orWhere('id', $id)->first();
+                    if ($p) $p->update([
+                        'is_on_special_sale' => false,
+                        'special_sale_title' => null,
+                    ]);
+                }
                 $msg = "Removed special sale campaigns from {$count} products.";
                 break;
 
             case 'reset_curation':
-                Product::whereIn('id', $ids)->update([
-                    'is_featured' => false,
-                    'is_on_special_sale' => false,
-                    'special_sale_title' => null,
-                    'featured_order' => 0,
-                ]);
+                foreach ($ids as $id) {
+                    $p = Product::where('_id', $id)->orWhere('id', $id)->first();
+                    if ($p) $p->update([
+                        'is_featured' => false,
+                        'is_flash_sale' => false,
+                        'is_on_special_sale' => false,
+                        'special_sale_title' => null,
+                        'curation_tier' => 'none',
+                        'tier' => 'none',
+                        'featured_order' => 0,
+                    ]);
+                }
                 $msg = "Reset all merchandising curation flags on {$count} products.";
                 break;
 
