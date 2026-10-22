@@ -104,17 +104,11 @@ class CustomerController extends Controller
                 ->inBudgetPicksTier()
                 ->take(8)
                 ->get();
-            if ($budgetPicks->isEmpty()) {
-                $budgetPicks = (clone $curationBase)->orderBy('price', 'asc')->take(8)->get();
-            }
 
             $enterpriseHeavyDuty = (clone $curationBase)
                 ->inEnterpriseTier()
                 ->take(8)
                 ->get();
-            if ($enterpriseHeavyDuty->isEmpty()) {
-                $enterpriseHeavyDuty = (clone $curationBase)->orderBy('price', 'desc')->take(8)->get();
-            }
 
             $premiumLuxury = (clone $curationBase)
                 ->orderBy('price', 'desc')

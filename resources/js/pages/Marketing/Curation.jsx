@@ -92,24 +92,22 @@ export default function MarketingCuration({
         }, { preserveScroll: true });
     };
 
-    const normalizeDropdownTier = (tierVal, isFeatured, isSpecial) => {
+    const normalizeDropdownTier = (tierVal) => {
         if (!tierVal || tierVal === 'none' || tierVal === 'standard' || tierVal === 'uncurated') {
-            if (isFeatured) return 'flagship_featured';
-            if (isSpecial) return 'special_flash_sale';
             return 'none';
         }
         const lower = String(tierVal).toLowerCase();
         if (['flagship_featured', 'flagship', 'featured'].includes(lower)) return 'flagship_featured';
-        if (['special_flash_sale', 'flash_sale', 'flash-sale'].includes(lower)) return 'special_flash_sale';
+        if (['special_flash_sale', 'flash_sale', 'flash-sale', 'flash_deals'].includes(lower)) return 'special_flash_sale';
         if (['smart_value_budget', 'budget_picks', 'budget-picks', 'smart_value', 'smart-value'].includes(lower)) return 'smart_value_budget';
         if (['enterprise_heavy_duty', 'enterprise_tier', 'enterprise', 'enterprise-tier'].includes(lower)) return 'enterprise_heavy_duty';
-        return lower;
+        return 'none';
     };
 
     // Open detailed edit modal
     const handleOpenEditModal = (product) => {
         setEditingProduct(product);
-        setModalTier(normalizeDropdownTier(product.curation_tier || product.tier, product.is_featured, product.is_on_special_sale || product.is_flash_sale));
+        setModalTier(normalizeDropdownTier(product.curation_tier || product.tier));
         setModalDiscount(product.discount_percentage || '');
         setModalBadge(product.sale_badge_label || product.special_sale_title || '');
         setModalEndDate(product.flash_sale_end_time ? product.flash_sale_end_time.substring(0, 16) : '');
@@ -161,17 +159,18 @@ export default function MarketingCuration({
         });
     };
 
-    const getTierBadge = (tier, isFeatured, isSpecial) => {
-        if (tier === 'flagship_featured' || isFeatured) {
+    const getTierBadge = (tier) => {
+        const lower = String(tier || '').toLowerCase();
+        if (['flagship_featured', 'flagship', 'featured'].includes(lower)) {
             return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200"><Sparkles className="w-3 h-3 text-brand-500" /> Flagship Featured</span>;
         }
-        if (tier === 'special_flash_sale' || isSpecial) {
+        if (['special_flash_sale', 'flash_sale', 'flash-sale', 'flash_deals'].includes(lower)) {
             return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200"><Flame className="w-3 h-3 text-rose-500" /> Special Flash</span>;
         }
-        if (tier === 'smart_value_budget' || tier === 'budget_picks' || tier === 'smart_value') {
+        if (['smart_value_budget', 'budget_picks', 'budget-picks', 'smart_value', 'smart-value'].includes(lower)) {
             return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200"><BadgeDollarSign className="w-3 h-3 text-amber-600" /> Smart Value</span>;
         }
-        if (tier === 'enterprise_heavy_duty' || tier === 'enterprise_tier' || tier === 'enterprise') {
+        if (['enterprise_heavy_duty', 'enterprise_tier', 'enterprise', 'enterprise-tier'].includes(lower)) {
             return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200"><Gem className="w-3 h-3 text-indigo-600" /> Enterprise Tier</span>;
         }
         return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">Standard Catalog</span>;
@@ -336,7 +335,7 @@ export default function MarketingCuration({
                             ) : (
                                 products.map((product) => {
                                     const isSelected = selectedIds.includes(product.id);
-                                    const currentTier = normalizeDropdownTier(product.curation_tier || product.tier, product.is_featured, product.is_on_special_sale || product.is_flash_sale);
+                                    const currentTier = normalizeDropdownTier(product.curation_tier || product.tier);
 
                                     return (
                                         <tr key={product.id} className={`hover:bg-slate-50/80 transition-colors ${isSelected ? 'bg-purple-50/40' : ''}`}>

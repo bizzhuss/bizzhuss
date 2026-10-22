@@ -44,12 +44,14 @@ class AdminCurationController extends Controller
         $tab = $request->input('tab', 'all');
         if ($tab === 'featured' || $tab === 'flagship_featured') {
             $query->inFlagshipFeaturedTier()->orderBy('featured_order', 'asc');
-        } elseif ($tab === 'special_sale' || $tab === 'flash_sale') {
+        } elseif ($tab === 'special_sale' || $tab === 'flash_sale' || $tab === 'flash_deals') {
             $query->inFlashSaleTier();
         } elseif ($tab === 'budget_picks' || $tab === 'smart_value') {
             $query->inBudgetPicksTier();
         } elseif ($tab === 'enterprise_tier' || $tab === 'enterprise') {
             $query->inEnterpriseTier();
+        } elseif ($tab === 'uncurated' || $tab === 'none') {
+            $query->inUncuratedTier();
         } elseif ($tab === 'best_sellers') {
             $query->where('total_sold_count', '>', 0)->orderByDesc('total_sold_count');
         } elseif ($tab === 'draft') {
@@ -67,17 +69,18 @@ class AdminCurationController extends Controller
 
         // Standardized tier counts synchronized with Homepage sections
         $tiers = Product::getStandardTiers();
-        $tierMap = collect($tiers)->keyBy('id');
+        $base = Product::activeOrPublished();
 
         // Calculate global platform merchandising KPIs matching homepage queries
         $metrics = [
-            'total_products' => Product::activeOrPublished()->count(),
-            'featured_count' => $tierMap['flagship_featured']['count'] ?? 0,
-            'special_sale_count' => $tierMap['flash_sale']['count'] ?? 0,
-            'budget_picks_count' => $tierMap['budget_picks']['count'] ?? 0,
-            'enterprise_count' => $tierMap['enterprise_tier']['count'] ?? 0,
-            'best_sellers_count' => Product::activeOrPublished()->where('total_sold_count', '>', 0)->count(),
-            'total_units_sold' => (int) Product::activeOrPublished()->sum('total_sold_count'),
+            'total_products' => (clone $base)->count(),
+            'featured_count' => (clone $base)->inFlagshipFeaturedTier()->count(),
+            'special_sale_count' => (clone $base)->inFlashSaleTier()->count(),
+            'budget_picks_count' => (clone $base)->inBudgetPicksTier()->count(),
+            'enterprise_count' => (clone $base)->inEnterpriseTier()->count(),
+            'uncurated_count' => (clone $base)->inUncuratedTier()->count(),
+            'best_sellers_count' => (clone $base)->where('total_sold_count', '>', 0)->count(),
+            'total_units_sold' => (int) (clone $base)->sum('total_sold_count'),
         ];
 
         return Inertia::render('Admin/Curation', [
@@ -105,6 +108,15 @@ class AdminCurationController extends Controller
             : !$product->is_featured;
 
         $product->is_featured = $newFeatured;
+        if ($newFeatured) {
+            $product->curation_tier = 'flagship_featured';
+            $product->tier = 'flagship_featured';
+        } else {
+            if (in_array($product->curation_tier, ['flagship_featured', 'flagship', 'featured'])) {
+                $product->curation_tier = 'none';
+                $product->tier = 'none';
+            }
+        }
         if ($request->has('featured_order')) {
             $product->featured_order = (int) $request->input('featured_order', 0);
         }
@@ -137,6 +149,9 @@ class AdminCurationController extends Controller
         $product->is_on_special_sale = $newSale;
         
         if ($newSale) {
+            $product->is_flash_sale = true;
+            $product->curation_tier = 'special_flash_sale';
+            $product->tier = 'special_flash_sale';
             $product->special_sale_title = $request->input('special_sale_title') ?: 'Limited Time Offer';
             if ($request->filled('compare_price')) {
                 $product->compare_price = $request->input('compare_price');
@@ -145,7 +160,12 @@ class AdminCurationController extends Controller
                 $product->price = $request->input('price');
             }
         } else {
+            $product->is_flash_sale = false;
             $product->special_sale_title = null;
+            if (in_array($product->curation_tier, ['special_flash_sale', 'flash_sale', 'flash-sale', 'flash_deals'])) {
+                $product->curation_tier = 'none';
+                $product->tier = 'none';
+            }
         }
 
         $product->save();
@@ -264,7 +284,11 @@ class AdminCurationController extends Controller
             case 'make_featured':
                 foreach ($ids as $id) {
                     $p = Product::where('_id', $id)->orWhere('id', $id)->first();
-                    if ($p) $p->update(['is_featured' => true]);
+                    if ($p) $p->update([
+                        'is_featured' => true,
+                        'curation_tier' => 'flagship_featured',
+                        'tier' => 'flagship_featured',
+                    ]);
                 }
                 $msg = "Added {$count} products to Storefront Featured row.";
                 break;
@@ -272,7 +296,14 @@ class AdminCurationController extends Controller
             case 'remove_featured':
                 foreach ($ids as $id) {
                     $p = Product::where('_id', $id)->orWhere('id', $id)->first();
-                    if ($p) $p->update(['is_featured' => false]);
+                    if ($p) {
+                        $update = ['is_featured' => false];
+                        if (in_array($p->curation_tier, ['flagship_featured', 'flagship', 'featured'])) {
+                            $update['curation_tier'] = 'none';
+                            $update['tier'] = 'none';
+                        }
+                        $p->update($update);
+                    }
                 }
                 $msg = "Removed {$count} products from Featured row.";
                 break;
@@ -283,7 +314,10 @@ class AdminCurationController extends Controller
                     $p = Product::where('_id', $id)->orWhere('id', $id)->first();
                     if ($p) $p->update([
                         'is_on_special_sale' => true,
+                        'is_flash_sale' => true,
                         'special_sale_title' => $title,
+                        'curation_tier' => 'special_flash_sale',
+                        'tier' => 'special_flash_sale',
                     ]);
                 }
                 $msg = "Applied special sale \"{$title}\" to {$count} products.";
@@ -292,10 +326,18 @@ class AdminCurationController extends Controller
             case 'remove_special_sale':
                 foreach ($ids as $id) {
                     $p = Product::where('_id', $id)->orWhere('id', $id)->first();
-                    if ($p) $p->update([
-                        'is_on_special_sale' => false,
-                        'special_sale_title' => null,
-                    ]);
+                    if ($p) {
+                        $update = [
+                            'is_on_special_sale' => false,
+                            'is_flash_sale' => false,
+                            'special_sale_title' => null,
+                        ];
+                        if (in_array($p->curation_tier, ['special_flash_sale', 'flash_sale', 'flash-sale', 'flash_deals'])) {
+                            $update['curation_tier'] = 'none';
+                            $update['tier'] = 'none';
+                        }
+                        $p->update($update);
+                    }
                 }
                 $msg = "Removed special sale campaigns from {$count} products.";
                 break;

@@ -116,13 +116,9 @@ class Product extends BaseModel
     public function scopeInFlashSaleTier($query)
     {
         return $query->where(function ($q) {
-            $q->whereIn('curation_tier', ['special_flash_sale', 'flash_sale', 'flash-sale'])
-              ->orWhereIn('tier', ['flash_sale', 'flash-sale', 'special_flash_sale'])
-              ->orWhereIn('tier_slug', ['flash-sale', 'special-flash-sale'])
-              ->orWhere('badge', 'Flash Deal')
-              ->orWhere('sale_badge_label', 'Flash Deal')
-              ->orWhere('is_on_special_sale', true)
-              ->orWhere('is_flash_sale', true);
+            $q->whereIn('curation_tier', ['special_flash_sale', 'flash_sale', 'flash-sale', 'flash_deals'])
+              ->orWhereIn('tier', ['flash_sale', 'flash-sale', 'special_flash_sale', 'flash_deals'])
+              ->orWhereIn('tier_slug', ['flash-sale', 'special-flash-sale']);
         });
     }
 
@@ -134,10 +130,7 @@ class Product extends BaseModel
         return $query->where(function ($q) {
             $q->whereIn('curation_tier', ['smart_value_budget', 'budget_picks', 'budget-picks', 'smart_value', 'smart-value'])
               ->orWhereIn('tier', ['budget_picks', 'budget-picks', 'smart_value', 'smart-value', 'smart_value_budget'])
-              ->orWhereIn('tier_slug', ['smart-value-budget-picks', 'budget-picks', 'smart-value'])
-              ->orWhere('badge', 'Smart Value')
-              ->orWhere('sale_badge_label', 'Smart Value')
-              ->orWhere('price', '<=', 1000);
+              ->orWhereIn('tier_slug', ['smart-value-budget-picks', 'budget-picks', 'smart-value']);
         });
     }
 
@@ -147,13 +140,9 @@ class Product extends BaseModel
     public function scopeInEnterpriseTier($query)
     {
         return $query->where(function ($q) {
-            $q->whereIn('curation_tier', ['enterprise_heavy_duty', 'enterprise_tier', 'enterprise'])
-              ->orWhereIn('tier', ['enterprise_tier', 'enterprise', 'enterprise_heavy_duty'])
-              ->orWhereIn('tier_slug', ['enterprise-heavy-duty-tier', 'enterprise-tier', 'enterprise'])
-              ->orWhere('badge', 'Bulk Campaign Eid')
-              ->orWhere('sale_badge_label', 'Bulk Campaign Eid')
-              ->orWhere('badge', 'like', '%Enterprise%')
-              ->orWhere('sale_badge_label', 'like', '%Enterprise%');
+            $q->whereIn('curation_tier', ['enterprise_heavy_duty', 'enterprise_tier', 'enterprise', 'enterprise-tier'])
+              ->orWhereIn('tier', ['enterprise_tier', 'enterprise', 'enterprise_heavy_duty', 'enterprise-tier'])
+              ->orWhereIn('tier_slug', ['enterprise-heavy-duty-tier', 'enterprise-tier', 'enterprise']);
         });
     }
 
@@ -165,8 +154,19 @@ class Product extends BaseModel
         return $query->where(function ($q) {
             $q->whereIn('curation_tier', ['flagship_featured', 'flagship', 'featured'])
               ->orWhereIn('tier', ['flagship_featured', 'flagship', 'featured'])
-              ->orWhereIn('tier_slug', ['flagship-featured', 'featured'])
-              ->orWhere('is_featured', true);
+              ->orWhereIn('tier_slug', ['flagship-featured', 'featured']);
+        });
+    }
+
+    /**
+     * Scope for Uncurated / Standard Catalog products.
+     */
+    public function scopeInUncuratedTier($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('curation_tier')
+              ->orWhere('curation_tier', '')
+              ->orWhereIn('curation_tier', ['none', 'standard', 'standard_catalog', 'uncurated']);
         });
     }
 
@@ -178,6 +178,12 @@ class Product extends BaseModel
         $base = static::activeOrPublished();
 
         return [
+            [
+                'id' => 'flagship_featured',
+                'slug' => 'flagship-featured',
+                'title' => 'Flagship Featured Showcase',
+                'count' => (clone $base)->inFlagshipFeaturedTier()->count(),
+            ],
             [
                 'id' => 'flash_sale',
                 'slug' => 'flash-sale',
@@ -197,10 +203,10 @@ class Product extends BaseModel
                 'count' => (clone $base)->inEnterpriseTier()->count(),
             ],
             [
-                'id' => 'flagship_featured',
-                'slug' => 'flagship-featured',
-                'title' => 'Flagship Featured Showcase',
-                'count' => (clone $base)->inFlagshipFeaturedTier()->count(),
+                'id' => 'uncurated',
+                'slug' => 'uncurated',
+                'title' => 'Standard Uncurated Catalog',
+                'count' => (clone $base)->inUncuratedTier()->count(),
             ],
         ];
     }

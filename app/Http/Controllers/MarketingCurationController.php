@@ -53,17 +53,14 @@ class MarketingCurationController extends Controller
             $tier = $request->input('tier');
             if ($tier === 'flagship_featured' || $tier === 'flagship' || $tier === 'flagship-featured') {
                 $query->inFlagshipFeaturedTier();
-            } elseif ($tier === 'special_flash_sale' || $tier === 'flash_sale' || $tier === 'flash-sale') {
+            } elseif ($tier === 'special_flash_sale' || $tier === 'flash_sale' || $tier === 'flash-sale' || $tier === 'flash_deals') {
                 $query->inFlashSaleTier();
-            } elseif ($tier === 'smart_value_budget' || $tier === 'budget_picks' || $tier === 'budget-picks' || $tier === 'smart_value') {
+            } elseif ($tier === 'smart_value_budget' || $tier === 'budget_picks' || $tier === 'budget-picks' || $tier === 'smart_value' || $tier === 'smart-value') {
                 $query->inBudgetPicksTier();
             } elseif ($tier === 'enterprise_heavy_duty' || $tier === 'enterprise_tier' || $tier === 'enterprise' || $tier === 'enterprise-tier') {
                 $query->inEnterpriseTier();
             } elseif ($tier === 'none' || $tier === 'uncurated') {
-                $query->where(function ($q) {
-                    $q->where('curation_tier', 'none')
-                      ->orWhereNull('curation_tier');
-                })->where('is_featured', false)->where('is_on_special_sale', false);
+                $query->inUncuratedTier();
             } else {
                 $query->where('curation_tier', $tier);
             }
@@ -83,22 +80,15 @@ class MarketingCurationController extends Controller
 
         // Standardized tier counts synchronized with Homepage sections
         $tiers = Product::getStandardTiers();
-        $tierMap = collect($tiers)->keyBy('id');
+        $base = Product::activeOrPublished();
 
         $metrics = [
-            'total' => Product::activeOrPublished()->count(),
-            'flagship' => $tierMap['flagship_featured']['count'] ?? 0,
-            'flash_sale' => $tierMap['flash_sale']['count'] ?? 0,
-            'smart_value' => $tierMap['budget_picks']['count'] ?? 0,
-            'enterprise' => $tierMap['enterprise_tier']['count'] ?? 0,
-            'uncurated' => Product::activeOrPublished()
-                ->where(function ($q) {
-                    $q->where('curation_tier', 'none')
-                      ->orWhereNull('curation_tier');
-                })
-                ->where('is_featured', false)
-                ->where('is_on_special_sale', false)
-                ->count(),
+            'total' => (clone $base)->count(),
+            'flagship' => (clone $base)->inFlagshipFeaturedTier()->count(),
+            'flash_sale' => (clone $base)->inFlashSaleTier()->count(),
+            'smart_value' => (clone $base)->inBudgetPicksTier()->count(),
+            'enterprise' => (clone $base)->inEnterpriseTier()->count(),
+            'uncurated' => (clone $base)->inUncuratedTier()->count(),
         ];
 
         return Inertia::render('Marketing/Curation', [

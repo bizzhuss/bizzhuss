@@ -47,9 +47,12 @@ class MarketingController extends Controller
         $recentBanners = Banner::orderBy('sort_order', 'asc')->orderBy('id', 'desc')->take(4)->get();
 
         $curatedProducts = Product::with(['vendor:id,shop_name,logo', 'category:id,name'])
-            ->where('curation_tier', '!=', 'none')
-            ->orWhere('is_featured', true)
-            ->orWhere('is_on_special_sale', true)
+            ->where(function ($q) {
+                $q->inFlagshipFeaturedTier()
+                  ->orWhere(fn ($sub) => $sub->inFlashSaleTier())
+                  ->orWhere(fn ($sub) => $sub->inBudgetPicksTier())
+                  ->orWhere(fn ($sub) => $sub->inEnterpriseTier());
+            })
             ->orderBy('updated_at', 'desc')
             ->take(6)
             ->get();

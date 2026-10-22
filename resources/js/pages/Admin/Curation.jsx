@@ -296,6 +296,7 @@ export default function Curation({ products = [], categories = [], vendors = [],
                             { id: 'special_sale', label: '🔥 Special Offers', count: metrics.special_sale_count },
                             { id: 'budget_picks', label: '💎 Smart Value', count: metrics.budget_picks_count },
                             { id: 'enterprise_tier', label: '🏢 Enterprise Tier', count: metrics.enterprise_count },
+                            { id: 'uncurated', label: '📦 Uncurated', count: metrics.uncurated_count },
                             { id: 'best_sellers', label: '📈 Best Sellers', count: metrics.best_sellers_count },
                         ].map((t) => (
                             <button

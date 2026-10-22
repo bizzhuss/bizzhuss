@@ -721,8 +721,8 @@ export default function Home({
                 </section>
             )}
 
-            {/* 7. Premium Luxury & Industrial Flagships (Sorted by price DESC) */}
-            {premiumLuxury.length > 0 && (
+            {/* 7. Premium Luxury & Industrial Flagships */}
+            {enterpriseHeavyDuty.length > 0 && (
                 <section id="premium-luxury" className="mb-12">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-2">
                         <div>
@@ -750,7 +750,7 @@ export default function Home({
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-                        {(enterpriseHeavyDuty.length > 0 ? enterpriseHeavyDuty : premiumLuxury).map((p) => 
+                        {enterpriseHeavyDuty.map((p) => 
                             renderCard(p, {
                                 badge: p.sale_badge_label || 'Enterprise Flagship',
                                 badgeColor: 'bg-slate-900 text-white font-bold',
