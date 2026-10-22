@@ -154,10 +154,10 @@ export default function MarketingCuration({
         if (tier === 'special_flash_sale' || isSpecial) {
             return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200"><Flame className="w-3 h-3 text-rose-500" /> Special Flash</span>;
         }
-        if (tier === 'smart_value_budget') {
+        if (tier === 'smart_value_budget' || tier === 'budget_picks' || tier === 'smart_value') {
             return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200"><BadgeDollarSign className="w-3 h-3 text-amber-600" /> Smart Value</span>;
         }
-        if (tier === 'enterprise_heavy_duty') {
+        if (tier === 'enterprise_heavy_duty' || tier === 'enterprise_tier' || tier === 'enterprise') {
             return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200"><Gem className="w-3 h-3 text-indigo-600" /> Enterprise Tier</span>;
         }
         return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">Standard Catalog</span>;
