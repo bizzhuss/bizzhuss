@@ -94,4 +94,110 @@ class Product extends BaseModel
     {
         return $this->status === 'published';
     }
+
+    /**
+     * Scope for products with active or published status.
+     */
+    public function scopeActiveOrPublished($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn('status', ['active', 'published'])
+              ->orWhereNull('status');
+        });
+    }
+
+    /**
+     * Scope for Flash Sale / Special Sale Tier products.
+     */
+    public function scopeInFlashSaleTier($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn('curation_tier', ['special_flash_sale', 'flash_sale', 'flash-sale'])
+              ->orWhereIn('tier', ['flash_sale', 'flash-sale', 'special_flash_sale'])
+              ->orWhereIn('tier_slug', ['flash-sale', 'special-flash-sale'])
+              ->orWhere('badge', 'Flash Deal')
+              ->orWhere('sale_badge_label', 'Flash Deal')
+              ->orWhere('is_on_special_sale', true)
+              ->orWhere('is_flash_sale', true);
+        });
+    }
+
+    /**
+     * Scope for Smart Value & Budget Picks Tier products.
+     */
+    public function scopeInBudgetPicksTier($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn('curation_tier', ['smart_value_budget', 'budget_picks', 'budget-picks', 'smart_value', 'smart-value'])
+              ->orWhereIn('tier', ['budget_picks', 'budget-picks', 'smart_value', 'smart-value', 'smart_value_budget'])
+              ->orWhereIn('tier_slug', ['smart-value-budget-picks', 'budget-picks', 'smart-value'])
+              ->orWhere('badge', 'Smart Value')
+              ->orWhere('sale_badge_label', 'Smart Value')
+              ->orWhere('price', '<=', 1000);
+        });
+    }
+
+    /**
+     * Scope for Enterprise & Heavy Duty Tier products.
+     */
+    public function scopeInEnterpriseTier($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn('curation_tier', ['enterprise_heavy_duty', 'enterprise_tier', 'enterprise'])
+              ->orWhereIn('tier', ['enterprise_tier', 'enterprise', 'enterprise_heavy_duty'])
+              ->orWhereIn('tier_slug', ['enterprise-heavy-duty-tier', 'enterprise-tier', 'enterprise'])
+              ->orWhere('badge', 'Bulk Campaign Eid')
+              ->orWhere('sale_badge_label', 'Bulk Campaign Eid')
+              ->orWhere('badge', 'like', '%Enterprise%')
+              ->orWhere('sale_badge_label', 'like', '%Enterprise%');
+        });
+    }
+
+    /**
+     * Scope for Flagship Featured Tier products.
+     */
+    public function scopeInFlagshipFeaturedTier($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn('curation_tier', ['flagship_featured', 'flagship', 'featured'])
+              ->orWhereIn('tier', ['flagship_featured', 'flagship', 'featured'])
+              ->orWhereIn('tier_slug', ['flagship-featured', 'featured'])
+              ->orWhere('is_featured', true);
+        });
+    }
+
+    /**
+     * Get the standardized Tier definitions and product counts synchronized with Homepage sections.
+     */
+    public static function getStandardTiers(): array
+    {
+        $base = static::activeOrPublished();
+
+        return [
+            [
+                'id' => 'flash_sale',
+                'slug' => 'flash-sale',
+                'title' => 'Special Flash Sale Tier',
+                'count' => (clone $base)->inFlashSaleTier()->count(),
+            ],
+            [
+                'id' => 'budget_picks',
+                'slug' => 'budget-picks',
+                'title' => 'Smart Value & Budget Picks',
+                'count' => (clone $base)->inBudgetPicksTier()->count(),
+            ],
+            [
+                'id' => 'enterprise_tier',
+                'slug' => 'enterprise-tier',
+                'title' => 'Enterprise & Heavy Duty Tier',
+                'count' => (clone $base)->inEnterpriseTier()->count(),
+            ],
+            [
+                'id' => 'flagship_featured',
+                'slug' => 'flagship-featured',
+                'title' => 'Flagship Featured Showcase',
+                'count' => (clone $base)->inFlagshipFeaturedTier()->count(),
+            ],
+        ];
+    }
 }

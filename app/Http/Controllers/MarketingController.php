@@ -20,16 +20,21 @@ class MarketingController extends Controller
     {
         $activeCampaignsCount = PromotionalCampaign::where('is_active', true)->count();
         $activeBannersCount = Banner::where('is_active', true)->count();
-        $totalCuratedCount = Product::where('curation_tier', '!=', 'none')
-            ->orWhere('is_featured', true)
-            ->orWhere('is_on_special_sale', true)
-            ->count();
+        $tiers = Product::getStandardTiers();
+        $tierMap = collect($tiers)->keyBy('id');
+
+        $totalCuratedCount = Product::activeOrPublished()->where(function ($q) {
+            $q->inFlagshipFeaturedTier()
+              ->orWhere(fn ($sub) => $sub->inFlashSaleTier())
+              ->orWhere(fn ($sub) => $sub->inBudgetPicksTier())
+              ->orWhere(fn ($sub) => $sub->inEnterpriseTier());
+        })->count();
 
         $tierCounts = [
-            'flagship_featured' => Product::where('curation_tier', 'flagship_featured')->orWhere('is_featured', true)->count(),
-            'special_flash_sale' => Product::where('curation_tier', 'special_flash_sale')->orWhere('is_on_special_sale', true)->count(),
-            'smart_value_budget' => Product::where('curation_tier', 'smart_value_budget')->count(),
-            'enterprise_heavy_duty' => Product::where('curation_tier', 'enterprise_heavy_duty')->count(),
+            'flagship_featured' => $tierMap['flagship_featured']['count'] ?? 0,
+            'special_flash_sale' => $tierMap['flash_sale']['count'] ?? 0,
+            'smart_value_budget' => $tierMap['budget_picks']['count'] ?? 0,
+            'enterprise_heavy_duty' => $tierMap['enterprise_tier']['count'] ?? 0,
         ];
 
         $currentCampaign = PromotionalCampaign::where('is_active', true)

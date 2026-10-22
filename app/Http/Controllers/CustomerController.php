@@ -62,7 +62,7 @@ class CustomerController extends Controller
 
             // Base relation query with active vendor gatekeeper
             $curationBase = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug'])
-                ->where('status', 'published')
+                ->activeOrPublished()
                 ->whereHas('vendor', function ($q) {
                     $q->where('status', 'active');
                 });
@@ -83,18 +83,14 @@ class CustomerController extends Controller
                 ->first();
 
             $featuredProducts = (clone $curationBase)
-                ->where(function ($q) {
-                    $q->where('curation_tier', 'flagship_featured')->orWhere('is_featured', true);
-                })
+                ->inFlagshipFeaturedTier()
                 ->orderBy('featured_order', 'asc')
                 ->orderBy('id', 'desc')
                 ->take(8)
                 ->get();
 
             $specialSaleProducts = (clone $curationBase)
-                ->where(function ($q) {
-                    $q->where('curation_tier', 'special_flash_sale')->orWhere('is_on_special_sale', true);
-                })
+                ->inFlashSaleTier()
                 ->orderBy('id', 'desc')
                 ->take(8)
                 ->get();
@@ -105,7 +101,7 @@ class CustomerController extends Controller
                 ->get();
 
             $budgetPicks = (clone $curationBase)
-                ->where('curation_tier', 'smart_value_budget')
+                ->inBudgetPicksTier()
                 ->take(8)
                 ->get();
             if ($budgetPicks->isEmpty()) {
@@ -113,7 +109,7 @@ class CustomerController extends Controller
             }
 
             $enterpriseHeavyDuty = (clone $curationBase)
-                ->where('curation_tier', 'enterprise_heavy_duty')
+                ->inEnterpriseTier()
                 ->take(8)
                 ->get();
             if ($enterpriseHeavyDuty->isEmpty()) {

@@ -294,6 +294,8 @@ export default function Curation({ products = [], categories = [], vendors = [],
                             { id: 'all', label: 'All Products', count: metrics.total_products },
                             { id: 'featured', label: '⭐ Featured Row', count: metrics.featured_count },
                             { id: 'special_sale', label: '🔥 Special Offers', count: metrics.special_sale_count },
+                            { id: 'budget_picks', label: '💎 Smart Value', count: metrics.budget_picks_count },
+                            { id: 'enterprise_tier', label: '🏢 Enterprise Tier', count: metrics.enterprise_count },
                             { id: 'best_sellers', label: '📈 Best Sellers', count: metrics.best_sellers_count },
                         ].map((t) => (
                             <button

@@ -42,10 +42,14 @@ class AdminCurationController extends Controller
 
         // Tab filter
         $tab = $request->input('tab', 'all');
-        if ($tab === 'featured') {
-            $query->where('is_featured', true)->orderBy('featured_order', 'asc');
-        } elseif ($tab === 'special_sale') {
-            $query->where('is_on_special_sale', true);
+        if ($tab === 'featured' || $tab === 'flagship_featured') {
+            $query->inFlagshipFeaturedTier()->orderBy('featured_order', 'asc');
+        } elseif ($tab === 'special_sale' || $tab === 'flash_sale') {
+            $query->inFlashSaleTier();
+        } elseif ($tab === 'budget_picks' || $tab === 'smart_value') {
+            $query->inBudgetPicksTier();
+        } elseif ($tab === 'enterprise_tier' || $tab === 'enterprise') {
+            $query->inEnterpriseTier();
         } elseif ($tab === 'best_sellers') {
             $query->where('total_sold_count', '>', 0)->orderByDesc('total_sold_count');
         } elseif ($tab === 'draft') {
@@ -53,7 +57,7 @@ class AdminCurationController extends Controller
         }
 
         // Default ordering if not already ordered
-        if ($tab !== 'featured' && $tab !== 'best_sellers') {
+        if ($tab !== 'featured' && $tab !== 'flagship_featured' && $tab !== 'best_sellers') {
             $query->orderBy('id', 'desc');
         }
 
@@ -61,13 +65,19 @@ class AdminCurationController extends Controller
         $categories = Category::select('id', 'name', 'slug')->get();
         $vendors = Vendor::select('id', 'shop_name', 'status')->get();
 
-        // Calculate global platform merchandising KPIs
+        // Standardized tier counts synchronized with Homepage sections
+        $tiers = Product::getStandardTiers();
+        $tierMap = collect($tiers)->keyBy('id');
+
+        // Calculate global platform merchandising KPIs matching homepage queries
         $metrics = [
-            'total_products' => Product::count(),
-            'featured_count' => Product::where('is_featured', true)->count(),
-            'special_sale_count' => Product::where('is_on_special_sale', true)->count(),
-            'best_sellers_count' => Product::where('total_sold_count', '>', 0)->count(),
-            'total_units_sold' => (int) Product::sum('total_sold_count'),
+            'total_products' => Product::activeOrPublished()->count(),
+            'featured_count' => $tierMap['flagship_featured']['count'] ?? 0,
+            'special_sale_count' => $tierMap['flash_sale']['count'] ?? 0,
+            'budget_picks_count' => $tierMap['budget_picks']['count'] ?? 0,
+            'enterprise_count' => $tierMap['enterprise_tier']['count'] ?? 0,
+            'best_sellers_count' => Product::activeOrPublished()->where('total_sold_count', '>', 0)->count(),
+            'total_units_sold' => (int) Product::activeOrPublished()->sum('total_sold_count'),
         ];
 
         return Inertia::render('Admin/Curation', [
@@ -75,6 +85,7 @@ class AdminCurationController extends Controller
             'categories' => $categories,
             'vendors' => $vendors,
             'metrics' => $metrics,
+            'tiers' => $tiers,
             'filters' => $request->only(['search', 'category', 'tab']),
         ]);
     }
