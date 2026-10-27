@@ -845,14 +845,20 @@ export default function FinanceIndex({
 
                 {/* Audit Sign-off Box */}
                 <div className="mt-12 pt-8 border-t-2 border-slate-200 flex items-end justify-between text-xs">
-                    <div className="flex flex-col items-start justify-end">
-                        <div className="h-14 w-full"></div>
-                        <div className="w-48 h-[1.5px] bg-slate-400 mb-2"></div>
-                        <div className="text-sm font-extrabold text-slate-900 tracking-tight">
-                            Platform Financial Comptroller
+                    <div className="flex flex-col items-center justify-center text-center">
+                        {/* Physical Ink Stamp Placeholder Box */}
+                        <div className="w-32 h-32 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-slate-300 select-none bg-slate-50/50 mb-3">
+                            <span className="text-[10px] font-bold tracking-widest uppercase">Affix Official</span>
+                            <span className="text-xs font-black tracking-wider uppercase text-slate-400">Stamp / Seal</span>
                         </div>
-                        <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
-                            Bizzhuss Treasury Division
+
+                        {/* Baseline Label */}
+                        <div className="w-52 h-[1px] bg-slate-300 mb-2"></div>
+                        <div className="text-xs font-extrabold text-slate-800 tracking-tight uppercase">
+                            Official Company Stamp
+                        </div>
+                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+                            Bizzhuss Corporate Seal
                         </div>
                     </div>
 
