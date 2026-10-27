@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
 import CategorySidebar from '@/components/CategorySidebar';
 import SEOHead from '@/components/SEOHead';
+import BrandStores from '@/components/BrandStores';
 import { generateOrganizationSchema, generateWebSiteSchema } from '@/lib/seo';
 import { useApp } from '@/context/AppContext';
 import { formatCurrency } from '@/lib/utils';
@@ -750,79 +751,8 @@ export default function Home({
                 </div>
             </section>
 
-            {/* 9. Certified Marketplace Merchants Spotlight */}
-            <section className="mb-10 bg-slate-900 text-white rounded-3xl p-6 sm:p-10 border border-slate-800">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-800 gap-4">
-                    <div>
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 text-brand-400 text-[10px] font-bold uppercase tracking-wider mb-2">
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            <span>Audited Marketplace Merchants</span>
-                        </div>
-                        <h2 className="text-xl sm:text-2xl font-black">Official Certified Brand Stores</h2>
-                        <p className="text-xs text-slate-400 mt-1 max-w-xl">
-                            Each vendor is vetted for SLA fulfillment, strict product authenticity, and automated split-order disbursement.
-                        </p>
-                    </div>
-
-                    <Link
-                        href="/register?role=vendor"
-                        className="px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shrink-0 transition-transform hover:scale-102 flex items-center gap-1.5 self-start sm:self-auto"
-                    >
-                        <Store className="w-4 h-4" />
-                        <span>Open a Store on Bizzhuss</span>
-                    </Link>
-                </div>
-
-                <div className="mt-6">
-                    {featuredVendors && featuredVendors.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                            {featuredVendors.map((vendor) => (
-                                <div key={vendor.id || vendor.slug} className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/80 flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h3 className="font-bold text-white text-sm">{vendor.shop_name}</h3>
-                                            <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                                                ★ Verified Store
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
-                                            {vendor.description || 'Verified enterprise merchant offering direct manufacturer pricing and authentic products.'}
-                                        </p>
-                                    </div>
-                                    <div className="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
-                                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                            Active Store
-                                        </span>
-                                        <Link
-                                            href={`/shop?vendor=${vendor.slug || vendor.id}`}
-                                            className="text-brand-400 hover:text-brand-300 font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
-                                        >
-                                            <span>Visit Store</span>
-                                            <Eye className="w-3.5 h-3.5" />
-                                        </Link>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-8 text-center max-w-2xl mx-auto">
-                            <Store className="w-10 h-10 text-brand-400 mx-auto mb-3 opacity-80" />
-                            <h3 className="text-base font-bold text-white mb-1">Certified Vendor Network Initializing</h3>
-                            <p className="text-xs text-slate-400 max-w-md mx-auto mb-4">
-                                Certified merchant stores are currently undergoing SLA verification. New enterprise supplier catalogs will be published here.
-                            </p>
-                            <Link
-                                href="/register?role=vendor"
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs transition-colors"
-                            >
-                                <Store className="w-3.5 h-3.5" />
-                                <span>Apply for Merchant Onboarding</span>
-                            </Link>
-                        </div>
-                    )}
-                </div>
-            </section>
+            {/* 9. Certified Marketplace Merchants Spotlight (Horizontal Slider) */}
+            <BrandStores stores={featuredVendors} />
 
             {/* Store Inspection Modal */}
             {inspectedStore && (
