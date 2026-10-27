@@ -120,6 +120,9 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::post('/vendors/{vendor}/commission', [AdminVendorController::class, 'updateCommission'])->name('vendors.updateCommission');
     Route::delete('/vendors/{vendor}', [AdminVendorController::class, 'destroy'])->name('vendors.destroy');
 
+    // 2.15 Super Admin User Directory & Role Oversight
+    Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+
     // 2.2 Department & Workforce Hierarchy
     Route::get('/workforce/departments', [AdminWorkforceController::class, 'departments'])->name('workforce.departments');
     Route::post('/workforce/departments', [AdminWorkforceController::class, 'storeDepartment'])->name('workforce.departments.store');
