@@ -858,9 +858,10 @@ export default function FinanceIndex({
                     </div>
 
                     <div className="text-right">
-                        <div className="w-40 border-b border-slate-400 mb-1 ml-auto"></div>
-                        <span className="font-bold text-slate-700">Super Admin Authorization</span>
-                        <span className="text-[10px] text-slate-400 block">Executive Board Oversight</span>
+                        <div className="font-serif italic font-semibold text-sm text-slate-800 mb-1 tracking-wider">Haseeb U. Khan</div>
+                        <div className="w-44 border-b border-slate-400 mb-1 ml-auto"></div>
+                        <span className="font-bold text-slate-800 block">Official CEO Signature</span>
+                        <span className="text-[10px] text-slate-500 block">Chief Executive Officer & Founder</span>
                     </div>
                 </div>
             </div>
