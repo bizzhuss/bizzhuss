@@ -6,6 +6,7 @@ import {
     Building2, 
     Users, 
     UserCheck,
+    Landmark,
     CheckSquare, 
     Settings, 
     ExternalLink,
@@ -80,6 +81,13 @@ export function AdminHeader({ title, subtitle, actions }) {
             href: '/admin/workforce/tasks',
             active: url?.startsWith('/admin/workforce/tasks') || false,
             icon: CheckSquare,
+        },
+        {
+            name: 'Financial Intelligence',
+            permission: 'module.financial_intelligence',
+            href: '/admin/finance',
+            active: url?.startsWith('/admin/finance') || false,
+            icon: Landmark,
         },
         {
             name: 'Platform Settings',

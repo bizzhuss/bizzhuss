@@ -123,6 +123,12 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     // 2.15 Super Admin User Directory & Role Oversight
     Route::get('/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
 
+    // 2.16 Accounts & Financial Intelligence Suite
+    Route::get('/finance', [\App\Http\Controllers\Admin\FinanceController::class, 'index'])->name('finance.index');
+    Route::post('/finance/settings', [\App\Http\Controllers\Admin\FinanceController::class, 'updateSettings'])->name('finance.settings');
+    Route::post('/finance/payouts', [\App\Http\Controllers\Admin\FinanceController::class, 'createPayout'])->name('finance.payouts.create');
+    Route::post('/finance/payouts/{id}/settle', [\App\Http\Controllers\Admin\FinanceController::class, 'settlePayout'])->name('finance.payouts.settle');
+
     // 2.2 Department & Workforce Hierarchy
     Route::get('/workforce/departments', [AdminWorkforceController::class, 'departments'])->name('workforce.departments');
     Route::post('/workforce/departments', [AdminWorkforceController::class, 'storeDepartment'])->name('workforce.departments.store');
