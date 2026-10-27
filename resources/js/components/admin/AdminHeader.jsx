@@ -5,6 +5,7 @@ import {
     Store, 
     Building2, 
     Users, 
+    UserCheck,
     CheckSquare, 
     Settings, 
     ExternalLink,
@@ -65,6 +66,13 @@ export function AdminHeader({ title, subtitle, actions }) {
             href: '/admin/workforce/employees',
             active: url?.startsWith('/admin/workforce/employees') || false,
             icon: Users,
+        },
+        {
+            name: 'User Directory',
+            permission: 'module.user_directory',
+            href: '/admin/users',
+            active: url?.startsWith('/admin/users') || false,
+            icon: UserCheck,
         },
         {
             name: 'Task Delegation & Kanban',
