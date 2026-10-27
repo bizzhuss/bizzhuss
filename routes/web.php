@@ -42,6 +42,7 @@ Route::get('/storefront', [CustomerController::class, 'index'])->name('storefron
 Route::get('/shop', [CustomerController::class, 'shop'])->name('shop');
 Route::get('/product/{slug}', [CustomerController::class, 'productDetail'])->name('product.detail');
 Route::get('/category/{slug}', [CustomerController::class, 'category'])->name('category.show');
+Route::post('/cart/add', [CustomerController::class, 'addToCart'])->name('cart.add');
 
 // Tier 1A Protected: Authenticated-only Customer Actions
 Route::middleware(['auth'])->group(function () {

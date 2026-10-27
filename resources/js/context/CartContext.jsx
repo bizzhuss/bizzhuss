@@ -83,26 +83,30 @@ export function CartProvider({ children }) {
     /**
      * Add product to cart.
      * If product already exists in cart (matching id and variant), increment quantity.
-     * Strictly requires authentication; guests are redirected to /login.
+     * Strictly requires authentication unless skipAuthCheck is true (e.g. Buy Now direct checkout).
      */
-    const addToCart = useCallback((product, quantity = 1, selectedVariant = null, openDrawer = false) => {
-        const currentUser = getAuthUser();
-        if (!currentUser) {
-            const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/';
-            router.visit(`/login?intended=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please sign in to add items to your cart or wishlist.')}`);
-            return false;
+    const addToCart = useCallback((product, quantity = 1, selectedVariant = null, openDrawer = false, skipAuthCheck = false) => {
+        if (!skipAuthCheck) {
+            const currentUser = getAuthUser();
+            if (!currentUser) {
+                const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/';
+                router.visit(`/login?intended=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please sign in to add items to your cart or wishlist.')}`);
+                return false;
+            }
         }
 
         const qty = Math.max(1, Number(quantity) || 1);
         const variantKey = selectedVariant ? (typeof selectedVariant === 'object' ? JSON.stringify(selectedVariant) : String(selectedVariant)) : null;
+        const prodId = product?.id || product?._id || 'item';
 
         setCart((prevCart) => {
             const existingIndex = prevCart.findIndex((item) => {
-                const sameId = String(item.productId || item.id) === String(product.id);
+                const sameId = String(item.productId || item.id) === String(prodId);
                 const sameVariant = (item.selectedVariant || null) === variantKey;
                 return sameId && sameVariant;
             });
 
+            let newCart;
             if (existingIndex > -1) {
                 // Item exists: update quantity
                 const updated = [...prevCart];
@@ -110,40 +114,49 @@ export function CartProvider({ children }) {
                     ...updated[existingIndex],
                     quantity: updated[existingIndex].quantity + qty,
                 };
-                return updated;
+                newCart = updated;
+            } else {
+                // New item: append to cart
+                const price = Number(product?.price) || 0;
+                const comparePrice = product?.compare_price ? Number(product.compare_price) : null;
+                const imageUrl = resolveProductImage(product);
+                const vendorName = product?.vendor?.shop_name || product?.vendorName || product?.vendor?.name || 'Verified Merchant';
+                const vendorId = product?.vendor_id || product?.vendor?.id || 1;
+
+                const newItem = {
+                    id: variantKey ? `${prodId}-${variantKey}` : prodId,
+                    productId: prodId,
+                    title: product?.title || product?.name || 'Product',
+                    slug: product?.slug || prodId,
+                    sku: product?.sku || `SKU-${prodId}`,
+                    price: price,
+                    compare_price: comparePrice,
+                    image: imageUrl,
+                    vendorName: vendorName,
+                    vendorId: vendorId,
+                    vendor: product?.vendor || { id: vendorId, shop_name: vendorName },
+                    selectedVariant: variantKey,
+                    variantLabel: selectedVariant ? (typeof selectedVariant === 'object' ? Object.values(selectedVariant).join(', ') : String(selectedVariant)) : null,
+                    quantity: qty,
+                };
+
+                newCart = [...prevCart, newItem];
             }
 
-            // New item: append to cart
-            const price = Number(product.price) || 0;
-            const comparePrice = product.compare_price ? Number(product.compare_price) : null;
-            const imageUrl = resolveProductImage(product);
-            const vendorName = product.vendor?.shop_name || product.vendorName || product.vendor?.name || 'Verified Merchant';
-            const vendorId = product.vendor_id || product.vendor?.id || 1;
+            try {
+                localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(newCart));
+            } catch (e) {
+                console.error('Failed to sync cart to localStorage:', e);
+            }
 
-            const newItem = {
-                id: variantKey ? `${product.id}-${variantKey}` : product.id,
-                productId: product.id,
-                title: product.title,
-                slug: product.slug || product.id,
-                sku: product.sku || `SKU-${product.id}`,
-                price: price,
-                compare_price: comparePrice,
-                image: imageUrl,
-                vendorName: vendorName,
-                vendorId: vendorId,
-                vendor: product.vendor || { id: vendorId, shop_name: vendorName },
-                selectedVariant: variantKey,
-                variantLabel: selectedVariant ? (typeof selectedVariant === 'object' ? Object.values(selectedVariant).join(', ') : String(selectedVariant)) : null,
-                quantity: qty,
-            };
-
-            return [...prevCart, newItem];
+            return newCart;
         });
 
         if (openDrawer) {
             setIsCartOpen(true);
         }
-    }, []);
+        return true;
+    }, [getAuthUser]);
 
     /**
      * Remove item from cart by id (or productId + variant)

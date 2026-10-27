@@ -429,6 +429,59 @@ class CustomerController extends Controller
     }
 
     /**
+     * Add product to cart session.
+     */
+    public function addToCart(Request $request)
+    {
+        $validated = $request->validate([
+            'product_id' => 'required',
+            'quantity' => 'nullable|integer|min:1',
+            'variation' => 'nullable',
+        ]);
+
+        $productId = (string) $validated['product_id'];
+        $quantity = max(1, (int) ($validated['quantity'] ?? 1));
+        $variation = $validated['variation'] ?? null;
+
+        $product = Product::where('_id', $productId)
+            ->orWhere('id', $productId)
+            ->orWhere('slug', $productId)
+            ->first();
+
+        $cart = session()->get('cart', []);
+        $variantKey = $variation ? (is_array($variation) ? json_encode($variation) : (string) $variation) : null;
+        $cartKey = $variantKey ? "{$productId}-{$variantKey}" : $productId;
+
+        if (isset($cart[$cartKey])) {
+            $cart[$cartKey]['quantity'] += $quantity;
+        } else {
+            $cart[$cartKey] = [
+                'id' => $cartKey,
+                'product_id' => $productId,
+                'title' => $product?->title ?? $product?->name ?? 'Product',
+                'slug' => $product?->slug ?? $productId,
+                'price' => (float) ($product?->price ?? 0),
+                'quantity' => $quantity,
+                'variation' => $variation,
+                'image' => $product?->image ?? $product?->thumbnail,
+                'vendor_id' => $product?->vendor_id,
+            ];
+        }
+
+        session()->put('cart', $cart);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product added to cart successfully',
+                'cart' => $cart,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Product added to cart successfully');
+    }
+
+    /**
      * Display shopping cart page.
      */
     public function cart(): Response

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { router } from '@inertiajs/react';
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Store, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
@@ -21,15 +21,6 @@ function getItemImage(item) {
 
 export function CartDrawer() {
     const { cart, isCartOpen, setIsCartOpen, removeItem, updateQuantity, clearCart, subtotal, totalItems, showNotification } = useApp();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-    const [customerForm, setCustomerForm] = useState({
-        name: 'David Miller',
-        email: 'david.m@globalcorp.io',
-        phone: '+1 (555) 776-8822',
-        shipping_address: '400 Technology Way, Dock 7, Austin, TX 78701',
-        payment_method: 'card',
-    });
 
     if (!isCartOpen) return null;
 
@@ -45,26 +36,9 @@ export function CartDrawer() {
     const shipping = subtotal > 15000 || subtotal === 0 ? 0 : 250.0;
     const grandTotal = subtotal + estimatedTax + shipping;
 
-    const handleCheckout = (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        router.post('/checkout', {
-            ...customerForm,
-            items: cart.map(i => ({ id: i.id, quantity: i.quantity })),
-        }, {
-            onSuccess: () => {
-                setIsSubmitting(false);
-                setShowCheckoutModal(false);
-                clearCart();
-                setIsCartOpen(false);
-                showNotification('Multi-vendor order placed and split across vendors successfully!');
-            },
-            onError: (errors) => {
-                setIsSubmitting(false);
-                alert('Order error: ' + JSON.stringify(errors));
-            }
-        });
+    const handleProceedToCheckout = () => {
+        setIsCartOpen(false);
+        router.visit('/checkout');
     };
 
     return (
@@ -243,7 +217,7 @@ export function CartDrawer() {
                         <Button
                             variant="primary"
                             className="w-full py-3 rounded-xl font-bold text-xs sm:text-sm shadow-md shadow-brand-500/20 active:scale-[0.99] transition-transform flex items-center justify-center gap-2 cursor-pointer"
-                            onClick={() => setShowCheckoutModal(true)}
+                            onClick={handleProceedToCheckout}
                             icon={ArrowRight}
                         >
                             Proceed to Multi-Vendor Checkout
@@ -251,87 +225,6 @@ export function CartDrawer() {
                     </div>
                 )}
             </div>
-
-            {/* Simulated Checkout Modal */}
-            {showCheckoutModal && (
-                <div className="fixed inset-0 z-[70] overflow-y-auto">
-                    <div className="fixed inset-0 bg-black/70 backdrop-blur-xs cursor-pointer" onClick={() => setShowCheckoutModal(false)} />
-                    <div className="flex min-h-full items-center justify-center p-4">
-                        <div className="relative bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
-                            <div className="flex items-center justify-between border-b pb-3">
-                                <div>
-                                    <h3 className="text-base font-bold text-slate-900">Complete Enterprise Checkout</h3>
-                                    <p className="text-xs text-slate-500">Order will auto-split into {Object.keys(vendorGroups).length} vendor sub-orders with commission.</p>
-                                </div>
-                                <button onClick={() => setShowCheckoutModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleCheckout} className="space-y-3">
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-700 uppercase">Purchasing Entity / Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="mt-1 w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:ring-2 focus:ring-brand-500"
-                                        value={customerForm.name}
-                                        onChange={e => setCustomerForm({ ...customerForm, name: e.target.value })}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 uppercase">Corporate Email</label>
-                                        <input
-                                            type="email"
-                                            required
-                                            className="mt-1 w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:ring-2 focus:ring-brand-500"
-                                            value={customerForm.email}
-                                            onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 uppercase">Phone Number</label>
-                                        <input
-                                            type="text"
-                                            className="mt-1 w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:ring-2 focus:ring-brand-500"
-                                            value={customerForm.phone}
-                                            onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-700 uppercase">Receiving Facility Address</label>
-                                    <textarea
-                                        rows={2}
-                                        required
-                                        className="mt-1 w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:ring-2 focus:ring-brand-500"
-                                        value={customerForm.shipping_address}
-                                        onChange={e => setCustomerForm({ ...customerForm, shipping_address: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="bg-slate-50 p-3 rounded-lg border text-xs text-slate-600 space-y-1">
-                                    <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                                        <span>Automated Split Order Architecture</span>
-                                    </div>
-                                    <p>Upon placement, Bizzhuss will create a master order ({formatCurrency(grandTotal)}) and dispatch independent sub-orders to each participating vendor with automated commission deductions.</p>
-                                </div>
-
-                                <div className="pt-2 flex justify-end gap-2">
-                                    <Button variant="secondary" onClick={() => setShowCheckoutModal(false)}>
-                                        Cancel
-                                    </Button>
-                                    <Button variant="primary" type="submit" loading={isSubmitting}>
-                                        Confirm & Place Multi-Vendor Order
-                                    </Button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

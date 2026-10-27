@@ -226,18 +226,36 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
     };
 
     const handleBuyNow = () => {
-        if (!auth?.user) {
-            router.visit(`/login?intended=${encodeURIComponent(window.location.pathname)}&message=${encodeURIComponent('Please sign in to add items to your cart or wishlist.')}`);
-            return;
+        // 1. Adds current product into client-side cart state
+        try {
+            addToCart({
+                ...product,
+                price: price,
+                image: activeImage,
+                variant: selectedVariantLabel,
+                selectedVariant: selectedVariantLabel,
+            }, quantity, selectedVariantLabel, false, true);
+        } catch (err) {
+            console.error("Cart state error:", err);
         }
-        addToCart({
-            ...product,
-            price: price,
-            image: activeImage,
-            variant: selectedVariantLabel
-        }, quantity, selectedVariantLabel);
 
-        router.visit('/checkout');
+        // 2. Sync to backend session cart & immediately redirect directly to /checkout
+        router.post('/cart/add', {
+            product_id: product?._id || product?.id,
+            quantity: quantity || 1,
+            variation: selectedVariantLabel || undefined,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                // Direct redirect to checkout page
+                router.visit('/checkout');
+            },
+            onError: (err) => {
+                console.error("Cart error:", err);
+                // Fallback direct navigate
+                window.location.href = '/checkout';
+            }
+        });
     };
 
     const handleToggleWishlist = () => {
