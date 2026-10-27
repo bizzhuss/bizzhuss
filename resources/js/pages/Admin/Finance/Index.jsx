@@ -844,24 +844,38 @@ export default function FinanceIndex({
                 </div>
 
                 {/* Audit Sign-off Box */}
-                <div className="mt-12 pt-8 border-t-2 border-slate-200 flex items-center justify-between text-xs">
-                    <div>
-                        <div className="w-40 border-b border-slate-400 mb-1"></div>
-                        <span className="font-bold text-slate-700">Platform Financial Comptroller</span>
-                        <span className="text-[10px] text-slate-400 block">Bizzhuss Treasury Division</span>
+                <div className="mt-12 pt-8 border-t-2 border-slate-200 flex items-end justify-between text-xs">
+                    <div className="flex flex-col items-start justify-end">
+                        <div className="h-14 w-full"></div>
+                        <div className="w-48 h-[1.5px] bg-slate-400 mb-2"></div>
+                        <div className="text-sm font-extrabold text-slate-900 tracking-tight">
+                            Platform Financial Comptroller
+                        </div>
+                        <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+                            Bizzhuss Treasury Division
+                        </div>
                     </div>
 
-                    <div className="text-center p-3 border-2 border-dashed border-slate-300 rounded-2xl w-48">
+                    <div className="text-center p-3 border-2 border-dashed border-slate-300 rounded-2xl w-48 mb-1">
                         <ShieldCheck className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
                         <span className="text-[10px] font-black uppercase text-emerald-700 block">Verified Audit Seal</span>
                         <span className="text-[9px] text-slate-400 block font-mono">HASH: 9F84B-2026-BZ</span>
                     </div>
 
-                    <div className="text-right">
-                        <div className="font-serif italic font-semibold text-sm text-slate-800 mb-1 tracking-wider">Haseeb U. Khan</div>
-                        <div className="w-44 border-b border-slate-400 mb-1 ml-auto"></div>
-                        <span className="font-bold text-slate-800 block">Official CEO Signature</span>
-                        <span className="text-[10px] text-slate-500 block">Chief Executive Officer & Founder</span>
+                    <div className="flex flex-col items-end justify-end text-right">
+                        {/* Empty blank signing space for physical pen signature */}
+                        <div className="h-14 w-full"></div>
+
+                        {/* Physical Signature Line */}
+                        <div className="w-60 h-[1.5px] bg-slate-400 mb-2"></div>
+
+                        {/* Designation Details */}
+                        <div className="text-sm font-extrabold text-slate-900 tracking-tight">
+                            Official CEO Signature
+                        </div>
+                        <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+                            Chief Executive Officer & Founder
+                        </div>
                     </div>
                 </div>
             </div>
