@@ -52,13 +52,15 @@ class UserController extends Controller
             })->count();
 
             // Total amount spent by user
-            $totalSpent = Order::where(function($q) use ($user, $userIdStr) {
+            $rawSpent = Order::where(function($q) use ($user, $userIdStr) {
                 $q->where('user_id', $userIdStr)
                   ->orWhere('user_id', $user->id)
                   ->orWhere('customer_id', $userIdStr)
                   ->orWhere('customer_id', $user->id)
                   ->orWhere('customer_email', $user->email);
             })->where('status', '!=', 'cancelled')->sum('total_amount');
+
+            $totalSpent = is_numeric($rawSpent) ? (float)$rawSpent : (float)(string)$rawSpent;
 
             // Format registration date safely
             $createdAt = 'N/A';
