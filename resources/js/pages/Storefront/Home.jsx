@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { StorefrontLayout } from '@/components/layout/StorefrontLayout';
+import CategorySidebar from '@/components/CategorySidebar';
 import SEOHead from '@/components/SEOHead';
 import { generateOrganizationSchema, generateWebSiteSchema } from '@/lib/seo';
 import { useApp } from '@/context/AppContext';
