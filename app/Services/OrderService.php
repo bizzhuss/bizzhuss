@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Coupon;
+use App\Models\FinanceSetting;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -87,8 +88,15 @@ class OrderService
             }
 
             $orderSubtotalAfterDiscount = max(0.00, $orderSubtotal - $discountAmount);
-            $shippingFee = $orderSubtotalAfterDiscount > 150 ? 0.00 : 15.00;
-            $taxAmount = round($orderSubtotalAfterDiscount * 0.08, 2);
+
+            // Dynamic City-Wise Delivery Calculation & Taxes from Platform Finance Settings
+            $financeSettings = FinanceSetting::getActive();
+            $city = $customerDetails['city'] ?? null;
+            $shippingInfo = $financeSettings->getShippingChargeForCity($city);
+            $shippingFee = (float)$shippingInfo['charge'];
+
+            $taxRate = (float)($financeSettings->default_tax_rate ?? 8.0);
+            $taxAmount = round(($orderSubtotalAfterDiscount * $taxRate) / 100, 2);
             $totalAmount = $orderSubtotalAfterDiscount + $shippingFee + $taxAmount;
 
             $orderNumber = 'BZH-' . strtoupper(Str::random(8));
@@ -104,10 +112,18 @@ class OrderService
                     'email' => $customerDetails['email'] ?? 'customer@example.com',
                     'phone' => $customerDetails['phone'] ?? null,
                     'address' => $customerDetails['shipping_address'] ?? '124 Enterprise Blvd',
+                    'city' => $customerDetails['city'] ?? ($shippingInfo['city'] ?? 'Karachi'),
+                    'postal_code' => $customerDetails['postal_code'] ?? null,
+                    'country' => $customerDetails['country'] ?? 'Pakistan',
+                    'shipping_fee' => $shippingFee,
+                    'shipping_sla' => $shippingInfo['sla'] ?? '2-3 Business Days',
+                    'tax_amount' => $taxAmount,
                 ],
                 'billing_address' => [
                     'name' => $customerDetails['name'] ?? 'Guest Customer',
                     'address' => $customerDetails['shipping_address'] ?? '124 Enterprise Blvd',
+                    'city' => $customerDetails['city'] ?? ($shippingInfo['city'] ?? 'Karachi'),
+                    'country' => $customerDetails['country'] ?? 'Pakistan',
                 ],
             ]);
 

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CheckoutRequest;
 use App\Models\Banner;
 use App\Models\Category;
+use App\Models\FinanceSetting;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\PromotionalCampaign;
 use App\Models\Review;
@@ -498,11 +500,58 @@ class CustomerController extends Controller
     }
 
     /**
-     * Display checkout page.
+     * Display checkout page with platform finance settings and prefill data.
      */
-    public function checkoutPage(): Response
+    public function checkoutPage(Request $request): Response
     {
-        return Inertia::render('Storefront/Checkout');
+        $financeSettings = FinanceSetting::getActive();
+        $user = auth()->user();
+
+        // Auto-Location & prefill resolution
+        $prefill = [
+            'name' => $user?->name ?? '',
+            'email' => $user?->email ?? '',
+            'phone' => $user?->phone ?? '',
+            'shipping_address' => '',
+            'city' => '',
+            'postal_code' => '',
+            'country' => 'Pakistan',
+        ];
+
+        if ($user) {
+            $lastOrder = Order::where(function ($q) use ($user) {
+                $q->where('customer_id', $user->id)
+                  ->orWhere('user_id', (string)$user->id)
+                  ->orWhere('customer_email', $user->email);
+            })->orderBy('created_at', 'desc')->first();
+
+            if ($lastOrder && !empty($lastOrder->shipping_address)) {
+                $addr = $lastOrder->shipping_address;
+                $prefill['shipping_address'] = $addr['address'] ?? '';
+                $prefill['city'] = $addr['city'] ?? '';
+                $prefill['postal_code'] = $addr['postal_code'] ?? '';
+                $prefill['country'] = $addr['country'] ?? 'Pakistan';
+                if (!empty($addr['phone']) && empty($prefill['phone'])) {
+                    $prefill['phone'] = $addr['phone'];
+                }
+            }
+        }
+
+        // Country detection fallback (Cloudflare / Server headers)
+        $detectedCountry = $request->header('CF-IPCountry');
+        if ($detectedCountry && empty($prefill['country'])) {
+            $prefill['country'] = $detectedCountry === 'PK' ? 'Pakistan' : $detectedCountry;
+        }
+
+        return Inertia::render('Storefront/Checkout', [
+            'finance_settings' => [
+                'default_tax_rate' => (float)($financeSettings->default_tax_rate ?? 8.0),
+                'default_shipping_charge' => (float)($financeSettings->default_shipping_charge ?? 250.0),
+                'city_shipping_rules' => (array)($financeSettings->city_shipping_rules ?? []),
+                'currency' => $financeSettings->currency ?? 'PKR',
+            ],
+            'prefill' => $prefill,
+        ]);
     }
 
     /**
@@ -518,6 +567,9 @@ class CustomerController extends Controller
                 'email' => $validated['email'],
                 'phone' => $validated['phone'] ?? null,
                 'shipping_address' => $validated['shipping_address'],
+                'city' => $request->input('city') ?? ($validated['city'] ?? null),
+                'postal_code' => $request->input('postal_code') ?? null,
+                'country' => $request->input('country') ?? 'Pakistan',
                 'payment_method' => $validated['payment_method'],
                 'coupon_code' => $validated['coupon_code'] ?? null,
             ],

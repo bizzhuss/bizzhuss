@@ -86,7 +86,7 @@ export function AdminHeader({ title, subtitle, actions }) {
             name: 'Financial Intelligence',
             permission: 'module.financial_intelligence',
             href: '/admin/finance',
-            active: url?.startsWith('/admin/finance') || false,
+            active: (url?.startsWith('/admin/finance') || url?.startsWith('/admin/accounts')) || false,
             icon: Landmark,
         },
         {

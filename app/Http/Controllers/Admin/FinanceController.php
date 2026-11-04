@@ -237,26 +237,27 @@ class FinanceController extends Controller
     }
 
     /**
-     * Update dynamic regional tax & shipping matrix.
+     * Update dynamic tax & city-wise shipping charges matrix.
      */
     public function updateSettings(Request $request)
     {
         $validated = $request->validate([
             'default_tax_rate' => 'required|numeric|min:0|max:100',
             'platform_commission_rate' => 'required|numeric|min:0|max:100',
+            'default_shipping_charge' => 'nullable|numeric|min:0',
             'currency' => 'required|string|max:10',
             'auto_payout_threshold' => 'required|numeric|min:0',
-            'shipping_rules' => 'required|array',
-            'shipping_rules.*.region' => 'required|string',
-            'shipping_rules.*.base_fee' => 'required|numeric|min:0',
-            'shipping_rules.*.free_shipping_threshold' => 'required|numeric|min:0',
-            'shipping_rules.*.estimated_days' => 'required|string',
+            'city_shipping_rules' => 'nullable|array',
+            'city_shipping_rules.*.city' => 'required|string',
+            'city_shipping_rules.*.charge' => 'required|numeric|min:0',
+            'city_shipping_rules.*.sla' => 'required|string',
+            'shipping_rules' => 'nullable|array',
         ]);
 
         $setting = FinanceSetting::getActive();
         $setting->update($validated);
 
-        return redirect()->back()->with('success', 'Platform Financial Rules & Regional Shipping Matrix successfully updated.');
+        return redirect()->back()->with('success', 'Platform Financial Rules & City-Wise Shipping Charges successfully updated.');
     }
 
     /**

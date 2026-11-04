@@ -65,20 +65,25 @@ export default function FinanceIndex({
     });
     const [submittingPayout, setSubmittingPayout] = useState(false);
 
-    // Regional Shipping & Tax Form State
+    // Regional & City-Wise Shipping & Tax Form State
     const [settingsForm, setSettingsForm] = useState({
-        default_tax_rate: finance_settings.default_tax_rate ?? 5.0,
-        platform_commission_rate: finance_settings.platform_commission_rate ?? 10.0,
+        default_tax_rate: finance_settings.default_tax_rate ?? 8.0,
+        platform_commission_rate: finance_settings.platform_commission_rate ?? 8.0,
+        default_shipping_charge: finance_settings.default_shipping_charge ?? 250,
         currency: finance_settings.currency ?? 'PKR',
         auto_payout_threshold: finance_settings.auto_payout_threshold ?? 5000,
-        shipping_rules: Array.isArray(finance_settings.shipping_rules) ? [...finance_settings.shipping_rules] : [
-            { region: 'Sindh', base_fee: 250, free_shipping_threshold: 5000, estimated_days: '2-3 Business Days' },
-            { region: 'Punjab', base_fee: 300, free_shipping_threshold: 5000, estimated_days: '3-4 Business Days' },
-            { region: 'Islamabad & Rawalpindi', base_fee: 280, free_shipping_threshold: 5000, estimated_days: '2-3 Business Days' },
-            { region: 'Khyber Pakhtunkhwa', base_fee: 350, free_shipping_threshold: 6000, estimated_days: '4-5 Business Days' },
-            { region: 'Balochistan', base_fee: 450, free_shipping_threshold: 8000, estimated_days: '5-7 Business Days' },
-            { region: 'Gilgit-Baltistan & AJK', base_fee: 450, free_shipping_threshold: 8000, estimated_days: '5-7 Business Days' },
-        ]
+        city_shipping_rules: Array.isArray(finance_settings.city_shipping_rules) && finance_settings.city_shipping_rules.length > 0
+            ? [...finance_settings.city_shipping_rules]
+            : [
+                { city: 'Karachi', charge: 150, sla: '1-2 Business Days' },
+                { city: 'Lahore', charge: 250, sla: '2-3 Business Days' },
+                { city: 'Islamabad', charge: 250, sla: '2-3 Business Days' },
+                { city: 'Rawalpindi', charge: 250, sla: '2-3 Business Days' },
+                { city: 'Faisalabad', charge: 300, sla: '3-4 Business Days' },
+                { city: 'Multan', charge: 300, sla: '3-4 Business Days' },
+                { city: 'Peshawar', charge: 300, sla: '3-4 Business Days' },
+                { city: 'Quetta', charge: 350, sla: '4-5 Business Days' },
+            ]
     });
     const [savingSettings, setSavingSettings] = useState(false);
 
@@ -142,25 +147,25 @@ export default function FinanceIndex({
         });
     };
 
-    const handleShippingRuleChange = (index, field, value) => {
-        const updated = [...settingsForm.shipping_rules];
+    const handleCityRuleChange = (index, field, value) => {
+        const updated = [...settingsForm.city_shipping_rules];
         updated[index] = { ...updated[index], [field]: value };
-        setSettingsForm({ ...settingsForm, shipping_rules: updated });
+        setSettingsForm({ ...settingsForm, city_shipping_rules: updated });
     };
 
-    const handleAddShippingRule = () => {
+    const handleAddCityRule = () => {
         setSettingsForm({
             ...settingsForm,
-            shipping_rules: [
-                ...settingsForm.shipping_rules,
-                { region: 'New Region / Zone', base_fee: 300, free_shipping_threshold: 5000, estimated_days: '3-5 Business Days' }
+            city_shipping_rules: [
+                ...settingsForm.city_shipping_rules,
+                { city: 'New City', charge: 250, sla: '2-3 Business Days' }
             ]
         });
     };
 
-    const handleRemoveShippingRule = (index) => {
-        const updated = settingsForm.shipping_rules.filter((_, idx) => idx !== index);
-        setSettingsForm({ ...settingsForm, shipping_rules: updated });
+    const handleRemoveCityRule = (index) => {
+        const updated = settingsForm.city_shipping_rules.filter((_, idx) => idx !== index);
+        setSettingsForm({ ...settingsForm, city_shipping_rules: updated });
     };
 
     const handleSaveSettings = (e) => {
@@ -313,7 +318,7 @@ export default function FinanceIndex({
                         {[
                             { id: 'ledger', label: 'General Ledger Audit', icon: Receipt },
                             { id: 'settlements', label: 'Vendor Split Settlements', icon: Store },
-                            { id: 'settings', label: 'Tax & Shipping Matrix', icon: Truck },
+                            { id: 'settings', label: 'City Shipping & Tax Matrix', icon: Truck },
                             { id: 'statement', label: 'Print-Ready Financial Statement', icon: FileText },
                         ].map((tab) => {
                             const Icon = tab.icon;
@@ -613,6 +618,19 @@ export default function FinanceIndex({
                                 </div>
 
                                 <div>
+                                    <label className="font-bold text-slate-700 block mb-1">Default Fallback Shipping (PKR)</label>
+                                    <input
+                                        type="number"
+                                        step="10"
+                                        min="0"
+                                        value={settingsForm.default_shipping_charge}
+                                        onChange={(e) => setSettingsForm({ ...settingsForm, default_shipping_charge: parseFloat(e.target.value) || 0 })}
+                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-500 font-bold text-slate-900"
+                                    />
+                                    <span className="text-[10px] text-slate-400 mt-1 block">Applied to unlisted cities or nationwide delivery.</span>
+                                </div>
+
+                                <div>
                                     <label className="font-bold text-slate-700 block mb-1">Settlement Threshold (PKR)</label>
                                     <input
                                         type="number"
@@ -638,22 +656,22 @@ export default function FinanceIndex({
                             </div>
                         </Card>
 
-                        {/* Region-Based Shipping Matrix */}
+                        {/* Pure City-Wise Shipping Charges Matrix */}
                         <Card>
                             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-bold text-base text-slate-900">Regional Delivery & Shipping Tariff Matrix</h3>
-                                    <p className="text-xs text-slate-500 mt-0.5">Customize provincial freight costs, free-shipping thresholds, and fulfillment SLAs.</p>
+                                    <h3 className="font-bold text-base text-slate-900">City-Wise Delivery Tariff Matrix</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">Configure individual city shipping fees and fulfillment SLAs across Pakistan.</p>
                                 </div>
                                 <Button
                                     type="button"
                                     variant="secondary"
                                     size="sm"
-                                    onClick={handleAddShippingRule}
+                                    onClick={handleAddCityRule}
                                     className="inline-flex items-center gap-1.5 text-xs"
                                 >
                                     <Plus className="w-3.5 h-3.5" />
-                                    <span>Add Region Rule</span>
+                                    <span>Add City Rule</span>
                                 </Button>
                             </div>
 
@@ -661,56 +679,51 @@ export default function FinanceIndex({
                                 <table className="w-full text-left text-xs">
                                     <thead>
                                         <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
-                                            <th className="px-5 py-3">Province / Territory</th>
-                                            <th className="px-4 py-3">Base Shipping (PKR)</th>
-                                            <th className="px-4 py-3">Free Shipping Threshold (PKR)</th>
-                                            <th className="px-4 py-3">Estimated SLA</th>
+                                            <th className="px-5 py-3">Metropolitan City</th>
+                                            <th className="px-4 py-3">Shipping Charge (PKR)</th>
+                                            <th className="px-4 py-3">Fulfillment SLA</th>
                                             <th className="px-4 py-3 text-right">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {settingsForm.shipping_rules.map((rule, idx) => (
+                                        {settingsForm.city_shipping_rules.map((rule, idx) => (
                                             <tr key={idx} className="hover:bg-slate-50/60">
                                                 <td className="px-5 py-2.5">
                                                     <input
                                                         type="text"
-                                                        value={rule.region}
-                                                        onChange={(e) => handleShippingRuleChange(idx, 'region', e.target.value)}
+                                                        value={rule.city}
+                                                        onChange={(e) => handleCityRuleChange(idx, 'city', e.target.value)}
+                                                        placeholder="e.g. Karachi, Lahore..."
                                                         className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none focus:border-brand-500"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-2.5">
-                                                    <input
-                                                        type="number"
-                                                        step="10"
-                                                        value={rule.base_fee}
-                                                        onChange={(e) => handleShippingRuleChange(idx, 'base_fee', parseFloat(e.target.value) || 0)}
-                                                        className="w-36 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:border-brand-500"
-                                                    />
-                                                </td>
-                                                <td className="px-4 py-2.5">
-                                                    <input
-                                                        type="number"
-                                                        step="100"
-                                                        value={rule.free_shipping_threshold}
-                                                        onChange={(e) => handleShippingRuleChange(idx, 'free_shipping_threshold', parseFloat(e.target.value) || 0)}
-                                                        className="w-40 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold outline-none focus:border-brand-500"
-                                                    />
+                                                    <div className="relative w-44">
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">Rs.</span>
+                                                        <input
+                                                            type="number"
+                                                            step="10"
+                                                            value={rule.charge}
+                                                            onChange={(e) => handleCityRuleChange(idx, 'charge', parseFloat(e.target.value) || 0)}
+                                                            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900 outline-none focus:border-brand-500"
+                                                        />
+                                                    </div>
                                                 </td>
                                                 <td className="px-4 py-2.5">
                                                     <input
                                                         type="text"
-                                                        value={rule.estimated_days}
-                                                        onChange={(e) => handleShippingRuleChange(idx, 'estimated_days', e.target.value)}
-                                                        className="w-48 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 outline-none focus:border-brand-500"
+                                                        value={rule.sla}
+                                                        onChange={(e) => handleCityRuleChange(idx, 'sla', e.target.value)}
+                                                        placeholder="e.g. 1-2 Business Days"
+                                                        className="w-56 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 outline-none focus:border-brand-500"
                                                     />
                                                 </td>
                                                 <td className="px-4 py-2.5 text-right">
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleRemoveShippingRule(idx)}
-                                                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                                        title="Delete region rule"
+                                                        onClick={() => handleRemoveCityRule(idx)}
+                                                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                                        title="Delete city rule"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -729,7 +742,7 @@ export default function FinanceIndex({
                                     disabled={savingSettings}
                                     className="bg-brand-600 hover:bg-brand-700 text-xs shadow-xs"
                                 >
-                                    {savingSettings ? 'Saving Matrix...' : 'Save Financial & Shipping Configuration'}
+                                    {savingSettings ? 'Saving Matrix...' : 'Save Financial & City Shipping Matrix'}
                                 </Button>
                             </div>
                         </Card>

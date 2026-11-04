@@ -125,7 +125,9 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
 
     // 2.16 Accounts & Financial Intelligence Suite
     Route::get('/finance', [\App\Http\Controllers\Admin\FinanceController::class, 'index'])->name('finance.index');
+    Route::get('/accounts', [\App\Http\Controllers\Admin\AccountsController::class, 'index'])->name('accounts.index');
     Route::post('/finance/settings', [\App\Http\Controllers\Admin\FinanceController::class, 'updateSettings'])->name('finance.settings');
+    Route::post('/accounts/settings', [\App\Http\Controllers\Admin\AccountsController::class, 'updateSettings'])->name('accounts.settings');
     Route::post('/finance/payouts', [\App\Http\Controllers\Admin\FinanceController::class, 'createPayout'])->name('finance.payouts.create');
     Route::post('/finance/payouts/{id}/settle', [\App\Http\Controllers\Admin\FinanceController::class, 'settlePayout'])->name('finance.payouts.settle');
 
