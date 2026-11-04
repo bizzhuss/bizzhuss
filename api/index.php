@@ -94,6 +94,18 @@ if (!getenv('SESSION_DRIVER')) {
     $_SERVER['SESSION_DRIVER'] = 'cookie';
 }
 
+if (!getenv('SESSION_ENCRYPT')) {
+    putenv('SESSION_ENCRYPT=true');
+    $_ENV['SESSION_ENCRYPT'] = 'true';
+    $_SERVER['SESSION_ENCRYPT'] = 'true';
+}
+
+if (!getenv('SESSION_LIFETIME')) {
+    putenv('SESSION_LIFETIME=10080');
+    $_ENV['SESSION_LIFETIME'] = '10080';
+    $_SERVER['SESSION_LIFETIME'] = '10080';
+}
+
 if (!getenv('CACHE_STORE')) {
     putenv('CACHE_STORE=array');
     $_ENV['CACHE_STORE'] = 'array';

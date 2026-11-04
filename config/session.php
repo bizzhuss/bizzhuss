@@ -32,7 +32,7 @@ return [
     |
     */
 
-    'lifetime' => env('SESSION_LIFETIME', 120),
+    'lifetime' => env('SESSION_LIFETIME', 10080),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
@@ -47,7 +47,7 @@ return [
     |
     */
 
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    'encrypt' => env('SESSION_ENCRYPT', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -157,7 +157,17 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => (function () {
+        $domain = env('SESSION_DOMAIN');
+        if (!$domain || $domain === 'null') {
+            return null;
+        }
+        // When running on localhost / 127.0.0.1, browsers will reject cookies with domain .bizzhuss.com
+        if (isset($_SERVER['HTTP_HOST']) && (str_contains($_SERVER['HTTP_HOST'], 'localhost') || str_contains($_SERVER['HTTP_HOST'], '127.0.0.1'))) {
+            return null;
+        }
+        return $domain;
+    })(),
 
     /*
     |--------------------------------------------------------------------------
@@ -170,7 +180,18 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => (function () {
+        $secure = env('SESSION_SECURE_COOKIE');
+        if ($secure !== null && $secure !== '') {
+            $isSecure = filter_var($secure, FILTER_VALIDATE_BOOLEAN);
+            // On localhost without HTTPS, browsers reject secure cookies
+            if ($isSecure && isset($_SERVER['HTTP_HOST']) && (str_contains($_SERVER['HTTP_HOST'], 'localhost') || str_contains($_SERVER['HTTP_HOST'], '127.0.0.1')) && empty($_SERVER['HTTPS'])) {
+                return false;
+            }
+            return $isSecure;
+        }
+        return env('APP_ENV') === 'production';
+    })(),
 
     /*
     |--------------------------------------------------------------------------
