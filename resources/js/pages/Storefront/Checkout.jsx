@@ -137,8 +137,11 @@ export default function Checkout({ finance_settings = {}, prefill = {} }) {
 
         const payload = {
             name: formData.name,
+            customer_name: formData.name,
             email: formData.email,
+            customer_email: formData.email,
             phone: formData.phone,
+            customer_phone: formData.phone,
             shipping_address: formData.shipping_address,
             city: formData.city,
             postal_code: formData.postal_code,
@@ -146,8 +149,15 @@ export default function Checkout({ finance_settings = {}, prefill = {} }) {
             payment_method: formData.payment_method,
             notes: formData.notes,
             items: checkoutItems.map((item) => ({
-                id: item.id,
-                quantity: item.quantity,
+                id: item.productId || item.id,
+                product_id: item.productId || item.id,
+                name: item.title || item.name,
+                title: item.title || item.name,
+                price: Number(item.price) || 0,
+                quantity: Number(item.quantity) || 1,
+                image: item.image || null,
+                vendor_id: item.vendorId || item.vendor_id || item.vendor?.id || null,
+                shop_name: item.vendorName || item.vendor?.shop_name || 'Bizzhuss Official Store',
             })),
         };
 
