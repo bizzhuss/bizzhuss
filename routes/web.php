@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminTaskController;
 use App\Http\Controllers\AdminSettingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\VendorController;
@@ -49,7 +50,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cart', [CustomerController::class, 'cart'])->name('cart');
     Route::get('/wishlist', [CustomerController::class, 'wishlist'])->name('wishlist');
     Route::get('/checkout', [CustomerController::class, 'checkoutPage'])->name('checkout.page');
-    Route::post('/checkout', [CustomerController::class, 'checkout'])->name('checkout');
+    Route::post('/checkout', [CheckoutController::class, 'placeOrder'])->name('checkout');
+    Route::post('/checkout/place-order', [CheckoutController::class, 'placeOrder'])->name('checkout.placeOrder');
+    Route::get('/checkout/thank-you/{id}', [CheckoutController::class, 'thankyou'])->name('checkout.thankyou');
     Route::get('/checkout/{any}', [CustomerController::class, 'checkoutPage'])->where('any', '.*');
     Route::post('/product/{slug}/review', [CustomerController::class, 'submitReview'])->name('product.review.submit');
 });

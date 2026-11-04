@@ -577,6 +577,6 @@ class CustomerController extends Controller
             customer: auth()->user()
         );
 
-        return redirect()->route('storefront')->with('success', "Order #{$order->order_number} placed successfully across multi-vendor channels!");
+        return redirect()->route('checkout.thankyou', (string)($order->_id ?? $order->id));
     }
 }
