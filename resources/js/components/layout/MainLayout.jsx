@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/react';
 import { TierNavbar } from './TierNavbar';
 import { CartDrawer } from './CartDrawer';
 import { ApplicationLogo } from '@/components/ApplicationLogo';
+import { SystemDiagnosticsFooter } from '@/components/SystemDiagnosticsFooter';
 import { AppProvider, useApp } from '@/context/AppContext';
 import { CheckCircle2, AlertCircle, X, Shield, GitBranch, Cpu, Database } from 'lucide-react';
 
@@ -62,62 +63,19 @@ function LayoutInner({ children, title, subtitle }) {
             {/* Global Slide-over Cart Drawer */}
             <CartDrawer />
 
-            {/* Footer with Enterprise Architecture Summary */}
+            {/* Footer with Enterprise Architecture Diagnostics (Strictly Super Admin Only) */}
             <footer className="border-t border-slate-200 bg-white mt-auto">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-xs text-slate-600">
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                                <ApplicationLogo asLink={false} className="w-5 h-5 rounded shadow-xs" />
-                                <span>Bizzhuss Platform</span>
-                            </div>
-                            <p className="text-slate-500">
-                                Enterprise Multi-Vendor E-Commerce & Workforce Management Engine built on Laravel 11, Inertia.js, and React.
-                            </p>
-                        </div>
+                <SystemDiagnosticsFooter />
 
-                        <div>
-                            <h4 className="font-semibold text-slate-900 uppercase tracking-wider mb-2">Core Portals</h4>
-                            <ul className="space-y-1">
-                                <li>Tier 1: Customer Storefront & Catalog</li>
-                                <li>Tier 2: Super Admin Platform Operations</li>
-                                <li>Tier 3: Vendor Settlement & Inventory</li>
-                                <li>Tier 4: Employee Workforce Kanban Board</li>
-                            </ul>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+                        <div className="flex items-center gap-2">
+                            <ApplicationLogo asLink={false} className="w-5 h-5 rounded shadow-xs" />
+                            <span className="font-bold text-slate-800">Bizzhuss Platform</span>
+                            <span className="text-slate-300">•</span>
+                            <p>© 2026 Bizzhuss Enterprise Solutions. All rights reserved.</p>
                         </div>
-
-                        <div>
-                            <h4 className="font-semibold text-slate-900 uppercase tracking-wider mb-2">Backend Services</h4>
-                            <ul className="space-y-1">
-                                <li>OrderService: Sub-Order Splitter</li>
-                                <li>CommissionService: Fee Ledger</li>
-                                <li>PayoutService: ACH / Wire Settlement</li>
-                                <li>EmployeeTask: Kanban Dispatch</li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="font-semibold text-slate-900 uppercase tracking-wider mb-2">Environment</h4>
-                            <div className="space-y-1.5 font-mono text-[11px] bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500">Backend:</span>
-                                    <span className="font-bold text-slate-800">Laravel 11.56</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500">Frontend:</span>
-                                    <span className="font-bold text-slate-800">React 19 + Inertia</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500">Styling:</span>
-                                    <span className="font-bold text-slate-800">Tailwind CSS 3.4</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-8 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
-                        <p>© 2026 Bizzhuss Enterprise Solutions. All rights reserved.</p>
-                        <p className="flex items-center gap-2">
+                        <p className="flex items-center gap-2 text-slate-400">
                             <span>Status: Operational</span>
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                         </p>
