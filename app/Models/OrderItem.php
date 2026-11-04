@@ -9,41 +9,30 @@ class OrderItem extends BaseModel
 {
     use HasFactory;
 
-    protected $fillable = [
-        'order_id',
-        'vendor_id',
-        'product_id',
-        'quantity',
-        'unit_price',
-        'platform_fee',
-        'vendor_earning',
-        'delivery_status',
-        'tracking_number',
-        'carrier',
-    ];
+    protected $guarded = [];
 
     protected function casts(): array
     {
         return [
             'quantity' => 'integer',
-            'unit_price' => 'decimal:2',
-            'platform_fee' => 'decimal:2',
-            'vendor_earning' => 'decimal:2',
+            'unit_price' => 'float',
+            'platform_fee' => 'float',
+            'vendor_earning' => 'float',
         ];
     }
 
     public function order(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Order::class, 'order_id');
     }
 
     public function vendor(): BelongsTo
     {
-        return $this->belongsTo(Vendor::class);
+        return $this->belongsTo(Vendor::class, 'vendor_id');
     }
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }
