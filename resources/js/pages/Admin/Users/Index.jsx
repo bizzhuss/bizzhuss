@@ -29,7 +29,11 @@ import {
     ChevronLeft,
     ChevronRight,
     Copy,
-    Check
+    Check,
+    MapPin,
+    Truck,
+    Building2,
+    Package
 } from 'lucide-react';
 
 export default function UsersIndex({ users = {}, filters = {}, stats = {} }) {
@@ -216,7 +220,7 @@ export default function UsersIndex({ users = {}, filters = {}, stats = {} }) {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search by name, email, or phone..."
+                                placeholder="Search by name, email, phone, store name, or city..."
                                 className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-500 focus:bg-white transition-all"
                             />
                             {searchQuery && (
