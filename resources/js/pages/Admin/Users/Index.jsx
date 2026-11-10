@@ -295,6 +295,22 @@ export default function UsersIndex({ users = {}, filters = {}, stats = {} }) {
                                                             </span>
                                                         )}
                                                     </div>
+
+                                                    {/* Store Name & Location Meta Badges */}
+                                                    <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                                                        {user.shop_name && (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-800 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200/80">
+                                                                <Store className="w-2.5 h-2.5 text-sky-600" />
+                                                                {user.shop_name}
+                                                            </span>
+                                                        )}
+                                                        {user.city && user.city !== 'N/A' && (
+                                                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                                <MapPin className="w-2.5 h-2.5 text-slate-400" />
+                                                                {user.city}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
@@ -315,11 +331,21 @@ export default function UsersIndex({ users = {}, filters = {}, stats = {} }) {
                                                 <ShoppingBag className="w-3 h-3 text-slate-500" />
                                                 {user.orders_count}
                                             </span>
+                                            {user.vendor_orders_count > 0 && (
+                                                <div className="text-[10px] text-sky-700 font-bold mt-1 whitespace-nowrap">
+                                                    {user.vendor_orders_count} vendor sales
+                                                </div>
+                                            )}
                                         </td>
 
                                         {/* Lifetime Spend */}
                                         <td className="px-4 py-3.5 text-right font-bold text-slate-900 whitespace-nowrap">
-                                            {formatCurrency(user.total_spent)}
+                                            <div>{formatCurrency(user.total_spent)}</div>
+                                            {user.vendor_gross_sales > 0 && (
+                                                <div className="text-[10px] font-bold text-emerald-700 mt-0.5">
+                                                    Sales: {formatCurrency(user.vendor_gross_sales)}
+                                                </div>
+                                            )}
                                         </td>
 
                                         {/* Status */}
@@ -412,13 +438,13 @@ export default function UsersIndex({ users = {}, filters = {}, stats = {} }) {
                 <Modal
                     isOpen={Boolean(inspectedUser)}
                     onClose={() => setInspectedUser(null)}
-                    title="User Account Details"
-                    maxWidth="max-w-lg"
+                    title="Comprehensive User & Entity Profile"
+                    maxWidth="max-w-2xl"
                 >
-                    <div className="space-y-4 text-xs">
+                    <div className="space-y-4 text-xs max-h-[80vh] overflow-y-auto pr-1">
                         {/* Profile Header */}
                         <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0">
                                 {inspectedUser.avatar ? (
                                     <img src={inspectedUser.avatar} alt={inspectedUser.name} className="w-full h-full object-cover rounded-2xl" />
                                 ) : (
@@ -426,16 +452,26 @@ export default function UsersIndex({ users = {}, filters = {}, stats = {} }) {
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-bold text-base text-slate-900 truncate">{inspectedUser.name}</h4>
-                                <p className="text-slate-500 text-xs truncate">{inspectedUser.email}</p>
+                                <div className="flex items-center gap-2">
+                                    <h4 className="font-bold text-base text-slate-900 truncate">{inspectedUser.name}</h4>
+                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                        inspectedUser.status === 'active' 
+                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                    }`}>
+                                        <span className={`w-1.5 h-1.5 rounded-full ${inspectedUser.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                                        {inspectedUser.status === 'active' ? 'Active' : 'Suspended'}
+                                    </span>
+                                </div>
+                                <p className="text-slate-500 text-xs truncate mt-0.5">{inspectedUser.email}</p>
                             </div>
-                            <div>
+                            <div className="shrink-0">
                                 {renderRoleBadge(inspectedUser.role)}
                             </div>
                         </div>
 
-                        {/* Metadata Grid */}
-                        <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                        {/* Core Account Metadata Grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                             <div>
                                 <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Contact Phone</span>
                                 <span className="font-semibold text-slate-800">{inspectedUser.phone || 'Not provided'}</span>
@@ -445,22 +481,139 @@ export default function UsersIndex({ users = {}, filters = {}, stats = {} }) {
                                 <div>{renderAuthProviderBadge(inspectedUser.auth_provider)}</div>
                             </div>
                             <div>
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Total Orders</span>
-                                <span className="font-bold text-slate-900">{inspectedUser.orders_count} orders placed</span>
-                            </div>
-                            <div>
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Lifetime Spend</span>
-                                <span className="font-bold text-brand-600">{formatCurrency(inspectedUser.total_spent)}</span>
-                            </div>
-                            <div>
                                 <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Registration Date</span>
                                 <span className="font-medium text-slate-700">{inspectedUser.created_at}</span>
                             </div>
-                            <div>
-                                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Account Status</span>
-                                <span className="font-bold text-emerald-600 uppercase text-[11px]">{inspectedUser.status}</span>
+                        </div>
+
+                        {/* Detailed Buyer & Shipping Destination Profile */}
+                        <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
+                            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                                <div className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4 text-emerald-600" />
+                                    <span className="font-bold text-slate-900 uppercase tracking-wide text-[11px]">
+                                        Buyer Shipping & Consignee Location
+                                    </span>
+                                </div>
+                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                    Delivery Profile
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Delivery Address</span>
+                                    <p className="font-medium text-slate-800 text-xs leading-relaxed">
+                                        {inspectedUser.address || 'No saved address'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">City & Region</span>
+                                    <p className="font-bold text-slate-900 text-xs">
+                                        {inspectedUser.city || 'N/A'}{inspectedUser.postal_code && inspectedUser.postal_code !== 'N/A' ? ` (${inspectedUser.postal_code})` : ''}
+                                    </p>
+                                    <p className="text-[11px] text-slate-500 mt-0.5">
+                                        Country: <strong className="text-slate-700">{inspectedUser.country || 'Pakistan'}</strong>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Orders Placed</span>
+                                    <span className="font-black text-slate-900 text-xs mt-0.5 block">
+                                        {inspectedUser.orders_count} orders
+                                    </span>
+                                </div>
+                                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Lifetime Purchases</span>
+                                    <span className="font-black text-emerald-600 text-xs mt-0.5 block">
+                                        {formatCurrency(inspectedUser.total_spent)}
+                                    </span>
+                                </div>
                             </div>
                         </div>
+
+                        {/* Marketplace Vendor & Business Profile (if vendor or has shop_name) */}
+                        {(inspectedUser.role === 'vendor' || inspectedUser.shop_name) && (
+                            <div className="bg-white rounded-xl border border-sky-200 p-4 space-y-3 bg-gradient-to-br from-sky-50/30 to-white">
+                                <div className="flex items-center justify-between pb-2 border-b border-sky-100">
+                                    <div className="flex items-center gap-2">
+                                        <Store className="w-4 h-4 text-sky-600" />
+                                        <span className="font-bold text-slate-900 uppercase tracking-wide text-[11px]">
+                                            Marketplace Merchant & Storefront Profile
+                                        </span>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                                        Supplier Store
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Store / Shop Name</span>
+                                        <div className="font-black text-slate-900 text-sm flex items-center gap-1.5">
+                                            <span>{inspectedUser.shop_name || "Merchant's Store"}</span>
+                                        </div>
+                                        {inspectedUser.vendor_slug && (
+                                            <div className="mt-1">
+                                                <span className="text-[10px] text-slate-400">Slug: </span>
+                                                <code className="text-[10px] bg-slate-100 px-1 py-0.5 rounded font-mono text-slate-700">
+                                                    {inspectedUser.vendor_slug}
+                                                </code>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Business Registration</span>
+                                        <div className="text-xs font-semibold text-slate-800">
+                                            {inspectedUser.business_registration || 'Verified Marketplace Supplier'}
+                                        </div>
+                                        <div className="text-[11px] text-slate-400 mt-1">
+                                            Carrier SLA: 1-3 Business Days
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-sky-100">
+                                    <div className="bg-sky-50/70 p-2.5 rounded-lg border border-sky-100">
+                                        <span className="text-[10px] text-sky-700 uppercase font-bold block">Vendor Orders Received</span>
+                                        <span className="font-black text-slate-900 text-xs mt-0.5 block">
+                                            {inspectedUser.vendor_orders_count || 0} sub-orders
+                                        </span>
+                                    </div>
+                                    <div className="bg-sky-50/70 p-2.5 rounded-lg border border-sky-100">
+                                        <span className="text-[10px] text-sky-700 uppercase font-bold block">Gross Merchant Revenue</span>
+                                        <span className="font-black text-brand-600 text-xs mt-0.5 block">
+                                            {formatCurrency(inspectedUser.vendor_gross_sales || 0)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Workforce Profile (if employee/staff) */}
+                        {inspectedUser.designation && (
+                            <div className="bg-amber-50/60 p-3.5 rounded-xl border border-amber-100 text-amber-900">
+                                <span className="font-bold block text-[11px] flex items-center gap-1.5">
+                                    <Briefcase className="w-3.5 h-3.5 text-amber-600" />
+                                    Workforce Profile
+                                </span>
+                                <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                                    <div>
+                                        <span className="text-[10px] text-amber-700 font-semibold block">Designation:</span>
+                                        <span className="font-bold text-slate-900">{inspectedUser.designation}</span>
+                                    </div>
+                                    {inspectedUser.department && (
+                                        <div>
+                                            <span className="text-[10px] text-amber-700 font-semibold block">Department:</span>
+                                            <span className="font-bold text-slate-900">{inspectedUser.department}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* MongoDB ID with Copy */}
                         <div>
@@ -470,23 +623,13 @@ export default function UsersIndex({ users = {}, filters = {}, stats = {} }) {
                                 <button
                                     type="button"
                                     onClick={() => copyToClipboard(inspectedUser.id)}
-                                    className="text-slate-500 hover:text-slate-800 transition-colors p-1"
+                                    className="text-slate-500 hover:text-slate-800 transition-colors p-1 cursor-pointer"
                                     title="Copy ObjectId"
                                 >
                                     {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                                 </button>
                             </div>
                         </div>
-
-                        {inspectedUser.designation && (
-                            <div className="bg-amber-50/60 p-3 rounded-xl border border-amber-100 text-amber-900">
-                                <span className="font-bold block text-[11px]">Workforce Profile</span>
-                                <p className="text-[11px] mt-0.5">
-                                    Designation: <span className="font-semibold">{inspectedUser.designation}</span>
-                                    {inspectedUser.department && <> • Department: <span className="font-semibold">{inspectedUser.department}</span></>}
-                                </p>
-                            </div>
-                        )}
 
                         {/* Modal Action Buttons */}
                         <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
