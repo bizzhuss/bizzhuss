@@ -143,25 +143,27 @@ export default function VendorStoreShow({
 
             {/* 1. Store Hero Banner & Identity Card */}
             <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden mb-8">
-                {/* Custom Banner */}
-                <div
-                    className="relative h-44 sm:h-64 w-full bg-gradient-to-r from-slate-900 via-brand-900 to-indigo-950 bg-cover bg-center"
-                    style={vendor.banner ? { backgroundImage: `url(${vendor.banner})` } : undefined}
-                >
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent" />
+                {/* Cover Banner */}
+                <div className="h-44 sm:h-60 w-full bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 relative overflow-hidden">
+                    {vendor.banner ? (
+                        <img src={vendor.banner} alt={vendor.shop_name} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-700 font-black text-2xl sm:text-3xl uppercase tracking-widest opacity-25 select-none px-4 text-center">
+                            {vendor.shop_name}
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent pointer-events-none" />
 
-                    {/* Top Right Verification & Share Actions */}
+                    {/* Top Right Badges on Banner */}
                     <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-                        {vendor.is_verified && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold bg-emerald-500/90 text-white backdrop-blur-xs shadow-sm">
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                                <span>Verified Official Store</span>
-                            </span>
-                        )}
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/90 text-white backdrop-blur-md shadow-sm">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>Verified Official Store</span>
+                        </span>
                         <button
                             type="button"
                             onClick={handleShareStore}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold bg-white/90 hover:bg-white text-slate-900 backdrop-blur-xs shadow-sm transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/90 hover:bg-white text-slate-800 backdrop-blur-md transition shadow-sm cursor-pointer"
                             title="Copy Storefront Link"
                         >
                             {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5 text-slate-700" />}
@@ -170,75 +172,79 @@ export default function VendorStoreShow({
                     </div>
                 </div>
 
-                {/* Overlapping Store Profile Header */}
-                <div className="px-6 sm:px-8 pb-6 sm:pb-8 relative">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 -mt-12 sm:-mt-16 mb-6">
-                        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-                            {/* Avatar / Logo */}
-                            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white p-1.5 shadow-xl border border-slate-200 shrink-0 z-10">
-                                <div className="w-full h-full rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 text-white overflow-hidden flex items-center justify-center font-black text-2xl">
-                                    {vendor.avatar ? (
+                {/* Profile Details Container (Below Banner) */}
+                <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-0">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        {/* Avatar + Store Identity Info */}
+                        <div className="flex flex-col sm:flex-row sm:items-end gap-5">
+                            {/* ONLY the Avatar floats over the banner */}
+                            <div className="-mt-14 sm:-mt-16 shrink-0 z-10">
+                                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white p-1 shadow-lg border-2 border-white overflow-hidden">
+                                    {(vendor.avatar || vendor.logo) ? (
                                         <img
-                                            src={vendor.avatar}
+                                            src={vendor.avatar || vendor.logo}
                                             alt={vendor.shop_name}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-cover rounded-xl"
                                         />
                                     ) : (
-                                        (vendor.shop_name || 'BS').slice(0, 2).toUpperCase()
+                                        <div className="w-full h-full bg-slate-900 text-amber-400 flex items-center justify-center font-black text-2xl rounded-xl">
+                                            {(vendor.shop_name || 'S').charAt(0).toUpperCase()}
+                                        </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Store Name & Meta Pills */}
-                            <div className="pt-1 sm:pb-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                            {/* Store Name, Badges & Meta (Completely clear of the dark banner) */}
+                            <div className="pt-2 sm:pt-3">
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                                         {vendor.shop_name}
                                     </h1>
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-brand-50 text-brand-700 border border-brand-200">
-                                        <Award className="w-3 h-3 text-brand-600" />
-                                        Flagship Merchant
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                        <Award className="w-3 h-3 text-blue-600" />
+                                        <span>Flagship Merchant</span>
                                     </span>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 mt-1.5">
-                                    <span className="inline-flex items-center gap-1">
-                                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                                        <strong className="text-slate-700 font-semibold">{stats.city || vendor.city || 'Karachi, Pakistan'}</strong>
-                                    </span>
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-1.5 font-medium">
+                                    {(stats.city || vendor.city) && (
+                                        <span className="inline-flex items-center gap-1">
+                                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                            <span>{stats.city || vendor.city}</span>
+                                        </span>
+                                    )}
                                     <span className="inline-flex items-center gap-1">
                                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                        <span>Member since <strong className="text-slate-700 font-semibold">{stats.joined_date || '2024'}</strong></span>
+                                        <span>Member since {stats.joined_date || 'Nov 2026'}</span>
                                     </span>
-                                    {vendor.support_phone && (
+                                    {(vendor.support_phone || vendor.phone) && (
                                         <span className="inline-flex items-center gap-1">
                                             <Phone className="w-3.5 h-3.5 text-slate-400" />
-                                            <span>{vendor.support_phone}</span>
+                                            <span>{vendor.support_phone || vendor.phone}</span>
                                         </span>
                                     )}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Quick Store Highlights */}
-                        <div className="flex items-center gap-2 shrink-0">
-                            <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold">
+                        {/* Rating Badge */}
+                        <div className="shrink-0 mb-1">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 text-xs font-bold">
                                 <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-                                <span>{stats.rating || '4.9'} / 5.0</span>
-                                <span className="text-[11px] font-medium text-amber-700">({stats.positive_rating || '99%'} Positive)</span>
-                            </span>
+                                <span>{stats.rating || '4.9'} / 5.0 ({stats.positive_rating || '99%'} Positive)</span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Store Description */}
+                    {/* Store Bio Description */}
                     {vendor.description && (
-                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-4xl mb-6">
+                        <p className="text-xs sm:text-sm text-slate-600 mt-4 max-w-4xl leading-relaxed">
                             {vendor.description}
                         </p>
                     )}
 
                     {/* 2. Merchant Trust & Performance Stats Strip */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-5 border-t border-slate-100">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-5 border-t border-slate-100">
                         <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/70 flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center shrink-0">
                                 <Package className="w-5 h-5" />
