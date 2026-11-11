@@ -28,7 +28,7 @@ class CustomerController extends Controller
     public function index(Request $request): Response
     {
         try {
-            $query = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug'])
+            $query = Product::with(['vendor:id,shop_name,slug,logo,commission_rate,status', 'category:id,name,slug'])
                 ->where('status', 'published')
                 ->whereHas('vendor', function ($q) {
                     $q->where('status', 'active');
@@ -63,7 +63,7 @@ class CustomerController extends Controller
             $featuredVendors = Vendor::where('status', 'active')->limit(6)->get();
 
             // Base relation query with active vendor gatekeeper
-            $curationBase = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug'])
+            $curationBase = Product::with(['vendor:id,shop_name,slug,logo,commission_rate,status', 'category:id,name,slug'])
                 ->activeOrPublished()
                 ->whereHas('vendor', function ($q) {
                     $q->where('status', 'active');
@@ -155,7 +155,7 @@ class CustomerController extends Controller
     public function shop(Request $request): Response
     {
         try {
-            $query = Product::with(['vendor:id,shop_name,logo,commission_rate,status', 'category:id,name,slug,parent_id'])
+            $query = Product::with(['vendor:id,shop_name,slug,logo,commission_rate,status', 'category:id,name,slug,parent_id'])
                 ->where('status', 'published')
                 ->whereHas('vendor', function ($q) {
                     $q->where('status', 'active');

@@ -94,7 +94,7 @@ export default function BrandStores({ stores = [] }) {
                                     Active Store
                                 </span>
                                 <Link
-                                    href={`/shop?vendor=${store.slug || store.id}`}
+                                    href={`/store/${store.slug || store.id}`}
                                     className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 group-hover:translate-x-1 transition-transform"
                                 >
                                     <span>Visit Store</span>

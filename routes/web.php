@@ -19,6 +19,7 @@ use App\Http\Controllers\MarketingCurationController;
 use App\Http\Controllers\MarketingBannerController;
 use App\Http\Controllers\MarketingCampaignController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\Store\VendorStoreController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\SitemapController;
@@ -43,6 +44,7 @@ Route::get('/storefront', [CustomerController::class, 'index'])->name('storefron
 Route::get('/shop', [CustomerController::class, 'shop'])->name('shop');
 Route::get('/product/{slug}', [CustomerController::class, 'productDetail'])->name('product.detail');
 Route::get('/category/{slug}', [CustomerController::class, 'category'])->name('category.show');
+Route::get('/store/{slug}', [VendorStoreController::class, 'show'])->name('store.show');
 Route::post('/cart/add', [CustomerController::class, 'addToCart'])->name('cart.add');
 
 // Tier 1A Protected: Authenticated-only Customer Actions

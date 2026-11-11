@@ -19,6 +19,7 @@ export function ProductCard({
 
     const imageSrc = getProductImage(product);
     const vendorName = product.vendor?.shop_name || 'Verified Supplier';
+    const vendorStoreTarget = product.vendor?.slug || product.vendor?.id || product.vendor_id;
     const discountPercent = product.discount_percentage
         ? Math.round(Number(product.discount_percentage))
         : (product.compare_price && product.compare_price > product.price
@@ -86,10 +87,20 @@ export function ProductCard({
                 <div>
                     {/* Vendor & Category Header */}
                     <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 mb-1">
-                        <span className="truncate flex items-center gap-1 font-medium text-slate-600">
-                            <Store className="w-3 h-3 text-brand-500 shrink-0" />
-                            {vendorName}
-                        </span>
+                        {vendorStoreTarget ? (
+                            <Link
+                                href={`/store/${vendorStoreTarget}`}
+                                className="truncate flex items-center gap-1 font-medium text-slate-600 hover:text-brand-600 hover:underline transition-colors"
+                            >
+                                <Store className="w-3 h-3 text-brand-500 shrink-0" />
+                                <span className="truncate">{vendorName}</span>
+                            </Link>
+                        ) : (
+                            <span className="truncate flex items-center gap-1 font-medium text-slate-600">
+                                <Store className="w-3 h-3 text-brand-500 shrink-0" />
+                                {vendorName}
+                            </span>
+                        )}
                         <span className="text-slate-400 text-[9px] sm:text-[10px] hidden sm:inline">{product.category?.name}</span>
                     </div>
 

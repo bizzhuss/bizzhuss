@@ -602,7 +602,7 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
 
                                     {/* Visit Store Button */}
                                     <Link
-                                        href={`/shop?vendor=${vendor?.id || 1}`}
+                                        href={`/store/${vendor?.slug || vendor?.id || 1}`}
                                         className="w-full py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs border border-slate-300 transition-colors flex items-center justify-center gap-1.5"
                                     >
                                         <Store className="w-3.5 h-3.5 text-amber-500" />

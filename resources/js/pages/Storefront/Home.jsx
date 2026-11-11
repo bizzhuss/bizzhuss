@@ -817,7 +817,7 @@ export default function Home({
                                 Close
                             </button>
                             <Link
-                                href={`/shop?vendor=${inspectedStore.id}`}
+                                href={`/store/${inspectedStore.slug || inspectedStore.id}`}
                                 onClick={() => setInspectedStore(null)}
                                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-brand-500 hover:bg-brand-600 transition-colors inline-flex items-center gap-1.5"
                             >
