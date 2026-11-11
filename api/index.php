@@ -80,7 +80,13 @@ if (!getenv('APP_SERVICES_CACHE')) {
     $_SERVER['APP_SERVICES_CACHE'] = '/tmp/bootstrap/cache/services.php';
 }
 
-// Provide fallback APP_KEY if not yet configured in Vercel environment variables
+// Provide fallback APP_NAME and APP_KEY if not yet configured in Vercel environment variables
+if (!getenv('APP_NAME') && empty($_ENV['APP_NAME']) && empty($_SERVER['APP_NAME'])) {
+    putenv('APP_NAME=Bizzhuss');
+    $_ENV['APP_NAME'] = 'Bizzhuss';
+    $_SERVER['APP_NAME'] = 'Bizzhuss';
+}
+
 if (!getenv('APP_KEY') && empty($_ENV['APP_KEY']) && empty($_SERVER['APP_KEY'])) {
     $fallbackKey = 'base64:niNfQlDHgmS0Ja2dov5Sv0BV0eeOYqoyRFNCFmQlcxk=';
     putenv("APP_KEY={$fallbackKey}");

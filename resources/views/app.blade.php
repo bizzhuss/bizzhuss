@@ -23,9 +23,23 @@
 
     <title inertia>{{ config('app.name', 'Bizzhuss') }} | Built for Buyers | Powered by Sellers</title>
     <meta name="description" content="Bizzhuss is Pakistan's premier multi-vendor e-commerce marketplace connecting verified local sellers with smart shoppers. Built for Buyers | Powered by Sellers.">
-    <meta name="author" content="Bizzhuss">
+    <meta name="author" content="{{ config('app.name', 'Bizzhuss') }}">
     <link rel="canonical" href="https://www.bizzhuss.com">
     <link rel="icon" type="image/png" href="/images/bizzhuss-logo.png">
+
+    <!-- Open Graph / Social Link Preview Defaults -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ config('app.name', 'Bizzhuss') }}">
+    <meta property="og:title" content="{{ config('app.name', 'Bizzhuss') }} | Built for Buyers | Powered by Sellers">
+    <meta property="og:description" content="Bizzhuss is Pakistan's premier multi-vendor e-commerce marketplace connecting verified local sellers with smart shoppers. Built for Buyers | Powered by Sellers.">
+    <meta property="og:image" content="https://www.bizzhuss.com/og-image.jpg">
+    <meta property="og:url" content="https://www.bizzhuss.com">
+    <meta property="og:locale" content="en_PK">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@bizzhuss">
+    <meta name="twitter:title" content="{{ config('app.name', 'Bizzhuss') }} | Built for Buyers | Powered by Sellers">
+    <meta name="twitter:description" content="Bizzhuss is Pakistan's premier multi-vendor e-commerce marketplace connecting verified local sellers with smart shoppers. Built for Buyers | Powered by Sellers.">
+    <meta name="twitter:image" content="https://www.bizzhuss.com/og-image.jpg">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
