@@ -1,8 +1,34 @@
 import './bootstrap';
 import '../css/app.css';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
+
+// Track initial load and every Inertia SPA route transition via Google Tag / Data Layer
+if (typeof window !== 'undefined') {
+    window.__bizzhussRemoveGtmNavigate?.();
+    window.__bizzhussRemoveGtmNavigate = router.on('navigate', (event) => {
+        const pageUrl = event?.detail?.page?.url || `${window.location.pathname}${window.location.search}`;
+
+        // Defer one tick so @inertiajs/react's <Head> updates document.title before recording
+        setTimeout(() => {
+            const pageData = {
+                page_title: document.title,
+                page_location: window.location.href,
+                page_path: pageUrl,
+            };
+
+            if (typeof window.gtag === 'function') {
+                window.gtag('event', 'page_view', pageData);
+            } else if (Array.isArray(window.dataLayer)) {
+                window.dataLayer.push({
+                    event: 'page_view',
+                    ...pageData,
+                });
+            }
+        }, 0);
+    });
+}
 
 const appName = import.meta.env.VITE_APP_NAME || 'Bizzhuss';
 
