@@ -26,6 +26,9 @@ class ProductController extends Controller
             'stock' => 'nullable|integer|min:0',
             'stock_quantity' => 'nullable|integer|min:0',
             'sku' => 'nullable|string|max:100',
+            'delivery_timeframe' => 'nullable|string|max:100',
+            'has_return_guarantee' => 'nullable|boolean',
+            'has_official_warranty' => 'nullable|boolean',
             'image' => 'nullable', // Can be string URL or UploadedFile
         ]);
 
@@ -79,6 +82,11 @@ class ProductController extends Controller
                 'stock' => $stock,
                 'stock_quantity' => $stock,
                 'sku' => $sku,
+                'delivery_timeframe' => !empty(trim((string) $request->input('delivery_timeframe')))
+                    ? trim((string) $request->input('delivery_timeframe'))
+                    : '7-10 Days',
+                'has_return_guarantee' => $request->boolean('has_return_guarantee'),
+                'has_official_warranty' => $request->boolean('has_official_warranty'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

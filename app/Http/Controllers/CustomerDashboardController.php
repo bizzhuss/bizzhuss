@@ -56,42 +56,10 @@ class CustomerDashboardController extends Controller
             ],
         ];
 
-        // 3. Platform Coupons & Member Vouchers
-        $vouchers = [
-            [
-                'id' => 1,
-                'code' => 'BIZZ10',
-                'discount' => '10% OFF',
-                'description' => 'Platform-wide discount valid on all multi-vendor orders.',
-                'valid_until' => 'October 31, 2026',
-                'min_spend' => 200.00,
-                'status' => 'active',
-            ],
-            [
-                'id' => 2,
-                'code' => 'VIPTECH',
-                'discount' => '$150 OFF',
-                'description' => 'VIP tier credit on Enterprise Hardware and Server Chassis orders.',
-                'valid_until' => 'November 15, 2026',
-                'min_spend' => 1000.00,
-                'status' => 'active',
-            ],
-            [
-                'id' => 3,
-                'code' => 'FREESHIP',
-                'discount' => 'FREE FREIGHT',
-                'description' => 'Zero-fee expedited courier delivery on heavy equipment & tooling.',
-                'valid_until' => 'October 15, 2026',
-                'min_spend' => 500.00,
-                'status' => 'active',
-            ],
-        ];
-
         return Inertia::render('Customer/Dashboard', [
             'user' => $user,
             'orders' => $orders,
             'addresses' => $addresses,
-            'vouchers' => $vouchers,
         ]);
     }
 

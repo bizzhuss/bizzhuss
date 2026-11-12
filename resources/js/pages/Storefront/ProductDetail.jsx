@@ -617,24 +617,46 @@ export default function ProductDetail({ product = {}, relatedProducts = [] }) {
                             <div className="flex items-start gap-2.5">
                                 <Truck className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="font-bold text-slate-900">Standard Delivery (2-4 Days)</p>
+                                    <p className="font-bold text-slate-900">
+                                        Standard Delivery ({product?.delivery_timeframe || '7-10 Days'})
+                                    </p>
                                     <p className="text-[11px] text-slate-400">Automated multi-vendor split freight routing.</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-2.5">
-                                <RotateCcw className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="font-bold text-slate-900">7 Days Return Guarantee</p>
-                                    <p className="text-[11px] text-slate-400">Change of mind acceptable for intact sealed units.</p>
+                            {product?.has_return_guarantee ? (
+                                <div className="flex items-start gap-2.5">
+                                    <RotateCcw className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="font-bold text-slate-900">7 Days Return Guarantee</p>
+                                        <p className="text-[11px] text-slate-400">Change of mind acceptable for intact sealed units.</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-start gap-2.5">
-                                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="font-bold text-slate-900">1 Year Official Warranty</p>
-                                    <p className="text-[11px] text-slate-400">Original manufacturer SLA replacement warranty.</p>
+                            ) : (
+                                <div className="flex items-start gap-2.5 opacity-60">
+                                    <RotateCcw className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="font-semibold text-slate-600">No Return Guarantee</p>
+                                        <p className="text-[11px] text-slate-400">Return guarantee not offered by the seller for this item.</p>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+                            {product?.has_official_warranty ? (
+                                <div className="flex items-start gap-2.5">
+                                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="font-bold text-slate-900">1 Year Official Warranty</p>
+                                        <p className="text-[11px] text-slate-400">Original manufacturer SLA replacement warranty.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-start gap-2.5 opacity-60">
+                                    <ShieldCheck className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="font-semibold text-slate-600">No Official Warranty</p>
+                                        <p className="text-[11px] text-slate-400">Official warranty not included for this item.</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

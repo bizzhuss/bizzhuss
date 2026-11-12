@@ -173,6 +173,9 @@ class VendorProductController extends Controller
                 'image_order' => 'nullable|string',
                 'variants' => 'nullable|array',
                 'status' => 'nullable|string',
+                'delivery_timeframe' => 'nullable|string|max:100',
+                'has_return_guarantee' => 'nullable|boolean',
+                'has_official_warranty' => 'nullable|boolean',
             ];
 
             if ($request->hasFile('images')) {
@@ -304,6 +307,11 @@ class VendorProductController extends Controller
                 'description' => $validated['description'] ?? '',
                 'variants' => $validated['variants'] ?? [],
                 'status' => $status,
+                'delivery_timeframe' => !empty(trim((string) ($validated['delivery_timeframe'] ?? '')))
+                    ? trim((string) $validated['delivery_timeframe'])
+                    : '7-10 Days',
+                'has_return_guarantee' => $request->boolean('has_return_guarantee'),
+                'has_official_warranty' => $request->boolean('has_official_warranty'),
             ]);
 
             return redirect()->route('vendor.products.index')
@@ -381,6 +389,9 @@ class VendorProductController extends Controller
                 'image_order' => 'nullable|string',
                 'variants' => 'nullable|array',
                 'status' => 'nullable|string',
+                'delivery_timeframe' => 'nullable|string|max:100',
+                'has_return_guarantee' => 'nullable|boolean',
+                'has_official_warranty' => 'nullable|boolean',
             ];
 
             if ($request->hasFile('images')) {
@@ -498,6 +509,20 @@ class VendorProductController extends Controller
                 $validated['thumbnail'] = $finalImages[0] ?? null;
             }
 
+            if ($request->exists('delivery_timeframe')) {
+                $validated['delivery_timeframe'] = !empty(trim((string) $request->input('delivery_timeframe')))
+                    ? trim((string) $request->input('delivery_timeframe'))
+                    : '7-10 Days';
+            }
+
+            if ($request->exists('has_return_guarantee')) {
+                $validated['has_return_guarantee'] = $request->boolean('has_return_guarantee');
+            }
+
+            if ($request->exists('has_official_warranty')) {
+                $validated['has_official_warranty'] = $request->boolean('has_official_warranty');
+            }
+
             unset($validated['existing_images'], $validated['image_order']);
 
             $product->update($validated);
@@ -548,6 +573,9 @@ class VendorProductController extends Controller
             'images' => $product->images,
             'description' => $product->description,
             'variants' => $product->variants,
+            'delivery_timeframe' => $product->delivery_timeframe ?? '7-10 Days',
+            'has_return_guarantee' => (bool) $product->has_return_guarantee,
+            'has_official_warranty' => (bool) $product->has_official_warranty,
             'status' => 'draft',
         ]);
 

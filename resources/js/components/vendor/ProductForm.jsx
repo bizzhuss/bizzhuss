@@ -19,7 +19,10 @@ import {
     Save, 
     Sparkles,
     Check,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Truck,
+    RotateCcw,
+    ShieldCheck
 } from 'lucide-react';
 
 export function ProductForm({ 
@@ -81,6 +84,9 @@ export function ProductForm({
 
     // Publication Status
     const [status, setStatus] = useState(initialData?.status || 'published');
+    const [deliveryTimeframe, setDeliveryTimeframe] = useState(initialData?.delivery_timeframe || '7-10 Days');
+    const [hasReturnGuarantee, setHasReturnGuarantee] = useState(Boolean(initialData?.has_return_guarantee));
+    const [hasOfficialWarranty, setHasOfficialWarranty] = useState(Boolean(initialData?.has_official_warranty));
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -256,6 +262,9 @@ export function ProductForm({
         formData.append('stock_quantity', stockQuantity);
         formData.append('low_stock_threshold', lowStockThreshold);
         formData.append('status', status);
+        formData.append('delivery_timeframe', (deliveryTimeframe || '7-10 Days').trim() || '7-10 Days');
+        formData.append('has_return_guarantee', hasReturnGuarantee ? '1' : '0');
+        formData.append('has_official_warranty', hasOfficialWarranty ? '1' : '0');
 
         // Variants
         if (hasVariants && variants.length > 0) {
@@ -923,6 +932,89 @@ export function ProductForm({
                                         onChange={(e) => setLowStockThreshold(e.target.value)}
                                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold outline-none focus:ring-2 focus:ring-brand-500"
                                     />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Delivery, Return Guarantee & Official Warranty Options */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                <Truck className="w-4 h-4 text-amber-600" />
+                                <span>Delivery & Buyer Guarantees</span>
+                            </CardTitle>
+                            <CardDescription>
+                                Control shipping timeframe, return policy, and warranty coverage shown on this listing.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                                    Estimated Delivery Timeframe
+                                </label>
+                                <input
+                                    type="text"
+                                    value={deliveryTimeframe}
+                                    onChange={(e) => setDeliveryTimeframe(e.target.value)}
+                                    placeholder="7-10 Days"
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-brand-500"
+                                />
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {['2-4 Days', '3-5 Days', '5-7 Days', '7-10 Days', '10-14 Days'].map((preset) => (
+                                        <button
+                                            key={preset}
+                                            type="button"
+                                            onClick={() => setDeliveryTimeframe(preset)}
+                                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                                deliveryTimeframe === preset
+                                                    ? 'bg-brand-50 border-brand-300 text-brand-700'
+                                                    : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            {preset}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-slate-100 space-y-3">
+                                <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+                                    <div className="flex items-start gap-2.5">
+                                        <RotateCcw className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                                        <div>
+                                            <div className="text-xs font-bold text-slate-900">7 Days Return Guarantee</div>
+                                            <div className="text-[11px] text-slate-500">Allow intact unit returns within 7 days.</div>
+                                        </div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={hasReturnGuarantee}
+                                            onChange={(e) => setHasReturnGuarantee(e.target.checked)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+                                    <div className="flex items-start gap-2.5">
+                                        <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                        <div>
+                                            <div className="text-xs font-bold text-slate-900">1 Year Official Warranty</div>
+                                            <div className="text-[11px] text-slate-500">Include manufacturer SLA replacement warranty.</div>
+                                        </div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={hasOfficialWarranty}
+                                            onChange={(e) => setHasOfficialWarranty(e.target.checked)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    </label>
                                 </div>
                             </div>
                         </CardContent>

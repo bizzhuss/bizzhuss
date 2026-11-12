@@ -48,6 +48,9 @@ class Product extends BaseModel
         'discount_percentage',
         'flash_sale_end_time',
         'sale_badge_label',
+        'delivery_timeframe',
+        'has_return_guarantee',
+        'has_official_warranty',
     ];
 
     protected function casts(): array
@@ -56,11 +59,14 @@ class Product extends BaseModel
             'price' => 'float',
             'compare_price' => 'float',
             'cost_per_item' => 'float',
+            'stock' => 'integer',
             'stock_quantity' => 'integer',
             'low_stock_threshold' => 'integer',
             'is_featured' => 'boolean',
             'is_on_special_sale' => 'boolean',
             'is_flash_sale' => 'boolean',
+            'has_return_guarantee' => 'boolean',
+            'has_official_warranty' => 'boolean',
             'total_sold_count' => 'integer',
             'featured_order' => 'integer',
             'discount_percentage' => 'float',

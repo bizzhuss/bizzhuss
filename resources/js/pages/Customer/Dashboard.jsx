@@ -6,7 +6,6 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { 
     ShoppingBag, 
     MapPin, 
-    Tag, 
     User, 
     Store, 
     ArrowRight, 
@@ -15,7 +14,6 @@ import {
     CheckCircle2, 
     Clock, 
     ShieldCheck, 
-    Copy, 
     Plus, 
     Trash2, 
     Edit2, 
@@ -31,9 +29,9 @@ import {
 } from 'lucide-react';
 import { getProductImage } from '@/lib/productImage';
 
-export default function CustomerDashboard({ user = {}, orders = [], addresses = [], vouchers = [] }) {
+export default function CustomerDashboard({ user = {}, orders = [], addresses = [] }) {
     const { showNotification } = useApp();
-    const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'addresses', 'vouchers', 'profile'
+    const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'addresses', 'profile'
     const [trackingOrder, setTrackingOrder] = useState(null);
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [isAddAddressOpen, setIsAddAddressOpen] = useState(false);
@@ -137,13 +135,6 @@ export default function CustomerDashboard({ user = {}, orders = [], addresses = 
         });
     };
 
-    const handleCopyVoucher = (code) => {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(code);
-            showNotification(`Voucher code "${code}" copied to clipboard!`, 'success');
-        }
-    };
-
     const getStatusBadge = (status) => {
         switch (status) {
             case 'delivered':
@@ -222,7 +213,6 @@ export default function CustomerDashboard({ user = {}, orders = [], addresses = 
                         {[
                             { id: 'orders', label: 'Order History', icon: ShoppingBag, count: orders.length },
                             { id: 'addresses', label: 'Delivery Addresses', icon: MapPin, count: addresses.length },
-                            { id: 'vouchers', label: 'Vouchers & Discounts', icon: Tag, count: vouchers.length },
                             { id: 'profile', label: 'Profile Settings', icon: User },
                         ].map((tab) => {
                             const Icon = tab.icon;
@@ -454,61 +444,7 @@ export default function CustomerDashboard({ user = {}, orders = [], addresses = 
                     </div>
                 )}
 
-                {/* TAB 3: VOUCHERS & DISCOUNTS */}
-                {activeTab === 'vouchers' && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-base font-bold text-slate-900">Active Coupons & Discounts</h2>
-                                <p className="text-xs text-slate-500">Apply these voucher codes during checkout for instant savings.</p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {vouchers.map((vouch) => (
-                                <div
-                                    key={vouch.id}
-                                    className="bg-white rounded-3xl border border-slate-200/90 p-5 space-y-3 shadow-xs relative overflow-hidden"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="text-xl font-black text-amber-600">
-                                            {vouch.discount}
-                                        </div>
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
-                                            Active
-                                        </span>
-                                    </div>
-
-                                    <p className="text-xs text-slate-600 leading-relaxed">
-                                        {vouch.description}
-                                    </p>
-
-                                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                                        <div>
-                                            <span className="text-[10px] text-slate-400 block">Voucher Code:</span>
-                                            <span className="font-mono font-bold text-xs text-slate-900">{vouch.code}</span>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCopyVoucher(vouch.code)}
-                                            className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-[11px] flex items-center gap-1.5 cursor-pointer"
-                                        >
-                                            <Copy className="w-3 h-3" />
-                                            <span>Copy</span>
-                                        </button>
-                                    </div>
-
-                                    <div className="text-[10px] text-slate-400">
-                                        Expires: {vouch.valid_until} • Min spend: {formatCurrency(vouch.min_spend)}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* TAB 4: PROFILE SETTINGS */}
+                {/* TAB 3: PROFILE SETTINGS */}
                 {activeTab === 'profile' && (
                     <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 max-w-2xl">
                         <h2 className="text-base font-bold text-slate-900 pb-4 border-b border-slate-100">
